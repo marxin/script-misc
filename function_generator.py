@@ -6,9 +6,9 @@ import os
 import sys
 import random
 
-N = 1000
-M = 100
-K = 100
+N = 100
+M = 20
+K = 20
 
 def next(x):
   return random.randint(0, x)
@@ -36,7 +36,7 @@ def generate_function(i):
   k = i
 
   while k > K:
-    k = next(k)
+    k = next(k - 1)
     print('x = foo_%d(x);' % k)
 
   print('return x;')
