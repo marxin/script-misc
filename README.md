@@ -6,3 +6,4 @@ List of scripts:
 + gcc-reorder-runner.sh - wrapper running batch of gcc binaries (function reorder specific)
 + readelf_sections - wrapper that will print all sections presented in ELF binary, display modes: none|latex|padded
 + readelf_relocs - prints for each relocation type number of relocations
++ ldd_informer - shows all dependencies of executable including size of all shared libraries 
