@@ -43,4 +43,6 @@ for l in sorted(libraries, key = lambda x: x[1], reverse = True):
 
 print('\nTOTAL')
 print('Libraries: %31s' % sizeof_fmt(total))
+print('Number of libs: %26s' % len(libraries))
+print('Average library size: %20s' % (sizeof_fmt(total / len(libraries))))
 print('Grand total: %29s' % sizeof_fmt(total + binsize))
