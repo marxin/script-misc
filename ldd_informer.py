@@ -6,7 +6,7 @@ import os
 import sys
 
 def sizeof_fmt(num):
-  for x in ['bytes','KB','MB','GB','TB']:
+  for x in ['B','KB','MB','GB','TB']:
     if num < 1024.0:
       return "%3.1f %s" % (num, x)
     num /= 1024.0
@@ -18,19 +18,29 @@ if len(sys.argv) != 2:
 target = sys.argv[1]
 target_base = os.path.basename(target)
 
-f = os.popen('ldd ' + target)
+f = os.popen('LD_LIBRARY_PATH=./ ldd ' + target)
 
-size = os.path.getsize(target)
-print(target_base + ' (' + str(sizeof_fmt(size)) + ')')
+binsize = os.path.getsize(target)
+print('%-32s%10s' % (target_base, str(sizeof_fmt(binsize))))
+
+libraries = []
+total = 0
 
 for line in f.readlines():
   line = line.strip()
   tokens = line.split(' ')
  
-  print('\t' + tokens[0], end = '')
   if len(tokens) == 4:
     path = tokens[2]
     size = os.path.getsize(path)
-    print('(' + str(sizeof_fmt(size)) + ')')
+    total += size
+    libraries.append([tokens[0], size])
   else:
-    print()
+    libraries.append([tokens[0], 0])
+
+for l in sorted(libraries, key = lambda x: x[1], reverse = True):
+    print('%-32s%10s' % (l[0], str(sizeof_fmt(l[1]))))
+
+print('\nTOTAL')
+print('Libraries: %31s' % sizeof_fmt(total))
+print('Grand total: %29s' % sizeof_fmt(total + binsize))

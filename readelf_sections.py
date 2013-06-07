@@ -27,7 +27,7 @@ def parse_size(line):
   return int(line.split(' ')[0], 16)
 
 if len(sys.argv) < 2:
-  print('usage: readelf_sections <executable> [format_name={latex|padded}]')
+  print('usage: readelf_sections <executable> [format_name={latex|csv}]')
   exit(-1)
 
 target = sys.argv[1]
@@ -60,11 +60,12 @@ if len(sys.argv) == 3:
 
     for s in sections:
       print_escaped(s[0] + '&' + str(s[1]) + '&' + sizeof_fmt(s[1]) + '&' + str(s[2]) + '&' + str(sizeof_fmt(s[2])) + '&' + str("%0.2f %%" % (float(s[2]) / total * 100)) + ' \\\\ \hline')
-  elif sys.argv[2] == 'padded':
-    print('%-20s%12s%12s%16s%10s' % ('Section name', 'Start', 'Size in B', 'Size', 'Portion'))
+  elif sys.argv[2] == 'csv':
     for s in sections:
-      print('%-20s%12s%12s%16s%10s%%' % (s[0], str(s[1]), str(s[2]), sizeof_fmt(s[2]), str("%0.2f" % (float(s[2]) / total * 100))))
-    print('%44s%16s' % (str(total), sizeof_fmt(total)))
+      print(s[0] + ':' + str(s[1]) + ':' + str(s[2]) + '&' + str(sizeof_fmt(s[2])) + ':' + str("%0.2f" % (float(s[2]) / total * 100)))
 else:
+  print('%-20s%12s%12s%16s%10s' % ('Section name', 'Start', 'Size in B', 'Size', 'Portion'))
   for s in sections:
-    print(s[0] + ':' + str(s[1]) + ':' + str(s[2]) + '&' + str(sizeof_fmt(s[2])) + ':' + str("%0.2f" % (float(s[2]) / total * 100)))
+    print('%-20s%12s%12s%16s%10s%%' % (s[0], str(s[1]), str(s[2]), sizeof_fmt(s[2]), str("%0.2f" % (float(s[2]) / total * 100))))
+  print('%44s%16s' % (str(total), sizeof_fmt(total)))
+
