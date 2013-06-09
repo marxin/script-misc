@@ -9,3 +9,4 @@ List of scripts:
 + ldd_informer - shows all dependencies of executable including size of all shared libraries
 + readpage_graph - creates a graph from stap dump and binary file; all important ELF sections are highlighted
 + stap_readpage.stp - STAP script file printing all ext4 disc reads done by kernel
++ readelf_sorted_symbols - prints symbols from ELF in binary layout order
