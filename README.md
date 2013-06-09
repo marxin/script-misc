@@ -8,3 +8,4 @@ List of scripts:
 + readelf_relocs - prints for each relocation type number of relocations
 + ldd_informer - shows all dependencies of executable including size of all shared libraries
 + readpage_graph - creates a graph from stap dump and binary file; all important ELF sections are highlighted
++ stap_readpage.stp - STAP script file printing all ext4 disc reads done by kernel
