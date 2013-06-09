@@ -1,0 +1,23 @@
+global targetpid;
+global file_path;
+
+probe begin {
+  targetpid = target();
+}
+
+probe kernel.function("__do_page_cache_readahead") {
+  if (targetpid == pid())
+    file_path[tid()] = d_path(&$filp->f_path);
+}
+
+probe kernel.function("do_mpage_readpage") {
+  if (targetpid == pid() && (tid() in file_path)) {
+    now = gettimeofday_us();
+    printf("%d %s %d\n", now, file_path[tid()], $page->index*4096);
+  }
+}
+
+probe kernel.function("__do_page_cache_readahead").return {
+  if (targetpid == pid())
+    delete file_path[tid()];
+} 
