@@ -15,7 +15,7 @@ if len(sys.argv) < 3:
   print('usage: readpage_graph.py [data] [elf_executable] <graph_file>')
   exit(-1)
 
-graph_sections = (('.text', 'b'), ('.rel.dyn', 'r'), ('.rela.dyn', 'r'), ('.data.rel.ro', 'y'), ('.eh_frame', 'm'), ('.rodata', 'c'), ('.dynstr', '#ffa500'), ('.symtab', '#666f00'), ('.strtab', '#006f66'), ('.init_array', '#000000'))
+graph_sections = (('.text', '#5599ff'), ('.rel.dyn', 'r'), ('.rela.dyn', '#e9afaf'), ('.data.rel.ro', 'y'), ('.eh_frame', '#de87de'), ('.rodata', 'c'), ('.dynstr', '#ffa500'), ('.symtab', '#666f00'), ('.strtab', '#006f66'), ('.init_array', '#000000'))
 
 def parse_section_name(line):
   s = line.find(']') + 2
@@ -78,9 +78,6 @@ for s in sections:
   ax.add_collection(c)
   legends[0].insert(0, matplotlib.patches.Rectangle((0, 0), 1, 1, fc = item[1], alpha = alpha))
   legends[1].insert(0, s[0])
-
-print(ys)
-print(xs)
 
 ax.plot(xs, ys, color='silver', marker='o', markerfacecolor='black', mew = 0, markersize=1)
 ax.set_xlim(0, maxx)
