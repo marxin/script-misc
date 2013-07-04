@@ -11,3 +11,4 @@ List of scripts:
 + stap_readpage.stp - STAP script file printing all ext4 disc reads done by kernel
 + readelf_sorted_symbols - prints symbols from ELF in binary layout order
 + symbol_section_finder - reads a set of object files and find corresponding sections for given list of functions
++ gcc-function-reorder - script compares all symbols met by compiler, if all occure in correct order according to dump
