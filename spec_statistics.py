@@ -128,10 +128,15 @@ def transform_to_latex(table, filt, column_header_filter = lambda x: x, caption 
   print('\\begin{table}')
   print('\t\\begin{tabular}{', end = '')
 
+  format = ''
   for i in header:
-    print('|r', end = '')
+    format += '|r'
 
-  print('|}')
+  format += '|}'
+
+  format = format.replace('r', 'l', 1)
+  print(format)
+
   print('\t\hline')
 
   #header
@@ -144,8 +149,11 @@ def transform_to_latex(table, filt, column_header_filter = lambda x: x, caption 
 
   # body
   for line in iterate:
-    for item in line[:-1]:
-      print(filt(item) + ' & ', end = '')
+    for i, item in enumerate(line[:-1]):
+      if i > 0:
+        print(filt(item) + ' & ', end = '')
+      else:
+        print('\\textbf{' + filt(item) + '} & ', end = '')
 
     print(filt(line[-1]) + ' \\\\ \\hline')
 
@@ -172,9 +180,9 @@ for i, d in enumerate(data):
   for p in d.keys():
     for b in d[p].keys():
       if i == 0:
-        d[p][b].append(data[i][base_profile][b][0] / d[p][b][0])
+        d[p][b].append(data[i][base_profile][b][0] / d[p][b][0] - 1)
       else:
-        d[p][b].append(d[p][b][0] / data[i][base_profile][b][0])
+        d[p][b].append(d[p][b][0] / data[i][base_profile][b][0] - 1)
 
 def color_wrap(value, color):
   return '\cellcolor{%s}%s' % (color, value)
@@ -194,24 +202,24 @@ def percent_filter(x, reverse, color = True):
 
     if color:
       if reverse:
-        if x > 1.1:
+        if x > 0.1:
           return color_wrap(s, 'SpecBetter')
-        elif x > 1.05:
+        elif x > 0.05:
           return color_wrap(s, 'SpecGood')
-        elif x < 0.9:
+        elif x < -0.1:
           return color_wrap(s, 'SpecWorse')
-        elif x < 0.95:
+        elif x < -0.05:
           return color_wrap(s, 'SpecBad')
         else:
           return s
       else:
-        if x > 1.50:
+        if x > 0.50:
           return color_wrap(s, 'SpecWorse')
-        elif x > 1.25:
+        elif x > 0.25:
           return color_wrap(s, 'SpecBad')
-        elif x < 0.50:
+        elif x < -0.50:
           return color_wrap(s, 'SpecBetter')
-        elif x < 0.75:
+        elif x < -0.25:
           return color_wrap(s, 'SpecGood')
         else:
           return s
@@ -243,18 +251,21 @@ def column_name_filter(name):
   if name.startswith('49'):
     name = name[3:]
 
+  name = name.replace('LIPO', 'L')
+  name = name.replace('PGO', 'P')
+
   return name
 
 time_summary = [aggregate(data[0], True), aggregate(data[0], True, is_int), aggregate(data[0], True, is_fp)]
 size_summary = [aggregate(data[1], True), aggregate(data[1], True, is_int), aggregate(data[1], True, is_fp)]
 
 # 1) performance
-all_performance_data = transform_summary(time_summary, ['Performance ', 'Performance (INT)', 'Performance (FP)'])
+all_performance_data = transform_summary(time_summary, ['Speedup', 'Speedup (INT)', 'Speedup (FP)'])
 all_performance = transform_to_table(all_performance_data, row_sorter = sort_profiles)
 
 # 2) size
-all_size_data = transform_summary(size_summary, ['Binary size ', 'Binary size (INT)', 'Binary size (FP)'])
-all_size = transform_to_table(all_size_data)
+all_size_data = transform_summary(size_summary, ['Size ', 'Size (INT)', 'Size (FP)'])
+all_size = transform_to_table(all_size_data, row_sorter = sort_profiles)
 
 # 3) performance for INT profiles and benchmarks
 int_performance = transform_to_table(aggregate(data[0], False, is_int), sort_profiles)
@@ -270,33 +281,33 @@ fp_size = transform_to_table(aggregate(data[1], False, is_fp), sort_profiles)
 
 print('\n% 1) performance')
 
-transform_to_latex(all_performance, simple_percent_filter, column_name_filter, 'SPEC2006 performance', 'Spec2006Performance', False)
+transform_to_latex(all_performance, simple_percent_filter, column_name_filter, 'SPEC CPU2006 speedup summary', 'Spec2006SpeedupSummary', False)
 print()
 
 print('\n% 2) size')
-transform_to_latex(all_size, simple_percent_filter, column_name_filter, 'SPEC2006 binary size', 'Spec2006BinarySize', False)
+transform_to_latex(all_size, simple_percent_filter, column_name_filter, 'SPEC CPU2006 binary reduction', 'Spec2006BinarySizeReduction', False)
 
 print()
 
 print('\n% 3) int_performance')
 
-transform_to_latex(split_table(int_performance)[0], time_percent_filter, column_name_filter, 'SPEC2006 INT performance, part I', 'Spec2006IntPerformancePart1')
+transform_to_latex(split_table(int_performance)[0], time_percent_filter, column_name_filter, 'SPEC CPU2006 INT speedup, part I', 'Spec2006IntSpeedupPart1')
 print()
-transform_to_latex(split_table(int_performance)[1], time_percent_filter, column_name_filter, 'SPEC2006 INT performance, part II', 'Spec2006IntPerformancePart2')
+transform_to_latex(split_table(int_performance)[1], time_percent_filter, column_name_filter, 'SPEC CPU2006 INT speedup, part II', 'Spec2006IntSpeedupPart2')
 print()
 
 print('\n% 4) fp_performance')
-transform_to_latex(split_table(fp_performance)[0], time_percent_filter, column_name_filter, 'SPEC2006 FP performance, part I', 'Spec2006FpPerformancePart1')
+transform_to_latex(split_table(fp_performance)[0], time_percent_filter, column_name_filter, 'SPEC CPU2006 FP speedup, part I', 'Spec2006FpSpeedupPart1')
 print()
-transform_to_latex(split_table(fp_performance)[1], time_percent_filter, column_name_filter, 'SPEC2006 FP performance, part II', 'Spec2006FpPerformancePart2')
+transform_to_latex(split_table(fp_performance)[1], time_percent_filter, column_name_filter, 'SPEC CPU2006 FP speedup, part II', 'Spec2006FpSpeedupPart2')
 print()
 
 print('\n% 5) int_size')
-transform_to_latex(split_table(int_size)[0], size_percent_filter, column_name_filter, 'SPEC2006 INT binary size, part I', 'Spec2006IntSizePart1')
+transform_to_latex(split_table(int_size)[0], size_percent_filter, column_name_filter, 'SPEC CPU2006 INT size reduction, part I', 'Spec2006IntSizeReductionPart1')
 print()
-transform_to_latex(split_table(int_size)[1], size_percent_filter, column_name_filter, 'SPEC2006 INT binary size, part II', 'Spec2006IntSizePart2')
+transform_to_latex(split_table(int_size)[1], size_percent_filter, column_name_filter, 'SPEC CPU2006 INT size reduction, part II', 'Spec2006IntSizeReductionPart2')
 
 print('\n% 6) fp_size')
-transform_to_latex(split_table(fp_size)[0], size_percent_filter, column_name_filter, 'SPEC2006 FP binary size, part I', 'Spec2006FpSizePart1')
+transform_to_latex(split_table(fp_size)[0], size_percent_filter, column_name_filter, 'SPEC CPU2006 FP size reduction, part I', 'Spec2006FpSizeReductionPart1')
 print()
-transform_to_latex(split_table(fp_size)[1], size_percent_filter, column_name_filter, 'SPEC2006 FP binary size, part II', 'Spec2006IntSizePart2')
+transform_to_latex(split_table(fp_size)[1], size_percent_filter, column_name_filter, 'SPEC CPU2006 FP size reduction, part II', 'Spec2006IntSizeReductionPart2')
