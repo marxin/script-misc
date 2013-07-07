@@ -8,64 +8,93 @@ if len(sys.argv) != 4:
   print('gcc-function-reorder <binary> <gcc_dump> <callgrind_dump>')
   exit(1)
 
-f = os.popen('readelf --wide -s ' + sys.argv[1])
+f = os.popen('./readelf_sorted_symbols.py ' + sys.argv[1])
 
 ### read elf parsing ###
 readelf_functions = []
+readelf_lines = []
 
 for line in f.readlines():
-  items = [x for x in line.strip().split(' ') if x] + [line.strip()]
-
-  if len(items) > 5 and items[0][-1] is ':' and items[0][:-1].isdigit() and items[3] == 'FUNC' and items[2] != '0':
-    readelf_functions.append(items[7])
+  tokens = line.strip().split(' ')
+  readelf_functions.append(tokens[-1])
+  readelf_lines.append(line.strip())
 
 ### gcc log parsing ###
+### line sample: 'main:2:'
 
-gcc_dump = []
+gcc_dump = {}
 
 f = open(sys.argv[2])
 
 for line in f:
   l = line.rstrip()
-  if len(l) > 0 and l[0] != ' ':
-    gcc_dump.append(line[0:l.index('/')])
+
+  if l[-1] == ':':
+    tokens = l.split(':')
+    order = int(tokens[1])
+    if order > 0:
+      gcc_dump[tokens[0]] = order
 
 for x in gcc_dump:
   if x not in readelf_functions:
     print('WARNING: gcc func is missing in readelf: %s' % x)
 
 ### callgrind parsing ###
+# line format: INIT:<function_name>
+# Function is met multiple times
 
 callgrind_functions = []
+callgrind_dict = {}
 
 f = open(sys.argv[3])
 
 for line in f:
-  callgrind_functions.append(line.strip())
+  line = line.strip()
+  if line.startswith('INIT:'):
+    fname = line[5:]
+    if fname not in callgrind_dict:
+      callgrind_dict[fname] = 1
+      callgrind_functions.append(fname)
+    else:
+      callgrind_dict[fname] = callgrind_dict[fname] + 1
 
 ### PHASE 1: readelf and callgrind dump comparison
-
-called_in_gcc = []
 
 total = len(readelf_functions)
 found1 = 0
 found2 = 0
+called_once = 0
 
+d_visited = set()
+d_missing = set()
+
+print()
 for i in callgrind_functions:
   if i in readelf_functions:
     found1 += 1
+    if callgrind_dict[i] == 1:
+      called_once += 1
 
   if i in gcc_dump:
-    called_in_gcc.append(i)
+    d_visited.add(i)
     found2 += 1
+  elif i in readelf_functions:
+    d_missing.add(i)
+    print('WARNING: gcc func is missing in gcc dump: %s' % i)
 
+print()
 print('Total: %u, found in readelf: %u, found in gcc: %u' % (total, found1, found2))
+print('Called one: %u' % called_once)
 
-exit(0)
+for line in readelf_lines:
+  f = line.split(' ')[-1]
 
-seen = set()
+  print(line, end = '', file = sys.stderr)
 
-for i in called_in_gcc:
-  if i not in seen:
-    print(i, file = sys.stderr)
-  seen.add(i)
+  if f in gcc_dump:
+    print(' [SORTED:%s]' % gcc_dump[f], file = sys.stderr, end = '')
+
+  if f in d_missing:
+    print(' [NOT_SEEN]', file = sys.stderr, end = '')
+
+  print(file = sys.stderr)

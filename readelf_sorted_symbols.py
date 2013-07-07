@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
-from sets import Set
 
 import os
 import sys
@@ -33,10 +32,19 @@ for line in f.readlines():
 
 s = sorted(array, key = lambda x: int(x[1], 16))
 
+prev = ''
+
 for i in s:
   line = i[-1]  
   s = line.find(' ')
-  print(line[s:], end = '')
+
+  line = line[s:]
+  if line == prev:
+    continue
+
+  prev = line
+
+  print(line, end = '')
   
   funcname = i[7]
   i = funcname.find('@@')
