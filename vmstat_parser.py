@@ -7,9 +7,10 @@ from matplotlib.font_manager import FontProperties
 import os
 import sys
 
-# TODO: font folder correction
-# plt.rc('font', family='serif') 
-# plt.rc('font', serif='MU Classical Serif')
+plt.rc('text', usetex = True)
+font = {'family' : 'serif', 'size':13}
+plt.rc('font',**font)
+plt.rc('legend',**{'fontsize':11})
 
 cores = 8
 
@@ -38,12 +39,12 @@ memory_min = min(memory)
 memory = [1.0 * (x - memory_min) / (1024 * 1024) for x in memory]
 
 # DATA PRESENTATION
-plt.rcParams['figure.figsize'] = 10, 6
+plt.rcParams['figure.figsize'] = 10, 5
 f, axarr = plt.subplots(2, sharex = True)
 
 axarr[0].plot(cpu)
 axarr[0].set_title('CPU utilization')
-axarr[0].set_ylabel('%')
+axarr[0].set_ylabel('\%')
 axarr[0].grid(True)
 axarr[0].set_xlim([0, len(memory) + 10])
 axarr[0].set_ylim([0, 105])
@@ -57,6 +58,7 @@ axarr[1].grid(True)
 
 if len(sys.argv) >= 3:
   location = sys.argv[2]
+  plt.tight_layout()
   plt.savefig(location)
 
 else:
