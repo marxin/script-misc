@@ -13,3 +13,5 @@ List of scripts:
 + symbol_section_finder - reads a set of object files and find corresponding sections for given list of functions
 + gcc-function-reorder - script compares all symbols met by compiler, if all occure in correct order according to dump
 + spec_statistics - script being to parse spec results and arrange them to latex table style
++ vmstat_parser - loads CPU utilization and memory usage from vmstat output; matplotlib is used for graph visualization
++ function_call_stats - temporary script for function call statistics aggregation
