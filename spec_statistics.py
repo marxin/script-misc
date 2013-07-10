@@ -28,7 +28,9 @@ profile_order = [
                   'gcc49-O3-PGO',
                   'gcc49-O3-LTO-PGO',
                   'gcc49-O2-LIPO',
-                  'gcc49-O3-LIPO'
+                  'gcc49-O3-LIPO',
+                  'gcc49-O3-LTO1',
+                  'gcc49-O3-LTO1-SE'
                 ]
 
 def sort_profiles(names):
