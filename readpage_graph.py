@@ -9,13 +9,18 @@ from matplotlib.ticker import FuncFormatter
 from itertools import *
 import numpy as np
 
-alpha = 0.25
+plt.rc('text', usetex = True)
+font = {'family' : 'serif', 'size' : 18}
+plt.rc('font',**font)
+plt.rc('legend',**{'fontsize' : 18})
+
+alpha = 0.75
 
 if len(sys.argv) < 3:
   print('usage: readpage_graph.py [data] [elf_executable] <graph_file>')
   exit(-1)
 
-graph_sections = (('.text', '#5599ff'), ('.rel.dyn', 'r'), ('.rela.dyn', '#e9afaf'), ('.data.rel.ro', 'y'), ('.eh_frame', '#de87de'), ('.rodata', 'c'), ('.dynstr', '#ffa500'), ('.symtab', '#666f00'), ('.strtab', '#006f66'), ('.init_array', '#000000'))
+graph_sections = (('.text', '#5599ff'), ('.rel.dyn', 'r'), ('.rela.dyn', '#e9afaf'), ('.data.rel.ro', 'y'), ('.eh\_frame', '#de87de'), ('.rodata', 'c'), ('.dynstr', '#ffa500'), ('.symtab', '#666f00'), ('.strtab', '#006f66'), ('.init\_array', '#000000'))
 
 def parse_section_name(line):
   s = line.find(']') + 2
@@ -79,7 +84,7 @@ for s in sections:
   legends[0].insert(0, matplotlib.patches.Rectangle((0, 0), 1, 1, fc = item[1], alpha = alpha))
   legends[1].insert(0, s[0])
 
-ax.plot(xs, ys, color='silver', marker='o', markerfacecolor='black', mew = 0, markersize=1)
+ax.plot(xs, ys, color='black', marker='o', markerfacecolor='r', mew = 0, markersize=1, linewidth = 0.1, linestyle = '-')
 ax.set_xlim(0, maxx)
 ax.legend(legends[0], legends[1])
 
