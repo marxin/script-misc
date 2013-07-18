@@ -9,18 +9,20 @@ from matplotlib.ticker import FuncFormatter
 from itertools import *
 import numpy as np
 
-plt.rc('text', usetex = True)
-font = {'family' : 'serif', 'size' : 18}
-plt.rc('font',**font)
-plt.rc('legend',**{'fontsize' : 18})
+font_size = 38
 
-alpha = 0.75
+plt.rc('text', usetex = True)
+font = {'family' : 'serif', 'size' : font_size}
+plt.rc('font',**font)
+plt.rc('legend',**{'fontsize' : 0.8 * font_size})
+
+alpha = 0.5
 
 if len(sys.argv) < 3:
   print('usage: readpage_graph.py [data] [elf_executable] <graph_file>')
   exit(-1)
 
-graph_sections = (('.text', '#5599ff'), ('.rel.dyn', 'r'), ('.rela.dyn', '#e9afaf'), ('.data.rel.ro', 'y'), ('.eh\_frame', '#de87de'), ('.rodata', 'c'), ('.dynstr', '#ffa500'), ('.symtab', '#666f00'), ('.strtab', '#006f66'), ('.init\_array', '#000000'))
+graph_sections = (('.text', '#5599ff'), ('.rel.dyn', 'r'), ('.rela.dyn', '#e9afaf'), ('.data.rel.ro', 'y'), ('.eh_frame', '#de87de'), ('.eh_frame_hdr', '#de87de'), ('.rodata', 'c'), ('.dynstr', '#ffa500'), ('.symtab', '#666f00'), ('.strtab', '#006f66'), ('.init_array', '#000000'))
 
 def parse_section_name(line):
   s = line.find(']') + 2
@@ -82,9 +84,9 @@ for s in sections:
   c = collections.BrokenBarHCollection([(0, maxx)], (s[1], s[2]), facecolor = item[1], edgecolor = 'white', alpha = alpha)
   ax.add_collection(c)
   legends[0].insert(0, matplotlib.patches.Rectangle((0, 0), 1, 1, fc = item[1], alpha = alpha))
-  legends[1].insert(0, s[0])
+  legends[1].insert(0, s[0].replace('_', '\_'))
 
-ax.plot(xs, ys, color='black', marker='o', markerfacecolor='r', mew = 0, markersize=1, linewidth = 0.1, linestyle = '-')
+ax.plot(xs, ys, color='black', marker='o', markerfacecolor='r', mec = 'r', mew = 0, markersize = 2, linewidth = 0.1, linestyle = '-')
 ax.set_xlim(0, maxx)
 ax.legend(legends[0], legends[1])
 
@@ -95,6 +97,7 @@ ax.xaxis.set_major_formatter(FuncFormatter(lambda y, pos: ('%d') % (y / 1000)))
 ax.set_xlabel('Time (ms)')
 
 if len(sys.argv) >= 4:
-  fig.savefig(sys.argv[3], bbox_inches = 'tight')
+  plt.tight_layout()
+  fig.savefig(sys.argv[3])
 else:
   fig.show()

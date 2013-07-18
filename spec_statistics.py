@@ -2,9 +2,17 @@
 
 from __future__ import print_function
 
+from pylab import *
+import numpy as np
+import matplotlib.pyplot as plt
+
 import os
 import sys
 
+plt.rc('text', usetex = True)
+font = {'family' : 'serif', 'size':13}
+plt.rc('font',**font)
+plt.rc('legend',**{'fontsize':11})
 
 if len(sys.argv) != 2:  
   print('usage: spec_statistics data_folder')
@@ -258,6 +266,33 @@ def column_name_filter(name):
 
   return name
 
+def generate_graph(data, label, filename):
+  for k in data:
+    data[k] = (data[k] + 1) * 100
+
+  keys = sort_profiles(data.keys())
+  values = [data[x] for x in keys]
+
+  width = 0.7
+
+  plt.rcParams['figure.figsize'] = 10, 6
+  fig = plt.figure()
+  ax = fig.add_subplot(111)
+
+  ax.set_title(label)
+  x = np.arange(len(keys)) + width / 2
+  rects = ax.bar(x, values, width, color = 'y')
+  xticks(x, keys)
+  plt.xticks(rotation = 60)
+  axhline(linewidth = 2, color = 'r', y = 100)
+  ylabel('\%')
+
+  grid(True)
+  tight_layout(1.5)
+
+  savefig(filename)
+ 
+
 time_summary = [aggregate(data[0], True), aggregate(data[0], True, is_int), aggregate(data[0], True, is_fp)]
 size_summary = [aggregate(data[1], True), aggregate(data[1], True, is_int), aggregate(data[1], True, is_fp)]
 
@@ -280,6 +315,17 @@ int_size = transform_to_table(aggregate(data[1], False, is_int), sort_profiles)
 
 # 6) size for FP profiles and benchmarks
 fp_size = transform_to_table(aggregate(data[1], False, is_fp), sort_profiles)
+
+# GRAPH creation
+time_graph_data = aggregate(data[0], True)
+size_graph_data = aggregate(data[1], True)
+
+generate_graph(time_graph_data, 'SPEC CPU2006 - performance', '/tmp/spec-performance-graph.pdf')
+generate_graph(size_graph_data, 'SPEC CPU2006 - binary size', '/tmp/spec-size-graph.pdf')
+
+exit(0)
+
+print(time_graph_data)
 
 print('\n% 1) performance')
 
