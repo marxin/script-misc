@@ -15,3 +15,4 @@ List of scripts:
 + spec_statistics - script being to parse spec results and arrange them to latex table style
 + vmstat_parser - loads CPU utilization and memory usage from vmstat output; matplotlib is used for graph visualization
 + function_call_stats - temporary script for function call statistics aggregation
++ filter_lists - given a file to filter and a file with lines that should be filtered, print all these lines

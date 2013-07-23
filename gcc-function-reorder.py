@@ -27,13 +27,10 @@ gcc_dump = {}
 f = open(sys.argv[2])
 
 for line in f:
-  l = line.rstrip()
+  tokens = line.rstrip().split(':')
 
-  if l[-1] == ':':
-    tokens = l.split(':')
-    order = int(tokens[1])
-    if order > 0:
-      gcc_dump[tokens[0]] = order
+  if(len(tokens) > 2):
+    gcc_dump[tokens[-2]] = int(tokens[-1])
 
 for x in gcc_dump:
   if x not in readelf_functions:

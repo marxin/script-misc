@@ -37,8 +37,8 @@ profile_order = [
                   'gcc49-O3-LTO-PGO',
                   'gcc49-O2-LIPO',
                   'gcc49-O3-LIPO',
-                  'gcc49-O3-LTO1',
-                  'gcc49-O3-LTO1-SE'
+#                  'gcc49-O3-LTO1',
+#                  'gcc49-O3-LTO1-SE'
                 ]
 
 def sort_profiles(names):
@@ -270,7 +270,8 @@ def generate_graph(data, label, filename):
   for k in data:
     data[k] = (data[k] + 1) * 100
 
-  keys = sort_profiles(data.keys())
+  keys = sort_profiles([x for x in data.keys() if x in profile_order])
+
   values = [data[x] for x in keys]
 
   width = 0.7
@@ -291,7 +292,15 @@ def generate_graph(data, label, filename):
   tight_layout(1.5)
 
   savefig(filename)
- 
+
+# GRAPH creation
+time_graph_data = aggregate(data[0], True)
+size_graph_data = aggregate(data[1], True)
+
+generate_graph(time_graph_data, 'SPEC CPU2006 - performance', '/tmp/spec-performance-graph.pdf')
+generate_graph(size_graph_data, 'SPEC CPU2006 - binary size', '/tmp/spec-size-graph.pdf')
+
+exit(0)
 
 time_summary = [aggregate(data[0], True), aggregate(data[0], True, is_int), aggregate(data[0], True, is_fp)]
 size_summary = [aggregate(data[1], True), aggregate(data[1], True, is_int), aggregate(data[1], True, is_fp)]
@@ -315,13 +324,6 @@ int_size = transform_to_table(aggregate(data[1], False, is_int), sort_profiles)
 
 # 6) size for FP profiles and benchmarks
 fp_size = transform_to_table(aggregate(data[1], False, is_fp), sort_profiles)
-
-# GRAPH creation
-time_graph_data = aggregate(data[0], True)
-size_graph_data = aggregate(data[1], True)
-
-generate_graph(time_graph_data, 'SPEC CPU2006 - performance', '/tmp/spec-performance-graph.pdf')
-generate_graph(size_graph_data, 'SPEC CPU2006 - binary size', '/tmp/spec-size-graph.pdf')
 
 exit(0)
 
