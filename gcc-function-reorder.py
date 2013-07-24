@@ -31,6 +31,8 @@ for line in f:
 
   if(len(tokens) > 2):
     gcc_dump[tokens[-2]] = int(tokens[-1])
+  else:
+    gcc_dump[line.strip()] = 999999
 
 for x in gcc_dump:
   if x not in readelf_functions:
@@ -80,8 +82,10 @@ for i in callgrind_functions:
     print('WARNING: gcc func is missing in gcc dump: %s' % i)
 
 print()
-print('Total: %u, found in readelf: %u, found in gcc: %u' % (total, found1, found2))
-print('Called one: %u' % called_once)
+print('Total: %u, found in ELF: %u, found in gcc: %u' % (total, found1, found2))
+print('Called once: %u' % called_once)
+
+exit(0)
 
 for line in readelf_lines:
   f = line.split(' ')[-1]
