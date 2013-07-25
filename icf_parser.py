@@ -8,7 +8,7 @@ import sys
 import re
 
 if len(sys.argv) < 2:
-  print('usage: icf_wrapper icf_dump_file')
+  print('usage: icf_parse icf_dump_file ipa_dump_file')
   exit(-1)
 
 flags = ''
@@ -88,7 +88,8 @@ for k in sorted_keys:
 
   for alias in merged_to_dictionary[k]:
     if 'f' not in flags or alias[0] not in intersection: # f == filter
-      print('          %s\t [%s]' % (alias[0], alias[1]), end = '')
+# TODO: alias[1] is ''
+      print('          %s\t [%s]' % (alias[0], ''), end = '')
       print_in_set_suffix(alias[0])
 
 icf_count = len(icf_lines)
@@ -100,3 +101,10 @@ print('IPA TOTAL: %u that is %.2f%%\n' % (ipa_count, 100.0 * ipa_count / icf_cou
 print('Intersection: ' + str(len(intersection)))
 print('Just seen by ICF: ' + str(len(just_in_icf)))
 print('Just seen by IPA: ' + str(len(just_in_ipa)))
+
+print(just_in_ipa)
+print(ipa_lines[0])
+ipa_new = [x for x in ipa_lines if x[0] in just_in_ipa or x[1] in just_in_ipa]
+
+for i in ipa_new:
+  print('IPA sem equality: %s\t%s' % (i[0], i[1]))
