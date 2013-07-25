@@ -17,3 +17,5 @@ List of scripts:
 + function_call_stats - temporary script for function call statistics aggregation
 + filter_lists - given a file to filter and a file with lines that should be filtered, print all these lines
 + icf_parser - ICF to IPA sem equality function equality comparer
++ aimx_parser - AIMX benchmark result parser
++ spec_parser - SPEC result parser
