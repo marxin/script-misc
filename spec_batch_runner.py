@@ -48,6 +48,47 @@ config_template = os.path.join(config_folder, 'config-template.cfg')
 default_flags = '-fno-strict-aliasing -fpeel-loops -ffast-math -march=native'
 runspec_arguments = '--size=train --no-reportable --iterations=3 '
 profile_arguments = '--size=test --no-reportable --iterations=1 '
+
+profiles =  [
+              [
+                'gcc49',
+                '/home/marxin/gcc-sem-equality/bin/',
+                '-O2 -flto=5 -fno-fat-lto-objects -flto-partition=none -fwhole-program -fno-ipa-sem-equality',
+                False
+              ],
+              [
+                'gcc49-PIC',
+                '/home/marxin/gcc-sem-equality/bin/',
+                '-O2 -flto=5 -fno-fat-lto-objects -flto-partition=none -fwhole-program -fno-ipa-sem-equality -fpic',
+                False
+              ],
+              [
+                'gcc49-ICF',
+                '/home/marxin/gcc-sem-equality/bin/',
+                '-O2 -flto=5 -fno-fat-lto-objects -flto-partition=none -fwhole-program -fno-ipa-sem-equality -Wl,--icf=all',
+                False
+              ],
+              [
+                'gcc49-PIC-ICF',
+                '/home/marxin/gcc-sem-equality/bin/',
+                '-O2 -flto=5 -fno-fat-lto-objects -flto-partition=none -fwhole-program -fno-ipa-sem-equality -fpic -Wl,--icf=all',
+                False
+              ],
+              [
+                'gcc49-SE',
+                '/home/marxin/gcc-sem-equality/bin/',
+                '-O2 -flto=5 -fno-fat-lto-objects -flto-partition=none -fwhole-program',
+                False
+              ],
+              [
+                'gcc49-PIC-SE',
+                '/home/marxin/gcc-sem-equality/bin/',
+                '-O2 -flto=5 -fno-fat-lto-objects -flto-partition=none -fwhole-program -fpic',
+                False
+              ]
+            ]
+
+"""
 profiles =  [
               [
                 'gcc48-O2',
@@ -137,6 +178,7 @@ profiles =  [
                 ['416.gamess']
               ]
          ]
+"""
 
 if len(sys.argv) < 2:
   print('usage: [test_prefix]')
