@@ -19,3 +19,4 @@ List of scripts:
 + icf_parser - ICF to IPA sem equality function equality comparer
 + aimx_parser - AIMX benchmark result parser
 + spec_parser - SPEC result parser
++ spec_batch_runner - runs a set of SPEC tests and collects statistics
