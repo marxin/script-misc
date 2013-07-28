@@ -20,12 +20,21 @@ if len(sys.argv) != 2:
 
 datafolder = sys.argv[1]
 
-base_profile = 'gcc48-O2'
 data = [{}, {}]
 
 int_benchmarks = [400, 401, 403, 429, 445, 456, 458, 462, 464, 471, 473, 483]
 
 profile_order = [
+                  'gcc49',
+                  'gcc49',
+                  'gcc49-PIC',
+                  'gcc49-ICF',
+                  'gcc49-PIC-ICF',
+                  'gcc49-SE',
+                  'gcc49-PIC-SE'
+                ]
+
+"""
                   'gcc48-O2',
                   'gcc48-O3',
                   'gcc49-O2',
@@ -37,9 +46,11 @@ profile_order = [
                   'gcc49-O3-LTO-PGO',
                   'gcc49-O2-LIPO',
                   'gcc49-O3-LIPO',
-#                  'gcc49-O3-LTO1',
-#                  'gcc49-O3-LTO1-SE'
-                ]
+                  'gcc49-O3-LTO1',
+                  'gcc49-O3-LTO1-SE'
+"""                  
+
+base_profile = profile_order[0]
 
 def sort_profiles(names):
   return sorted(names, key = lambda x: profile_order.index(x))
@@ -283,8 +294,7 @@ def generate_graph(data, label, filename):
   ax.set_title(label)
   x = np.arange(len(keys)) + width / 2
   rects = ax.bar(x, values, width, color = 'y')
-  xticks(x, keys)
-  plt.xticks(rotation = 60)
+  plt.xticks(x + width / 2, keys, rotation = 60)
   axhline(linewidth = 2, color = 'r', y = 100)
   ylabel('\%')
 
@@ -299,8 +309,6 @@ size_graph_data = aggregate(data[1], True)
 
 generate_graph(time_graph_data, 'SPEC CPU2006 - performance', '/tmp/spec-performance-graph.pdf')
 generate_graph(size_graph_data, 'SPEC CPU2006 - binary size', '/tmp/spec-size-graph.pdf')
-
-exit(0)
 
 time_summary = [aggregate(data[0], True), aggregate(data[0], True, is_int), aggregate(data[0], True, is_fp)]
 size_summary = [aggregate(data[1], True), aggregate(data[1], True, is_int), aggregate(data[1], True, is_fp)]
@@ -324,8 +332,6 @@ int_size = transform_to_table(aggregate(data[1], False, is_int), sort_profiles)
 
 # 6) size for FP profiles and benchmarks
 fp_size = transform_to_table(aggregate(data[1], False, is_fp), sort_profiles)
-
-exit(0)
 
 print(time_graph_data)
 

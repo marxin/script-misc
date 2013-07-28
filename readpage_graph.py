@@ -88,9 +88,9 @@ for s in sections:
 
 ax.plot(xs, ys, color='black', marker='o', markerfacecolor='r', mec = 'r', mew = 0, markersize = 2, linewidth = 0.1, linestyle = '-')
 ax.set_xlim(0, maxx)
-ax.legend(legends[0], legends[1])
+ax.legend(legends[0], legends[1], loc = 9)
 
-ax.yaxis.set_major_formatter(FuncFormatter(lambda x, pos: ('%d') % (x / (1024 * 1024))))
+ax.yaxis.set_major_formatter(FuncFormatter(lambda x, pos: ('%d') % (x / (1023 * 1024))))
 ax.set_ylabel('Offset (MB)')
 
 ax.xaxis.set_major_formatter(FuncFormatter(lambda y, pos: ('%d') % (y / 1000)))

@@ -20,3 +20,4 @@ List of scripts:
 + aimx_parser - AIMX benchmark result parser
 + spec_parser - SPEC result parser
 + spec_batch_runner - runs a set of SPEC tests and collects statistics
++ spec_speed_size_graph - matplotlib graph generator for a single SPEC benchmark
