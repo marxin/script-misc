@@ -11,29 +11,25 @@ if len(sys.argv) != 2:
 
 p = sys.argv[1]
 
-"""
-commands = []
+total = 0
 
 for root, dirnames, filenames in os.walk(p):
     for filename in fnmatch.filter(filenames, '*.gcda'):
       absolute = os.path.join(root, filename)
-      commands.append('/ssd/gcc2/objdir/gcc/gcov-dump -l ' + absolute)
+      lines = os.popen('/ssd/gcc2/objdir/gcc/gcov-dump -l ' + absolute).readlines()
 
-for c in commands:
-  print(c)
+      tp = False
 
-"""
+      print('scanning: ' + absolute)
+      for l in lines:
+        l = l.strip()
+        if tp:
+          if l.find(' 0 ') == -1:
+            total += 1
+            # print(absolute + ':' + l)
 
-lines = open(p, 'r').readlines()
+          tp = False
+        elif l.find('time_profile') > 0:
+          tp = True
 
-tp = False
-
-for l in lines:
-  l = l.strip()
-  if tp:
-    if l.find(' 0 ') == -1:
-      print(l)
-
-    tp = False
-  elif l.find('time_profile') > 0:
-    tp = True
+print('TOTAL:' + str(total))
