@@ -25,7 +25,14 @@ data = [{}, {}]
 int_benchmarks = [400, 401, 403, 429, 445, 456, 458, 462, 464, 471, 473, 483]
 
 profile_order = [
-                  'gcc49',
+                  'gcc49-O2',
+                  'gcc49-O3',
+                  'gcc49-O3-UG100',
+                  'gcc49-O3-UG200'
+                ]
+
+"""
+profile_order = [
                   'gcc49',
                   'gcc49-PIC',
                   'gcc49-ICF',
@@ -33,6 +40,7 @@ profile_order = [
                   'gcc49-SE',
                   'gcc49-PIC-SE'
                 ]
+"""
 
 """
                   'gcc48-O2',
