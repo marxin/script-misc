@@ -20,13 +20,18 @@ for root, dirnames, filenames in os.walk(p):
 
       tp = False
 
-      print('scanning: ' + absolute)
+#      print('scanning: ' + absolute)
       for l in lines:
         l = l.strip()
         if tp:
           if l.find(' 0 ') == -1:
+            tokens = l.split(' ')
             total += 1
-            # print(absolute + ':' + l)
+            count = int(tokens[-1])
+            first = int(tokens[-3])
+            f = first / count
+
+            print(str(f) + ':' + absolute + ':' +  'total_first=' + str(first) +  ':' + 'total_count=' + str(count))
 
           tp = False
         elif l.find('time_profile') > 0:

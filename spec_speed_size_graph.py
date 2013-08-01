@@ -12,9 +12,9 @@ font = {'family' : 'serif', 'size':13}
 plt.rc('font',**font)
 plt.rc('legend',**{'fontsize':11})
 
-profiles = ['LTO 02', 'UG5', 'UG10', 'UG15', 'UG20', 'UG25', 'UG30', 'LTO O3']
-times = [49.926026, 48.079934, 47.952832, 48.545109, 47.622540, 45.598985, 44.856360, 44.895013]
-sizes = [4419672, 4316957, 4374225, 4442979, 4515759, 4592449, 4661235, 4661235]
+profiles = ['LTO 02', 'UG5', 'UG10', 'UG15', 'UG20', 'UG25', 'UG30', 'LTO O3', 'UG100', 'UG200']
+times = [49.926026, 48.079934, 47.952832, 48.545109, 47.622540, 45.598985, 44.856360, 44.895013, 43.076239, 42.571758]
+sizes = [4419672, 4316957, 4374225, 4442979, 4515759, 4592449, 4661235, 4661235, 5600149, 5600149]
 
 base_time = times[0]
 base_size = sizes[0]
@@ -34,7 +34,7 @@ ax.plot(times_percentage, 'y--s', markersize = 10, label = 'Speedup')
 ax.plot(sizes_percentage, 'g--o', markersize = 10, label = 'Size growth')
 plt.xticks(x, profiles)
 plt.xlim((-boundary, len(profiles) - 1 + boundary))
-plt.ylim((80, 120))
+plt.ylim((80, 140))
 plt.grid(True)
 
 ax.set_ylabel('\%')

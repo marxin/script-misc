@@ -24,13 +24,14 @@ data = [{}, {}]
 
 int_benchmarks = [400, 401, 403, 429, 445, 456, 458, 462, 464, 471, 473, 483]
 
+"""
 profile_order = [
                   'gcc49-O2',
                   'gcc49-O3',
                   'gcc49-O3-UG100',
                   'gcc49-O3-UG200'
                 ]
-
+"""
 """
 profile_order = [
                   'gcc49',
@@ -42,7 +43,7 @@ profile_order = [
                 ]
 """
 
-"""
+profile_order = [
                   'gcc48-O2',
                   'gcc48-O3',
                   'gcc49-O2',
@@ -51,7 +52,10 @@ profile_order = [
                   'gcc49-O3-LTO',
                   'gcc49-O3-LTO-UG5',
                   'gcc49-O3-PGO',
-                  'gcc49-O3-LTO-PGO',
+                  'gcc49-O3-LTO-PGO'
+                ]
+
+"""                  
                   'gcc49-O2-LIPO',
                   'gcc49-O3-LIPO',
                   'gcc49-O3-LTO1',
