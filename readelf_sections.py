@@ -92,7 +92,7 @@ else:
 
     section_portion = 0.0
     if s[2] > 0:
-      section_portion = 1.0 * stap / s[2] * 100
+      section_portion = min(1.0 * stap / s[2] * 100, 100)
     print('%-20s%12s%12s%16s%10s%%%15u%12s%14s%%' % (s[0], str(s[1]), str(s[2]), sizeof_fmt(s[2]), str("%0.2f" % (float(s[2]) / total * 100)), stap, sizeof_fmt(stap), str("%0.2f" % section_portion)))
 
   stap_sum = sum(stap_matches)

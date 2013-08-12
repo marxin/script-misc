@@ -22,7 +22,7 @@ if len(sys.argv) < 3:
   print('usage: readpage_graph.py [data] [elf_executable] <graph_file>')
   exit(-1)
 
-graph_sections = (('.text', '#5599ff'), ('.rel.dyn', 'r'), ('.rela.dyn', '#e9afaf'), ('.data.rel.ro', 'y'), ('.eh_frame', '#de87de'), ('.eh_frame_hdr', '#de87de'), ('.rodata', 'c'), ('.dynstr', '#ffa500'), ('.symtab', '#666f00'), ('.strtab', '#006f66'), ('.init_array', '#000000'))
+graph_sections = (('.text.unlikely', '#bbbbff'), ('.text.exit', '#9999ff'), ('.text.startup', '#6666ff'), ('.text.hot', '#3333ff'), ('.text', '#0000ff'), ('.rel.dyn', 'r'), ('.rela.dyn', '#e9afaf'), ('.data.rel.ro', 'y'), ('.eh_frame', '#de87de'), ('.eh_frame_hdr', '#de87de'), ('.rodata', 'c'), ('.dynstr', '#ffa500'), ('.symtab', '#666f00'), ('.strtab', '#006f66'), ('.init_array', '#000000'))
 
 def parse_section_name(line):
   s = line.find(']') + 2
@@ -88,7 +88,7 @@ for s in sections:
 
 ax.plot(xs, ys, color='black', marker='o', markerfacecolor='r', mec = 'r', mew = 0, markersize = 2, linewidth = 0.1, linestyle = '-')
 ax.set_xlim(0, maxx)
-ax.legend(legends[0], legends[1], loc = 9)
+ax.legend(legends[0], legends[1], loc = 9, ncol = 3)
 
 ax.yaxis.set_major_formatter(FuncFormatter(lambda x, pos: ('%d') % (x / (1023 * 1024))))
 ax.set_ylabel('Offset (MB)')
