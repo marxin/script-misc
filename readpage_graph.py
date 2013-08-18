@@ -57,6 +57,9 @@ def parse_readelf(target):
 
   return sections
 
+def to_megabytes(num):
+  return num / (1024.0 * 1024)
+
 f = open(sys.argv[1], 'r')
 
 k = 2
@@ -72,7 +75,7 @@ for line in f:
     start = int(columns[0])
 
   xs.append(int(columns[0]) - start)
-  ys.append(int(columns[2].strip()))
+  ys.append(to_megabytes(float(columns[2].strip())))
 
 sections = filter(lambda x: x[0] in map(lambda x: x[0], graph_sections),  parse_readelf(sys.argv[2]))
 
@@ -81,7 +84,7 @@ legends = [[], []]
 
 for s in sections:
   item = next(ifilter(lambda x: x[0] == s[0], graph_sections), None)
-  c = collections.BrokenBarHCollection([(0, maxx)], (s[1], s[2]), facecolor = item[1], edgecolor = 'white', alpha = alpha)
+  c = collections.BrokenBarHCollection([(0, maxx)], (to_megabytes(s[1]), to_megabytes(s[2])), facecolor = item[1], edgecolor = 'white', alpha = alpha)
   ax.add_collection(c)
   legends[0].insert(0, matplotlib.patches.Rectangle((0, 0), 1, 1, fc = item[1], alpha = alpha))
   legends[1].insert(0, s[0].replace('_', '\_'))
@@ -90,7 +93,6 @@ ax.plot(xs, ys, color='black', marker='o', markerfacecolor='r', mec = 'r', mew =
 ax.set_xlim(0, maxx)
 ax.legend(legends[0], legends[1], loc = 9, ncol = 3)
 
-ax.yaxis.set_major_formatter(FuncFormatter(lambda x, pos: ('%d') % (x / (1023 * 1024))))
 ax.set_ylabel('Offset (MB)')
 
 ax.xaxis.set_major_formatter(FuncFormatter(lambda y, pos: ('%d') % (y / 1000)))
