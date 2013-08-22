@@ -4,6 +4,7 @@ import os
 import sys
 import tempfile
 import commands
+import operator
 
 stap_config = 'stap_readpage_ptr.stp'
 graph_command = 'readpage_graph.py'
@@ -50,6 +51,22 @@ start_time = int(first_line_tokens[0])
 main_binary = first_line_tokens[1]
 offset = int(first_line_tokens[2])
 
+### histogram of touched pages for binaries that are wrapped ###
+histogram = {}
+
+for l in lines:
+  f = l.split(' ')[1]
+
+  if f in histogram:
+    histogram[f] += 1
+  else:
+    histogram[f] = 1
+
+sorted_histogram = sorted(histogram.iteritems(), key=operator.itemgetter(1), reverse = True)
+
+main_binary = sorted_histogram[0][0]
+print(main_binary)
+
 if offset != 0:
   die('offset of main library is non-zero: ' + str(offset))
 
@@ -71,16 +88,25 @@ print('Calling graph creation command')
 
 ### graph creation ###
 pdf_file = None
+pdf_file_set = False
 
-if len(sys.argv) == 3:  
-  pdf_file = sys.argv[2]
-else:
+if len(sys.argv) >= 3:
+  if sys.argv[2].endswith('.pdf'):
+    pdf_file = sys.argv[2]
+    pdf_file_set = True
+  else:
+    binary_file = sys.argv[2]
+
+if pdf_file_set == False:
   t = tempfile.mkstemp(suffix = '.pdf', prefix = temp_prefix)
   os.close(t[0])
   os.chmod(t[1], 0777)
   pdf_file = t[1]
 
-r = commands.getstatusoutput('python ' + graph_command + ' ' + temp[1] + ' ' + binary_file + ' ' + pdf_file)
+command = 'python ' + graph_command + ' ' + temp[1] + ' ' + binary_file + ' ' + pdf_file
+print('graph command execution: ' + command)
+
+r = commands.getstatusoutput(command)
 
 if r[0] != 0:
   die('graph creation command failed')
