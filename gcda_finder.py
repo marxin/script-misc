@@ -16,25 +16,24 @@ total = 0
 for root, dirnames, filenames in os.walk(p):
     for filename in fnmatch.filter(filenames, '*.gcda'):
       absolute = os.path.join(root, filename)
-      lines = os.popen('/ssd/gcc2/objdir/gcc/gcov-dump -l ' + absolute).readlines()
+      lines = os.popen('/ssd/gcc/objdir/gcc/gcov-dump -l ' + absolute).readlines()
 
       tp = False
 
-#      print('scanning: ' + absolute)
       for l in lines:
         l = l.strip()
         if tp:
-          if l.find(' 0 ') == -1:
+          if l.find('0 0') == -1:
+            # print(l)
             tokens = l.split(' ')
             total += 1
-            count = int(tokens[-1])
-            first = int(tokens[-3])
-            f = first / count
+            first = int(tokens[-1])
 
-            print(str(f) + ':' + absolute + ':' +  'total_first=' + str(first) +  ':' + 'total_count=' + str(count))
+            print(absolute + ':' + str(first))
 
           tp = False
         elif l.find('time_profile') > 0:
           tp = True
 
+print()
 print('TOTAL:' + str(total))

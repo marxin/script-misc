@@ -8,11 +8,18 @@ import operator
 
 stap_config = 'stap_readpage_ptr.stp'
 graph_command = 'readpage_graph.py'
-dev = '/dev/sda2'
+devs = ['/dev/sda2', '/dev/sdb1']
+original_devs = []
 
 def die(message):
   print('Error:' + message)
   exit(-1)
+
+def restore_blockdev():
+ for i, dev in enumerate(devs):
+  r = commands.getstatusoutput('blockdev --setra ' + str(original_devs[i]) + ' ' + dev)
+  if r[0] != 0:
+    die('blockdev command failed')
 
 if len(sys.argv) <= 1:
   print('step_runner [binary] <pdf>')
@@ -23,11 +30,19 @@ temp_prefix = os.path.basename(binary_file) + '-'
 
 ### setup phase ###
 
-print('Setting zero readahead for device: ' + dev)
-r = commands.getstatusoutput('blockdev --setra 0 ' + dev)
+for dev in devs:
+  r = commands.getstatusoutput('blockdev --getra ' + dev)
+  if r[0] != 0:
+    die('blockdev command failed')
 
-if r[0] != 0:
-  die('blockdev command failed')
+  original_devs.append(int(r[1]))
+
+  print('Setting zero readahead for device: ' + dev)
+  r = commands.getstatusoutput('blockdev --setra 0 ' + dev)
+  if r[0] != 0:
+    die('blockdev command failed')
+
+print(original_devs)
 
 print('Invalidating kernel FS caches')
 r = commands.getstatusoutput('echo 3 > /proc/sys/vm/drop_caches')
@@ -37,8 +52,12 @@ if r[0] != 0:
 
 print('Starting stap command')
 r = commands.getstatusoutput('stap ' + stap_config + ' -c ' + binary_file)
+
+restore_blockdev()
+
 if r[0] != 0:
-  die('stap execution for ' + binary_file + ' failed')
+  print(r[1])
+  die('stap execution for ' + binary_file + ' failed')  
 
 print('Stap command finished')
 
@@ -64,7 +83,8 @@ for l in lines:
 
 sorted_histogram = sorted(histogram.iteritems(), key=operator.itemgetter(1), reverse = True)
 
-main_binary = sorted_histogram[0][0]
+# main_binary = sorted_histogram[0][0]
+
 print(main_binary)
 
 if offset != 0:
