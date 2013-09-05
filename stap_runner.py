@@ -15,11 +15,26 @@ def die(message):
   print('Error:' + message)
   exit(-1)
 
+def set_blockdev():
+  for dev in devs:
+    r = commands.getstatusoutput('blockdev --getra ' + dev)
+    if r[0] != 0:
+      die('blockdev command failed')
+
+    original_devs.append(int(r[1]))
+
+    print('Setting zero readahead for device: ' + dev)
+    r = commands.getstatusoutput('blockdev --setra 0 ' + dev)
+    if r[0] != 0:
+      die('blockdev command failed')
+
 def restore_blockdev():
- for i, dev in enumerate(devs):
-  r = commands.getstatusoutput('blockdev --setra ' + str(original_devs[i]) + ' ' + dev)
-  if r[0] != 0:
-    die('blockdev command failed')
+  for i, dev in enumerate(devs):
+    r = commands.getstatusoutput('blockdev --setra ' + str(original_devs[i]) + ' ' + dev)
+    if r[0] != 0:
+      die('blockdev command failed')
+
+### MAIN ###
 
 if len(sys.argv) <= 1:
   print('step_runner [binary] <pdf>')
@@ -30,19 +45,7 @@ temp_prefix = os.path.basename(binary_file) + '-'
 
 ### setup phase ###
 
-for dev in devs:
-  r = commands.getstatusoutput('blockdev --getra ' + dev)
-  if r[0] != 0:
-    die('blockdev command failed')
-
-  original_devs.append(int(r[1]))
-
-  print('Setting zero readahead for device: ' + dev)
-  r = commands.getstatusoutput('blockdev --setra 0 ' + dev)
-  if r[0] != 0:
-    die('blockdev command failed')
-
-print(original_devs)
+set_blockdev()
 
 print('Invalidating kernel FS caches')
 r = commands.getstatusoutput('echo 3 > /proc/sys/vm/drop_caches')
