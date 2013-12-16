@@ -46,139 +46,24 @@ summary_folder = os.path.join(root_path, 'summary')
 config_template = os.path.join(config_folder, 'config-template.cfg')
 
 default_flags = '-fno-strict-aliasing -fpeel-loops -ffast-math -march=native'
-runspec_arguments = '--size=train --no-reportable --iterations=3 '
+# runspec_arguments = '--size=train --no-reportable --iterations=3 '
 profile_arguments = '--size=test --no-reportable --iterations=1 '
+runspec_arguments = '--size=test --no-reportable --iterations=1 '
 
 profiles =  [
-              [
-                'gcc49',
-                '/home/marxin/gcc-sem-equality/bin/',
-                '-O2 -flto=5 -fno-fat-lto-objects -flto-partition=none -fwhole-program -fno-ipa-sem-equality',
-                False
-              ],
-              [
-                'gcc49-PIC',
-                '/home/marxin/gcc-sem-equality/bin/',
-                '-O2 -flto=5 -fno-fat-lto-objects -flto-partition=none -fwhole-program -fno-ipa-sem-equality -fpic',
-                False
-              ],
-              [
-                'gcc49-ICF',
-                '/home/marxin/gcc-sem-equality/bin/',
-                '-O2 -flto=5 -fno-fat-lto-objects -flto-partition=none -fwhole-program -fno-ipa-sem-equality -Wl,--icf=all',
-                False
-              ],
-              [
-                'gcc49-PIC-ICF',
-                '/home/marxin/gcc-sem-equality/bin/',
-                '-O2 -flto=5 -fno-fat-lto-objects -flto-partition=none -fwhole-program -fno-ipa-sem-equality -fpic -Wl,--icf=all',
-                False
-              ],
-              [
-                'gcc49-SE',
-                '/home/marxin/gcc-sem-equality/bin/',
-                '-O2 -flto=5 -fno-fat-lto-objects -flto-partition=none -fwhole-program',
-                False
-              ],
-              [
-                'gcc49-PIC-SE',
-                '/home/marxin/gcc-sem-equality/bin/',
-                '-O2 -flto=5 -fno-fat-lto-objects -flto-partition=none -fwhole-program -fpic',
-                False
-              ]
-            ]
-
-"""
-profiles =  [
-              [
-                'gcc48-O2',
-                '/home/marxin/gcc-mirror-48/bin/',
-                '-O2',
-                False
-              ],
-              [
-                'gcc48-O3',
-                '/home/marxin/gcc-mirror-48/bin/',
-                '-O3',
-                False
-              ],
               [
                 'gcc49-O2',
                 '/home/marxin/gcc-mirror/bin/',
                 '-O2',
-                False
-              ],
-              [
-                'gcc49-O3',
-                '/home/marxin/gcc-mirror/bin/',
-                '-O3',
-                False
-              ],
-              [
-                'gcc49-O3-PGO',
-                '/home/marxin/gcc-mirror/bin/',
-                '-O3',
                 True
               ],
               [
-                'gcc49-O2-LTO',
+                'gcc49-O2',
                 '/home/marxin/gcc-mirror/bin/',
-                '-O2 -flto=5 -fno-fat-lto-objects -fwhole-program',
-                False,
-                ['416.gamess']
-              ],
-              [
-                'gcc49-O3-LTO',
-                '/home/marxin/gcc-mirror/bin/',
-                '-O3 -flto=5 -fno-fat-lto-objects -fwhole-program',
-                False,
-                ['416.gamess']
-
-              ],
-              [
-                'gcc49-O3-LTO-UG5',
-                '/home/marxin/gcc-mirror/bin/',
-                '-O3 -flto=5 -fno-fat-lto-objects -fwhole-program --param inline-unit-growth=5',
-                False,
-                ['416.gamess']
-              ],
-              [
-                'gcc49-O3-LTO-PGO',
-                '/home/marxin/gcc-mirror/bin/',
-                '-O3 -flto=5 -fno-fat-lto-objects -fwhole-program',
-                True,
-                ['416.gamess']
-              ],
-              [
-                'gcc49-O2-LIPO',
-                '/home/marxin/gcc-lipo/bin/',
-                '-O2 -fripa',
-                True,
-                ['410.bwaves', '416.gamess', '434.zeusmp', '435.gromacs', '436.cactusADM', '437.leslie3d', '454.calculix', '459.GemsFDTD', '465.tonto', '481.wrf']
-              ],
-              [
-                'gcc49-O3-LIPO',
-                '/home/marxin/gcc-lipo/bin/',
-                '-O3 -fripa',
-                True,
-                ['410.bwaves', '416.gamess', '434.zeusmp', '435.gromacs', '436.cactusADM', '437.leslie3d', '454.calculix', '459.GemsFDTD', '465.tonto', '481.wrf']
-              ],
-              [
-                'gcc49-O3-LTO1-SE',
-                '/home/marxin/gcc-sem-equality/bin/',
-                '-O3 -flto=5 -fno-fat-lto-objects -flto-partition=none -fwhole-program -fdump-ipa-sem-equality',
-                False,
-                ['416.gamess']
-              ],
-              [
-                'gcc49-O3-LTO1',
-                '/home/marxin/gcc-sem-equality/bin/',
-                '-O3 -flto=5 -fno-fat-lto-objects -flto-partition=none -fwhole-program -fno-ipa-sem-equality',
-                False,
-                ['416.gamess']
+                '-O2 -freorder-blocks-and-partition',
+                True
               ]
          ]
-"""
 
 if len(sys.argv) < 2:
   print('usage: [test_prefix]')
@@ -192,7 +77,7 @@ def full_profile_name(name):
 def generate_config(profile, extra_flags = ''):
   lines = open(config_template, 'r').readlines()
 
-  p = 123
+  p = 126
 
   flags = default_flags + ' ' + profile[2] + ' ' + extra_flags
 
@@ -200,7 +85,7 @@ def generate_config(profile, extra_flags = ''):
   lines.insert(p, 'CXXOPTIMIZE= ' + flags)
   lines.insert(p, 'COPTIMIZE= ' + flags)
 
-  p = 75
+  p = 78
 
   lines.insert(p, 'FC = ' + os.path.join(profile[1], 'gfortran'))
   lines.insert(p, 'CXX = ' + os.path.join(profile[1], 'g++'))
