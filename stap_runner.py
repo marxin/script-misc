@@ -8,7 +8,7 @@ import operator
 
 stap_config = 'stap_readpage_ptr.stp'
 graph_command = 'readpage_graph.py'
-devs = ['/dev/sda2', '/dev/sdb1']
+devs = ['/dev/sda2']
 original_devs = []
 
 def die(message):
@@ -67,8 +67,11 @@ print('Stap command finished')
 ### stap data parsing ###
 
 lines = r[1].split('\n')
+
+lines = [x for x in lines if len(x.strip().split(' ')) == 3 and x.strip().split(' ')[0].isdigit()]
 first_line_tokens = lines[0].strip().split(' ')
 
+print(first_line_tokens)
 start_time = int(first_line_tokens[0])
 main_binary = first_line_tokens[1]
 offset = int(first_line_tokens[2])
@@ -77,6 +80,9 @@ offset = int(first_line_tokens[2])
 histogram = {}
 
 for l in lines:
+  if l == '':
+    continue
+
   f = l.split(' ')[1]
 
   if f in histogram:
@@ -86,14 +92,19 @@ for l in lines:
 
 sorted_histogram = sorted(histogram.iteritems(), key=operator.itemgetter(1), reverse = True)
 
-# main_binary = sorted_histogram[0][0]
+print('Called histogram:')
 
-print(main_binary)
+for i,f in enumerate(sorted_histogram):
+  print(str(i) + ':' + str(f[0]) + ':' + str(f[1]))
 
-if offset != 0:
-  die('offset of main library is non-zero: ' + str(offset))
+main_binary = sorted_histogram[0][0]
 
-stats = [x for x in lines if x.strip().split(' ')[1] == main_binary]
+print('Main binary is: ' + main_binary)
+
+# if offset != 0:
+#  die('offset of main library is non-zero: ' + str(offset))
+
+stats = [x for x in lines if x.strip().split(' ')[0].isdigit() and x.strip().split(' ')[1] == main_binary]
 
 print('Disk pages read: %u' % len(stats))
 

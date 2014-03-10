@@ -16,7 +16,7 @@ total = 0
 for root, dirnames, filenames in os.walk(p):
     for filename in fnmatch.filter(filenames, '*.gcda'):
       absolute = os.path.join(root, filename)
-      lines = os.popen('/ssd/gcc/objdir/gcc/gcov-dump -l ' + absolute).readlines()
+      lines = os.popen('~/Programming/gcc/objdir/gcc/gcov-dump -l ' + absolute).readlines()
 
       tp = False
 

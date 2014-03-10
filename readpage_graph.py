@@ -22,7 +22,7 @@ if len(sys.argv) < 3:
   print('usage: readpage_graph.py [data] [elf_executable] <graph_file>')
   exit(-1)
 
-graph_sections = (('.text.unlikely', '#bbbbff'), ('.text.exit', '#9999ff'), ('.text.startup', '#6666ff'), ('.text.hot', '#3333ff'), ('.text', '#0000ff'), ('.rel.dyn', 'r'), ('.rela.dyn', '#e9afaf'), ('.data.rel.ro', 'y'), ('.eh_frame', '#de87de'), ('.eh_frame_hdr', '#de87de'), ('.rodata', 'c'), ('.dynstr', '#ffa500'), ('.symtab', '#666f00'), ('.strtab', '#006f66'), ('.init_array', '#000000'))
+graph_sections = (('.text.unlikely', '#bbbbff'), ('.text.exit', '#9999ff'), ('.text.startup', '#6666ff'), ('.text.hot', '#3333ff'), ('.text', '#0000ff'), ('.rel.dyn', 'r'), ('.rela.dyn', '#e9afaf'), ('.data.rel.ro', 'y'), ('.data.rel.ro.loca', '#cccc66'), ('.eh_frame', '#de87de'), ('.eh_frame_hdr', '#de87de'), ('.rodata', 'c'), ('.dynstr', '#ffa500'), ('.symtab', '#666f00'), ('.strtab', '#006f66'), ('.init_array', '#000000'))
 
 def parse_section_name(line):
   s = line.find(']') + 2

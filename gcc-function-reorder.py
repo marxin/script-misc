@@ -126,9 +126,9 @@ for line in readelf_lines:
 
 t = tempfile.mkstemp(suffix = '.html', prefix = 'gcc_dump_')
 
-style = '* { margin: 0; padding: 0; font-family: "Trebuchet MS"; font-size: 10pt; } table thead { background-color: green; color: white; font-weight: bold; } .not-seen { background-color: rgb(240,240,240); } .seen-nonzero { background-color: rgb(153, 204, 0); } .seen-zero { background-color: orange; } .cell-6 { font-weight: bold; } .cell-7 { font-weight: bold; } .called { background-color: rgb(0, 153, 255); }'
+style = '* { margin: 0; padding: 0; font-family: "Trebuchet MS"; font-size: 10pt; } table thead { background-color: green; color: white; font-weight: bold; } .not-seen { background-color: rgb(240,240,240); } .seen-nonzero { background-color: rgb(153, 204, 0); } .seen-zero { background-color: orange; } .cell-7 { font-weight: bold; } .cell-8 { font-weight: bold; } .called { background-color: rgb(0, 153, 255); }'
 
-os.write(t[0], '<html><head><style>' + style + '</style></head><body><table><thead><tr><td>#</td><td>Value</td><td>Size</td><td>Type</td><td>Bind</td><td>Vis</td><td>Ndx</td><td>Valgrind idx</td><td>Profile order</td><td>LTO partition</td><td>Status</td><td>Name</td></tr><thead><tbody>\n')
+os.write(t[0], '<html><head><style>' + style + '</style></head><body><table><thead><tr><td>#</td><td>Value</td><td>B value</td><td>Size</td><td>Type</td><td>Bind</td><td>Vis</td><td>Ndx</td><td>Valgrind idx</td><td>Profile order</td><td>LTO partition</td><td>Status</td><td>Name</td></tr><thead><tbody>\n')
 
 counter = 0
 for line in readelf_lines:
@@ -164,13 +164,22 @@ for line in readelf_lines:
     partition = gcc_dump_partition[f]
 
   items.insert(8, str(partition))
-  items.insert(9, 'MISSING' if callgrind_index > 0 and func_order <= 0 else '')
+
+  note = ''
+
+  if callgrind_index > 0:
+    note = '_MISSING_' if func_order <= 0 else '_VALGRIND_'
+
+  items.insert(9, note)
+
+  # offset in bytes
+  items.insert(1, int(items[0], 16))
 
   items.insert(0, str(counter))
   counter += 1
 
   for (idx, item) in enumerate(items):
-    if idx == 7:
+    if idx == 8:
       os.write(t[0], '<td class="cell-%d %s">%s</td>\n' % (idx, 'called' if callgrind_index > 0 else '', item))
     else:
       os.write(t[0], '<td class="cell-%d">%s</td>\n' % (idx, item))
@@ -195,4 +204,4 @@ os.write(t[0], '</tbody></table>')
 os.write(t[0], '</body></html>\n')
 
 os.close(t[0])
-print('HTML report file: ' + t[1])
+print('HTML report file: file://' + t[1])
