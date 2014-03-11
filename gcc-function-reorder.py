@@ -5,6 +5,13 @@ import os
 import sys
 import tempfile
 
+def is_thunk(name):
+  return name.startswith('_ZThn')
+
+def get_thunk_parent(name):
+  parent = '_Z' + name[(name[1:].index('_') + 2):]
+  return parent
+
 if len(sys.argv) != 4:
   print('gcc-function-reorder <binary> <gcc_dump> <callgrind_dump>')
   exit(1)
@@ -21,7 +28,7 @@ for line in f.readlines():
   readelf_lines.append(line.strip())
 
 ### gcc log parsing ###
-### line sample: 'Balanced map symbol order:main:2'
+### line execute: grep expand_all_function library.so.ltrans*
 
 gcc_dump = {}
 gcc_dump_partition = {}
@@ -79,7 +86,6 @@ found2 = 0
 called_once = 0
 
 d_visited = set()
-d_missing = set()
 
 print()
 for i in callgrind_functions:
@@ -92,8 +98,8 @@ for i in callgrind_functions:
     d_visited.add(i)
     found2 += 1
   elif i in readelf_functions:
-    d_missing.add(i)
-    print('WARNING: gcc func is missing in gcc dump: %s' % i)
+    if not is_thunk(i):
+      print('WARNING: gcc func is missing in gcc dump: %s' % i)
 
 print()
 print('Total: %u, found in ELF: %u, found in gcc: %u' % (total, found1, found2))
@@ -132,6 +138,7 @@ os.write(t[0], '<html><head><style>' + style + '</style></head><body><table><the
 
 counter = 0
 for line in readelf_lines:
+  counter += 1
   items = [x for x in line.strip().split(' ') if x]
   f = items[-1]
   func_order = -1
@@ -140,6 +147,33 @@ for line in readelf_lines:
   if f in gcc_dump:
     func_order = gcc_dump[f]
 
+  if func_order <= 0 and items[0] in offsets_seen_in_gcc:
+    continue
+
+  callgrind_index = callgrind_functions_filtered.index(f) if f in callgrind_functions_filtered else -1
+  note = ''
+
+  missing = '_MISSING_'
+
+  if callgrind_index > 0:
+    note = missing if func_order <= 0 else '_VALGRIND_'
+
+  # thunks
+
+  if missing and is_thunk(f): 
+    target = get_thunk_parent(f)
+    if target in gcc_dump:
+      func_order = gcc_dump[target]
+    
+    note = '_THUNK_'
+
+  # profile is missing
+  if func_order <= 0 and callgrind_index > 0 and not is_thunk(f):
+    print('ORDER missing: ' + f)
+
+  if note == '':
+    continue
+
   if func_order == -1:
     cls = 'not-seen'
   elif func_order == 0:
@@ -147,12 +181,7 @@ for line in readelf_lines:
   else:
     cls = 'seen-nonzero'
 
-  if func_order <= 0 and items[0] in offsets_seen_in_gcc:
-    continue
-
   os.write(t[0], '<tr class="%s">\n' % cls)
-
-  callgrind_index = callgrind_functions_filtered.index(f) if f in callgrind_functions_filtered else -1
 
   items.insert(6, str(callgrind_index))
   items.insert(7, str(func_order))
@@ -165,18 +194,12 @@ for line in readelf_lines:
 
   items.insert(8, str(partition))
 
-  note = ''
-
-  if callgrind_index > 0:
-    note = '_MISSING_' if func_order <= 0 else '_VALGRIND_'
-
   items.insert(9, note)
 
   # offset in bytes
   items.insert(1, int(items[0], 16))
 
   items.insert(0, str(counter))
-  counter += 1
 
   for (idx, item) in enumerate(items):
     if idx == 8:
