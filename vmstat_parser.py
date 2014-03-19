@@ -51,7 +51,7 @@ plt.rcParams['figure.figsize'] = 10, 5
 f, axarr = plt.subplots(2, sharex = True)
 
 axarr[0].plot(cpu)
-axarr[0].set_title('CPU utilization')
+axarr[0].set_title('CPU utilization (red=single core)')
 axarr[0].set_ylabel('\%')
 axarr[0].grid(True)
 axarr[0].set_xlim([0, len(memory) + 10])
@@ -60,9 +60,9 @@ axarr[0].axhline(linewidth = 1, color = 'r', y = 100.0 / cores)
 
 axarr[1].plot(memory)
 axarr[1].plot(active)
-axarr[1].set_title('memory usage')
+axarr[1].set_title('Memory usage (green=active, blue=used)')
 axarr[1].set_xlabel('time (s)')
-axarr[1].set_ylabel('RAM (in GB)')
+axarr[1].set_ylabel('RAM in GB')
 axarr[1].grid(True)
 
 if len(sys.argv) >= 3:
