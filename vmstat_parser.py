@@ -41,11 +41,10 @@ for line in f:
   cpu_usage = min(100, int(tokens[12]) + int(tokens[13]))
   cpu.append(cpu_usage)
 
-memory_min = min(memory)
-active_min = min(active)
+minimum = min(memory + active)
 
-memory = [1.0 * (x - memory_min) / (1024 * 1024) for x in memory]
-active = [1.0 * (x - active_min) / (1024 * 1024) for x in active]
+memory = [1.0 * (x - minimum) / (1024 * 1024) for x in memory]
+active = [1.0 * (x - minimum) / (1024 * 1024) for x in active]
 
 # DATA PRESENTATION
 plt.rcParams['figure.figsize'] = 10, 5
