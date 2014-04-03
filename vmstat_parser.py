@@ -60,7 +60,7 @@ axarr[0].axhline(linewidth = 1, color = 'r', y = 100.0 / cores)
 
 axarr[1].plot(memory)
 axarr[1].plot(active, c = '#bbbbbb')
-axarr[1].set_title('Memory usage (silver=used+buffers+cache, blue=used)')
+axarr[1].set_title('Memory usage (blue=used, silver=used+buffers+cache)')
 axarr[1].set_xlabel('time (s)')
 axarr[1].set_ylabel('RAM in GB')
 axarr[1].grid(True)

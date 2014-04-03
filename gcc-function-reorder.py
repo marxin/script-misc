@@ -16,7 +16,7 @@ if len(sys.argv) != 4:
   print('gcc-function-reorder <binary> <gcc_dump> <callgrind_dump>')
   exit(1)
 
-f = os.popen('./readelf_sorted_symbols.py ' + sys.argv[1])
+f = os.popen(os.path.join(os.path.dirname(os.path.realpath(__file__)), 'readelf_sorted_symbols.py') + ' ' + sys.argv[1])
 
 ### read elf parsing ###
 readelf_functions = []
