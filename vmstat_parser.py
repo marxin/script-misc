@@ -9,6 +9,9 @@ import os
 import sys
 import getopt
 
+cores = 8
+colors = ['#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c', '#98df8a', '#ff9896', '#9467bd', '#c5b0d5', '#8c564b', '#c49c94', '#e377c2', '#f7b6d2', '#7f7f7f', '#c7c7c7', '#bcbd22', '#dbdb8d', '#17becf', '#9edae5']
+
 class DataLine:
   def __init__(self, name):
     self.name = name
@@ -61,20 +64,6 @@ class DataLine:
 
   def min_y(self):
     return min(self.y)
-
-cores = 8
-colors = ['#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c', '#98df8a', '#ff9896', '#9467bd', '#c5b0d5', '#8c564b', '#c49c94', '#e377c2', '#f7b6d2', '#7f7f7f', '#c7c7c7', '#bcbd22', '#dbdb8d', '#17becf', '#9edae5']
-
-optlist, args = getopt.getopt(sys.argv[1:], 'o:')
-
-plt.rc('text', usetex = True)
-font = {'family' : 'serif', 'size':13}
-plt.rc('font',**font)
-plt.rc('legend',**{'fontsize':11})
-
-if len(args) == 0:
-  print('usage: vmstat_parser {data_files} -o pdf_file')
-  exit(-1)
 
 def parse_file(filename):
   f = open(filename)
@@ -147,30 +136,51 @@ def write_to_subplot(path, datalines, cpu_subplot, ram_subplot):
 
   ram_subplot.stackplot(stack_x, stack_y, colors = colors)
 
-file_names = sys.argv[1:]
+def main():
+  optlist, args = getopt.getopt(sys.argv[1:], 'o:')
 
-# DATA PRESENTATION
-plt.rcParams['figure.figsize'] = 10, 5
+  if len(args) == 0:
+    print('usage: vmstat_parser {data_files} -o pdf_file')
+    exit(-1)
 
-axarr = None
+  output_file = None
 
-if len(file_names) == 1:
-  f, axarr = plt.subplots(2, sharex = True)
-  write_to_subplot(file_names[0], parse_file(file_names[0]), axarr[0], axarr[1])
-else:
-  f, axarr = plt.subplots(len(file_names), 2, sharex = True)
+  for o, a in optlist:
+    if o == '-o':
+      output_file = a
+    else:
+      assert False, "Unhandled option"
 
-  for i, v in enumerate(file_names):
-    write_to_subplot(v, parse_file(v), axarr[i, 0], axarr[i, 1])
-    for j in range(0, 2):
-      axarr[i, j].set_xlabel('time (s)')
-      axarr[i, j].grid(True)
+  plt.rc('text', usetex = True)
+  font = {'family' : 'serif', 'size':13}
+  plt.rc('font',**font)
+  plt.rc('legend',**{'fontsize':11})
 
-plt.tight_layout(pad = 0.2, w_pad = 0.2, h_pad = 0.2)
+  file_names = args 
 
-#if len(args) >= 2:
-#  location = args[1]
-#  plt.tight_layout()
-#  plt.savefig(location)
+  # DATA PRESENTATION
+  plt.rcParams['figure.figsize'] = 10, 5
 
-plt.show()
+  axarr = None
+
+  if len(file_names) == 1:
+    f, axarr = plt.subplots(2, sharex = True)
+    write_to_subplot(file_names[0], parse_file(file_names[0]), axarr[0], axarr[1])
+  else:
+    f, axarr = plt.subplots(len(file_names), 2, sharex = True)
+
+    for i, v in enumerate(file_names):
+      write_to_subplot(v, parse_file(v), axarr[i, 0], axarr[i, 1])
+      for j in range(0, 2):
+	axarr[i, j].set_xlabel('time (s)')
+	axarr[i, j].grid(True)
+
+  plt.tight_layout(pad = 0.2, w_pad = 0.2, h_pad = 0.2)
+
+  if output_file != None:
+    plt.savefig(output_file)
+  else:
+    plt.show()
+
+### MAIN ###
+main()

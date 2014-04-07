@@ -64,41 +64,48 @@ def print_ram():
   r = os.popen('free | head -n3 | tail -n1 | tr -s " " |cut -f3 -d" "').readlines()[0].strip()
   print('RAM:%f:%s' % (time.time(), r))
 
-args = sys.argv[1:]
-optlist, args = getopt.getopt(args, 't:')
+def main():
+  args = sys.argv[1:]
+  optlist, args = getopt.getopt(args, 't:')
 
-# start vmstat period
-pid = os.fork()
-if pid == 0:
-  os.system('vmstat -n 1 1111111 >> ' + vmstat_temp)
-else:
-  while True:
-    ps = os.popen('ps v').readlines()[1:]
-    t = time.time()
+  # start vmstat period
+  pid = os.fork()
+  if pid == 0:
+    os.system('vmstat -n 1 1111111 >> ' + vmstat_temp)
+  else:
+    while True:
+      ps = os.popen('ps v').readlines()[1:]
+      t = time.time()
 
-    # consumption map
-    consumption = {}
+      # consumption map
+      consumption = {}
 
-    # iterate for new process
-    for line in ps:
-      tokens = [x.strip() for x  in line.split(' ') if x]
-      p = Process(tokens[0], tokens[9], tokens[10:])
+      # iterate for new process
+      for line in ps:
+	tokens = [x.strip() for x  in line.split(' ') if x]
+	p = Process(tokens[0], tokens[9], tokens[10:])
 
-      consumption[p.pid] = int(tokens[7])
-      nick = get_process_nickname_if_monitored(p)
+	consumption[p.pid] = int(tokens[7])
+	nick = get_process_nickname_if_monitored(p)
 
-      if nick != None:
-	p.nick = nick
-	processes.append(p)
+	if nick != None:
+	  p.nick = nick
+	  processes.append(p)
 
-    # add memory consumption for all monitored processes
-    for p in processes:
-      if p.pid in consumption:
-	p.report_memory(t, consumption[p.pid])
+      # add memory consumption for all monitored processes
+      for p in processes:
+	if p.pid in consumption:
+	  p.report_memory(t, consumption[p.pid])
 
-    # CPU & MEM
-    print_cpu()
-    print_ram()
+      # CPU & MEM
+      print_cpu()
+      print_ram()
 
-    interval = 900
-    time.sleep(interval / 1000.0)
+      interval = 900
+      time.sleep(interval / 1000.0)
+
+### MAIN ###
+try:
+  main()
+except KeyboardInterrupt:
+  sys.exit(0)
