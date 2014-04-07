@@ -2,6 +2,7 @@
 
 from __future__ import print_function
 import matplotlib.pyplot as plt
+import numpy as np
 from matplotlib.font_manager import FontProperties
 from psutil import virtual_memory
 
@@ -11,6 +12,7 @@ import getopt
 
 cores = 8
 colors = ['#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c', '#98df8a', '#ff9896', '#9467bd', '#c5b0d5', '#8c564b', '#c49c94', '#e377c2', '#f7b6d2', '#7f7f7f', '#c7c7c7', '#bcbd22', '#dbdb8d', '#17becf', '#9edae5']
+total_memory = virtual_memory().total / (1024 * 1024 * 1024)
 
 class DataLine:
   def __init__(self, name):
@@ -89,11 +91,6 @@ def parse_file(filename):
   for item in datalines.values():
     item.shift_x(min_time)
 
-  max_time = int(round(max(map(lambda x: x.max_x(), datalines.values()))))
-
-  for item in datalines.values():
-    item.unify_y(max_time)
-
   # ram shift
   ram = datalines['RAM']
   cpu = datalines['CPU']
@@ -108,16 +105,19 @@ def parse_file(filename):
 
   return datalines
 
-def write_to_subplot(path, datalines, cpu_subplot, ram_subplot):
+def unify_data(datalines, global_max_time):
+  for item in datalines.values():
+    item.unify_y(global_max_time)
+
+def write_to_subplot(path, datalines, cpu_subplot, ram_subplot, global_max_time):
   # TODO
   ram = datalines['RAM']
   cpu = datalines['CPU']
-  max_time = int(round(max(map(lambda x: x.max_x(), datalines.values()))))
 
   ram_peak = max(ram.y)
 
   sorted_stack = [datalines[x] for x in sorted(datalines.keys()) if x != 'CPU' and x != 'RAM']
-  stack_x = range(0, max_time + 1)
+  stack_x = range(0, global_max_time + 1)
   stack_y = [x.y for x in sorted_stack]
 
   title_prefix = os.path.basename(path).upper().replace('_', '\_')
@@ -125,14 +125,17 @@ def write_to_subplot(path, datalines, cpu_subplot, ram_subplot):
   cpu_subplot.plot(cpu.y)
   cpu_subplot.set_title(title_prefix + '@CPU (red=single core)')
   cpu_subplot.set_ylabel('\%')
-  cpu_subplot.set_xlim([0, max_time])
+  cpu_subplot.set_xlim([0, global_max_time])
   cpu_subplot.set_ylim([0, 105])
   cpu_subplot.axhline(linewidth = 1, color = 'r', y = 100.0 / cores)
 
   ram_subplot.plot(ram.y, c = 'blue', lw = 2)
   ram_subplot.set_title(title_prefix + '@RAM (peak: %2.2f GB)' % (ram_peak))
   ram_subplot.set_ylabel('GB')
-  ram_subplot.set_ylim([0, virtual_memory().total / (1024 * 1024 * 1024)])
+  ram_subplot.set_ylim([0, total_memory])
+
+  yticks = range(total_memory) if total_memory <= 8 else np.arange(0, total_memory, 2)
+  ram_subplot.set_yticks(yticks)
 
   ram_subplot.stackplot(stack_x, stack_y, colors = colors)
 
@@ -163,14 +166,25 @@ def main():
 
   axarr = None
 
+  # data parsing
+  file_datas = []
+
+  for i in file_names:
+    file_datas.append(parse_file(i))
+
+  global_max_time = int(round(max(map(lambda f: max(map(lambda x: x.max_x(), f.values())), file_datas))) + 10)
+
+  for i in file_datas:
+    unify_data(i, global_max_time)
+
   if len(file_names) == 1:
     f, axarr = plt.subplots(2, sharex = True)
-    write_to_subplot(file_names[0], parse_file(file_names[0]), axarr[0], axarr[1])
+    write_to_subplot(file_names[0], file_datas[0], axarr[0], axarr[1], global_max_time)
   else:
     f, axarr = plt.subplots(len(file_names), 2, sharex = True)
 
     for i, v in enumerate(file_names):
-      write_to_subplot(v, parse_file(v), axarr[i, 0], axarr[i, 1])
+      write_to_subplot(v, file_datas[i], axarr[i, 0], axarr[i, 1], global_max_time)
       for j in range(0, 2):
 	axarr[i, j].set_xlabel('time (s)')
 	axarr[i, j].grid(True)
