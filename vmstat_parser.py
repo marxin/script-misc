@@ -161,9 +161,6 @@ def main():
 
   file_names = args 
 
-  # DATA PRESENTATION
-  plt.rcParams['figure.figsize'] = 10, 5
-
   axarr = None
 
   # data parsing
@@ -177,6 +174,10 @@ def main():
   for i in file_datas:
     unify_data(i, global_max_time)
 
+  # DATA PRESENTATION
+  plt.rcParams['figure.figsize'] = 20, (5 * len(file_datas))
+  print(plt.rcParams['figure.figsize'])
+
   if len(file_names) == 1:
     f, axarr = plt.subplots(2, sharex = True)
     write_to_subplot(file_names[0], file_datas[0], axarr[0], axarr[1], global_max_time)
@@ -189,7 +190,7 @@ def main():
 	axarr[i, j].set_xlabel('time (s)')
 	axarr[i, j].grid(True)
 
-  plt.tight_layout(pad = 0.2, w_pad = 0.2, h_pad = 0.2)
+  plt.tight_layout(pad = 0.5, w_pad = 0.5, h_pad = 0.5)
 
   if output_file != None:
     plt.savefig(output_file)
