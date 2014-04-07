@@ -22,4 +22,5 @@ List of scripts:
 + spec_batch_runner - runs a set of SPEC tests and collects statistics
 + spec_speed_size_graph - matplotlib graph generator for a single SPEC benchmark
 + stap_run - uses systemtap script to monitor disk access to binary and creates graph with readpage_graph script
++ system_top - utilizes vmstat and free commands to get used memory and CPU (including lto1 in WPA and LTRANS phases)
 + gentoo_parse_packages - parses a list of packages (with topic) and generates emerge command
