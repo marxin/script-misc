@@ -140,7 +140,7 @@ def write_to_subplot(path, datalines, cpu_subplot, ram_subplot, global_max_time)
   ram_subplot.stackplot(stack_x, stack_y, colors = colors)
 
 def main():
-  optlist, args = getopt.getopt(sys.argv[1:], 'o:')
+  optlist, args = getopt.getopt(sys.argv[1:], 'o:m:')
 
   if len(args) == 0:
     print('usage: vmstat_parser {data_files} -o pdf_file')
@@ -151,6 +151,9 @@ def main():
   for o, a in optlist:
     if o == '-o':
       output_file = a
+    elif o == '-m':
+      global total_memory
+      total_memory = int(a)
     else:
       assert False, "Unhandled option"
 
@@ -176,9 +179,9 @@ def main():
 
   # DATA PRESENTATION
   plt.rcParams['figure.figsize'] = 20, (5 * len(file_datas))
-  print(plt.rcParams['figure.figsize'])
 
   if len(file_names) == 1:
+    plt.rcParams['figure.figsize'] = 10, 5
     f, axarr = plt.subplots(2, sharex = True)
     write_to_subplot(file_names[0], file_datas[0], axarr[0], axarr[1], global_max_time)
   else:
