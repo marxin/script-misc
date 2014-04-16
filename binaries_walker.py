@@ -42,6 +42,9 @@ def build_summary(folders):
   s = set()
 
   for folder in folders:
+    if not os.path.exists(folder):
+      continue
+
     s = s.union(get_files(folder))
 
   return [(x, datetime.datetime.fromtimestamp(os.path.getmtime(x)), os.stat(x).st_size) for x in s if is_elf(x)]
