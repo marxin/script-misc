@@ -24,3 +24,4 @@ List of scripts:
 + stap_run - uses systemtap script to monitor disk access to binary and creates graph with readpage_graph script
 + system_top - utilizes vmstat and free commands to get used memory and CPU (including lto1 in WPA and LTRANS phases)
 + gentoo_parse_packages - parses a list of packages (with topic) and generates emerge command
++ binaries_walker - goes through all shared libraries and ELF executables and presents stats about size of files
