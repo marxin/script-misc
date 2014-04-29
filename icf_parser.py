@@ -27,8 +27,8 @@ ipa_set = Set()
 ipa_lines = []
 
 all_lines = open(sys.argv[2], 'r').readlines()
-ipa_prefix = 'Assembler function names:'
-pf_prefix = 'Parsed function:'
+ipa_prefix = 'Assembler symbol names:'
+pf_prefix = 'Parsed symbol:'
 
 ipa_seen_functions = Set([x[len(pf_prefix):].strip() for x in all_lines if x.startswith(pf_prefix)])
 ipa_lines = [x[len(ipa_prefix):].strip() for x in all_lines if x.startswith(ipa_prefix)]
@@ -92,18 +92,16 @@ just_in_ipa = ipa_set - intersection
 for k in sorted_keys: 
   missing_items = [x[0] for x in merged_to_dictionary[k] if x[0] not in intersection]
 
-  
-
   if 'f' in flags and len(missing_items) == 0:
     continue
 
-  print('%4u/%-4u%s\t [%s]' % (len(merged_to_dictionary[k]), len(missing_items), k[0], k[1]), end = '')
+  print('%4u/%-4u %-49s' % (len(merged_to_dictionary[k]), len(missing_items), k[0]), end = '')
 
   print_in_set_suffix(k[0])
 
   for alias in merged_to_dictionary[k]:
     if 'f' not in flags or alias[0] not in intersection: # f == filter
-      print('          %s\t [%s]' % (alias[0], ''), end = '')
+      print('%10s%-50s[%s]' % ('', alias[0], ''), end = '')
       print_in_set_suffix(alias[0])
 
 ipa_count = len(ipa_lines)
@@ -114,6 +112,11 @@ print('IPA TOTAL: %u that is %.2f%%\n' % (ipa_count, 100.0 * ipa_count / icf_cou
 print('Intersection: ' + str(len(intersection)))
 print('Just seen by ICF: ' + str(len(just_in_icf)))
 print('Just seen by IPA: ' + str(len(just_in_ipa)))
+
+print('IPA only:')
+
+for i in just_in_ipa:
+  print('%10s%s' % ('', i))
 
 # print(just_in_ipa)
 # print(ipa_lines[0])
