@@ -26,3 +26,4 @@ List of scripts:
 + gentoo_parse_packages - parses a list of packages (with topic) and generates emerge command
 + binaries_walker - goes through all shared libraries and ELF executables and presents stats about size of files
 + table_transformer - transforms CSV-like data to HTML table
++ table_pretty_printer - transforms CSV-line data to plain-text padded table
