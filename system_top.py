@@ -12,6 +12,10 @@ import subprocess
 
 vmstat_temp = '/tmp/vmstat.log'
 
+def print_flush(text):
+  print(text)
+  sys.stdout.flush()
+
 class Process:
   def __init__(self, pid, name, args):
     self.pid = int(pid)
@@ -31,7 +35,7 @@ class Process:
 
   def report_memory(self, time, memory):
     self.memory.append((time, memory))
-    print('%s:%f:%u' % (self.nick, time, memory))
+    print_flush('%s:%f:%u' % (self.nick, time, memory))
 
 processes = []
 
@@ -58,11 +62,15 @@ def get_process_nickname_if_monitored(p):
 def print_cpu():
   vmstat_line = os.popen('tail -n1 ' + vmstat_temp).readlines()[0].strip()
   tokens = [x for x in vmstat_line.split() if x]  
-  print('CPU:%f:%u' % (time.time(), min(100, int(tokens[12]) + int(tokens[13]) + int(tokens[15]))))
+
+  if len(tokens) < 16:
+    return
+
+  print_flush('CPU:%f:%u' % (time.time(), min(100, int(tokens[12]) + int(tokens[13]) + int(tokens[15]))))
 
 def print_ram():
   r = os.popen('free | head -n3 | tail -n1 | tr -s " " |cut -f3 -d" "').readlines()[0].strip()
-  print('RAM:%f:%s' % (time.time(), r))
+  print_flush('RAM:%f:%s' % (time.time(), r))
 
 def main():
   args = sys.argv[1:]

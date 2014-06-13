@@ -97,7 +97,14 @@ print('Called histogram:')
 for i,f in enumerate(sorted_histogram):
   print(str(i) + ':' + str(f[0]) + ':' + str(f[1]))
 
-main_binary = sorted_histogram[0][0]
+print('Start of stap dump:')
+
+for i in range(10):
+  print(lines[i])
+
+choice = input('Your choice: ')
+
+main_binary = sorted_histogram[int(choice)][0]
 
 print('Main binary is: ' + main_binary)
 

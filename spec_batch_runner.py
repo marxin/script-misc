@@ -50,24 +50,27 @@ default_flags = '-fno-strict-aliasing -fpeel-loops -ffast-math -march=native'
 profile_arguments = '--size=test --no-reportable --iterations=1 '
 runspec_arguments = '--size=test --no-reportable --iterations=1 '
 
+
 profiles =  [
               [
-                'gcc49-O2',
-                '/home/marxin/gcc-mirror/bin/',
-                '-O2',
-                True
+                'gcc-O2-lto-ipa-icf',
+		'',
+                '-O2 -flto -fdump-ipa-icf-details',
+                False
               ],
+"""	      
               [
-                'gcc49-O2',
-                '/home/marxin/gcc-mirror/bin/',
-                '-O2 -freorder-blocks-and-partition',
-                True
+                'gcc-O2-lto-no-ipa-icf',
+		'',
+		'-O2 -flto -fno-ipa-icf -Wl,--icf=all,--print-icf-sections -ffunction-sections',
+                False
               ]
-         ]
+"""
+	]
 
 if len(sys.argv) < 2:
   print('usage: [test_prefix]')
-  exit(-1)
+  uxit(-1)
 
 test_prefix = sys.argv[1]
 
@@ -77,7 +80,7 @@ def full_profile_name(name):
 def generate_config(profile, extra_flags = ''):
   lines = open(config_template, 'r').readlines()
 
-  p = 126
+  p = 94
 
   flags = default_flags + ' ' + profile[2] + ' ' + extra_flags
 
@@ -85,7 +88,7 @@ def generate_config(profile, extra_flags = ''):
   lines.insert(p, 'CXXOPTIMIZE= ' + flags)
   lines.insert(p, 'COPTIMIZE= ' + flags)
 
-  p = 78
+  p = 54
 
   lines.insert(p, 'FC = ' + os.path.join(profile[1], 'gfortran'))
   lines.insert(p, 'CXX = ' + os.path.join(profile[1], 'g++'))
@@ -103,8 +106,8 @@ def generate_config(profile, extra_flags = ''):
 
   return config_name
 
-def save_spec_log(folder, profile, data):
-  f = open(os.path.join(folder, profile + '.log'), 'w+')
+def save_spec_log(folder, profile, benchmark, data):
+  f = open(os.path.join(folder, profile + '_' + benchmark + '.log'), 'w+')
 
   for l in data:
     f.write(l)
@@ -191,7 +194,7 @@ for i, profile in enumerate(profiles[-2:]):
     if pgo:
       ts_print('Profile generate phase')
       c = generate_config(profile, '-fprofile-generate=' + profile_path)
-      cl = 'runspec --config=' + c + ' ' + profile_arguments + get_benchmark_name(benchmark)
+      cl = 'runspec --output_format=csv --config=' + c + ' ' + profile_arguments + get_benchmark_name(benchmark)
       ts_print(cl)
       result = os.popen(cl).readlines()
 
@@ -207,7 +210,7 @@ for i, profile in enumerate(profiles[-2:]):
     cl = 'runspec --config=' + c + ' ' + runspec_arguments + get_benchmark_name(benchmark)
     ts_print(cl)
     result = os.popen(cl).readlines()
-    save_spec_log(summary_path, profile[0], result)
+    save_spec_log(summary_path, profile[0], get_benchmark_name(benchmark), result)
 
     csv = ''
     for r in result:
@@ -216,7 +219,7 @@ for i, profile in enumerate(profiles[-2:]):
       if r.startswith('format: CSV'):
         csv = r[r.find('/'):].strip()
 
-    parse_csv(csv, summary_path, profile[0])
+    # parse_csv(csv, summary_path, profile[0])
     parse_binary_size(summary_path, profile[0], benchmark[0])
 
   ts_print('Finishing %u/%u: %s' % (i + 1, len(profiles), profile[0]))

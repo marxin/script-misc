@@ -28,7 +28,7 @@ ipa_lines = []
 
 all_lines = open(sys.argv[2], 'r').readlines()
 ipa_prefix = 'Assembler symbol names:'
-pf_prefix = 'Parsed symbol:'
+pf_prefix = 'Symbol added:'
 
 ipa_seen_functions = Set([x[len(pf_prefix):].strip() for x in all_lines if x.startswith(pf_prefix)])
 ipa_lines = [x[len(ipa_prefix):].strip() for x in all_lines if x.startswith(ipa_prefix)]
@@ -89,8 +89,11 @@ intersection = icf_set & ipa_set
 just_in_icf = icf_set - intersection
 just_in_ipa = ipa_set - intersection
 
+missing_in_ipa = 0
+
 for k in sorted_keys: 
   missing_items = [x[0] for x in merged_to_dictionary[k] if x[0] not in intersection]
+  missing_in_ipa = missing_in_ipa + len(missing_items)
 
   if 'f' in flags and len(missing_items) == 0:
     continue
@@ -106,12 +109,16 @@ for k in sorted_keys:
 
 ipa_count = len(ipa_lines)
 
-print('\nICF TOTAL: %u in %u groups' % (icf_count, len(sorted_keys)))
-print('IPA TOTAL: %u that is %.2f%%\n' % (ipa_count, 100.0 * ipa_count / icf_count))
+print('\nICF TOTAL: %u\n  in %u groups' % (icf_count, len(sorted_keys)))
 
-print('Intersection: ' + str(len(intersection)))
-print('Just seen by ICF: ' + str(len(just_in_icf)))
-print('Just seen by IPA: ' + str(len(just_in_ipa)))
+if icf_count > 0:
+  print('IPA TOTAL: %u\n  that is %.2f%%\n' % (ipa_count, 100.0 * ipa_count / icf_count))
+else:
+  print('IPA TOTAL: %u\n' % (ipa_count))
+
+print('Intersection: ' + str(icf_count - missing_in_ipa))
+print('Just seen by ICF: ' + str(missing_in_ipa))
+print('Just seen by IPA: ' + str(ipa_count - icf_count + missing_in_ipa))
 
 print('IPA only:')
 
