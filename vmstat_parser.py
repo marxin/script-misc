@@ -184,6 +184,8 @@ def main():
     plt.rcParams['figure.figsize'] = 10, 5
     f, axarr = plt.subplots(2, sharex = True)
     write_to_subplot(file_names[0], file_datas[0], axarr[0], axarr[1], global_max_time)
+    axarr[0].grid(True)
+    axarr[1].grid(True)
   else:
     f, axarr = plt.subplots(len(file_names), 2, sharex = True)
 
