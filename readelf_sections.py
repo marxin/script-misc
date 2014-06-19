@@ -84,7 +84,7 @@ if len(sys.argv) >= 3 and (sys.argv[2] == 'latex' or sys.argv[2] == 'csv'):
     print_escaped('Total & & ' + sizeof_fmt(total) + ' & ' + sizeof_fmt(sum(stap_matches)) + ' & ' + '%0.2f%%' % (100.0 * sum(stap_matches) / total) + '\\\\ \\hline')
   elif sys.argv[2] == 'csv':
     for s in sections:
-      print(s[0] + ':' + str(s[1]) + ':' + str(s[2]) + '&' + str(sizeof_fmt(s[2])) + ':' + str("%0.2f" % (float(s[2]) / total * 100)) + '\\\\ \\hline')
+      print(s[0] + ':' + str(s[1]) + ':' + str(s[2]) + ':' + str(sizeof_fmt(s[2])) + ':' + str("%0.2f" % (float(s[2]) / total * 100)))
 else:
   print('%-20s%12s%12s%16s%11s%15s%12s%15s' % ('Section name', 'Start', 'Size in B', 'Size', 'Portion', 'Disk read in B', 'Disk read', 'Sec. portion'))
   for index, s in enumerate(sections):
