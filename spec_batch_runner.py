@@ -5,6 +5,7 @@ import sys
 import os
 import datetime
 import shutil
+import json
 
 benchmarks = [
               ['400.perlbench', True],
@@ -46,9 +47,9 @@ summary_folder = os.path.join(root_path, 'summary')
 config_template = os.path.join(config_folder, 'config-template.cfg')
 
 default_flags = '-fno-strict-aliasing -fpeel-loops -ffast-math -march=native'
-# runspec_arguments = '--size=train --no-reportable --iterations=3 '
-profile_arguments = '--size=test --no-reportable --iterations=1 '
 runspec_arguments = '--size=test --no-reportable --iterations=1 '
+profile_arguments = '--size=test --no-reportable --iterations=1 '
+# runspec_arguments = '--size=test --no-reportable --iterations=1 '
 
 
 profiles =  [
@@ -68,9 +69,12 @@ profiles =  [
 """
 	]
 
+loaded = json.load(open('/tmp/config.txt'))
+profiles = map(lambda x: [x['name'], '', x['options'], False], loaded)
+
 if len(sys.argv) < 2:
   print('usage: [test_prefix]')
-  uxit(-1)
+  exit(-1)
 
 test_prefix = sys.argv[1]
 
@@ -169,6 +173,7 @@ def clear_tmp():
     shutil.rmtree(profile_path)
 
 # MAIN
+print(os.getcwd())
 
 summary_path = os.path.join(summary_folder, test_prefix)
 if not os.path.isdir(summary_path):
@@ -176,12 +181,12 @@ if not os.path.isdir(summary_path):
 
 ts_print('Starting group of tests')
 
-for i, profile in enumerate(profiles[-2:]):
+for i, profile in enumerate(profiles):
   ts_print('Running %u/%u: %s' % (i + 1, len(profiles), profile[0]))
 
   pgo = profile[3]
 
-  for j, benchmark in enumerate(benchmarks):
+  for j, benchmark in enumerate(reversed(benchmarks)):
     clear_tmp()
 
     if len(profile) == 5 and benchmark[0] in profile[4]:
