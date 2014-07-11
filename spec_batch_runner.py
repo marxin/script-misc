@@ -6,6 +6,7 @@ import os
 import datetime
 import shutil
 import json
+import commands
 
 benchmarks = [
               ['400.perlbench', True],
@@ -47,7 +48,8 @@ summary_folder = os.path.join(root_path, 'summary')
 config_template = os.path.join(config_folder, 'config-template.cfg')
 
 default_flags = '-fno-strict-aliasing -fpeel-loops -ffast-math -march=native'
-runspec_arguments = '--size=test --no-reportable --iterations=1 '
+# runspec_arguments = '--size=test --no-reportable --iterations=1 '
+runspec_arguments = '-a build '
 profile_arguments = '--size=test --no-reportable --iterations=1 '
 # runspec_arguments = '--size=test --no-reportable --iterations=1 '
 
@@ -148,16 +150,29 @@ def parse_binary_size(folder, profile, benchmark):
   pn = full_profile_name(profile)
 
   subfolder = os.path.join(root_path, 'benchspec/CPU2006', benchmark, 'exe')
+  binary_file = None
 
   size = 0
 
   for exe in os.listdir(subfolder):
     if exe.endswith(pn):
-      size = int(os.path.getsize(os.path.join(subfolder, exe)))
+      binary_file = os.path.join(subfolder, exe)
+      size = int(os.path.getsize(binary_file))
+      break
 
   f = open(os.path.join(folder, profile + '-size.csv'), 'a+')
   f.write('%s:%u\n' % (benchmark, size))
   f.close()
+
+  path = os.path.join(folder, profile + '-' + benchmark + '-size.csv')
+  script_location = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'readelf_sections.py')
+
+  if binary_file != None:
+    command = 'python ' + script_location + ' ' + binary_file + ' csv > ' + path
+    r = commands.getstatusoutput(command)
+    if r[0] != 0:
+      print(r[1])
+      exit(2)
 
 def ts_print(*args):
   print('[%s]: ' % datetime.datetime.now(), end = '')

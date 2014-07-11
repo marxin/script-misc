@@ -10,8 +10,8 @@ import json
 
 def check_gcc_options(cmd):
   r = commands.getstatusoutput(cmd)
-#  if r[0] != 0:
-#    print(r[1])
+  if r[0] != 0:
+    print(r[1])
   return r[0]
 
 def negate(flag):

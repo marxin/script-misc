@@ -39,6 +39,7 @@ def print_super_line(line):
 parser = OptionParser()
 parser.add_option("-d", "--delimiter", dest="delimiter", help="column delimiter")
 parser.add_option("-f", "--file", dest="file", help="input file")
+parser.add_option("-a", "--default-padding", dest="default_padding", help="default padding in format {l|r}", default = 'l')
 parser.add_option("-p", "--padding", dest="padding", help="padding in format [column]|[column_range]{l|r}")
 parser.add_option("-e", "--header", dest="header", action="store_true", help="first line is header")
 parser.add_option("-o", "--footer", dest="footer", action="store_true", help="last line is footer")
@@ -48,7 +49,7 @@ parser.add_option("-o", "--footer", dest="footer", action="store_true", help="la
 lines = [map(lambda y: ' ' + y + ' ', x.strip().split(options.delimiter)) for x in open(options.file).readlines()]
 
 column_width_array = [0] * len(lines[0])
-column_padding_array = ['l'] * len(lines[0])
+column_padding_array = [options.default_padding] * len(lines[0])
 
 if options.padding:
   for token in options.padding.split(','):
