@@ -19,6 +19,11 @@ def relative_path(root, full_path):
 def check_leading_whitespaces(line, tab_width):
   leading = ''.join(itertools.takewhile(lambda x: x == ' ' or x == '\t', line))
   tokens = leading.split('\t')
+  f = filter(lambda x: len(x) > 0, tokens)
+
+  if len(f) > 1:
+    return False
+
   return all(map(lambda x: len(x) < tab_width, tokens))
 
 def analyze_ends_with_whitespace (lines):
