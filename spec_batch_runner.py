@@ -49,11 +49,18 @@ config_template = os.path.join(config_folder, 'config-template.cfg')
 
 default_flags = '-fno-strict-aliasing -fpeel-loops -ffast-math -march=native'
 # runspec_arguments = '--size=test --no-reportable --iterations=1 '
-runspec_arguments = '-a build '
+# runspec_arguments = '-a build '
 profile_arguments = '--size=test --no-reportable --iterations=1 '
-# runspec_arguments = '--size=test --no-reportable --iterations=1 '
+runspec_arguments = '--size=test --no-reportable --iterations=3 '
+
+profiles = [
+		('gcc-O3', '', '-O3', False),
+		('gcc-O3-fdo', '', '-O3', True),
+		('gcc-O3-tracer', '', '-O3 -ftracer', False)
+	]
 
 
+"""	      
 profiles =  [
               [
                 'gcc-O2-lto-ipa-icf',
@@ -61,18 +68,17 @@ profiles =  [
                 '-O2 -flto -fdump-ipa-icf-details',
                 False
               ],
-"""	      
               [
                 'gcc-O2-lto-no-ipa-icf',
 		'',
 		'-O2 -flto -fno-ipa-icf -Wl,--icf=all,--print-icf-sections -ffunction-sections',
                 False
               ]
-"""
 	]
 
 loaded = json.load(open('/tmp/config.txt'))
 profiles = map(lambda x: [x['name'], '', x['options'], False], loaded)
+"""
 
 if len(sys.argv) < 2:
   print('usage: [test_prefix]')
@@ -150,6 +156,9 @@ def parse_binary_size(folder, profile, benchmark):
   pn = full_profile_name(profile)
 
   subfolder = os.path.join(root_path, 'benchspec/CPU2006', benchmark, 'exe')
+  if not os.path.exists(subfolder):
+    return
+
   binary_file = None
 
   size = 0
@@ -195,6 +204,11 @@ if not os.path.isdir(summary_path):
   os.mkdir(summary_path)
 
 ts_print('Starting group of tests')
+
+# Write all profiles
+profiles_text = '\n'.join(map(lambda x: x[0], profiles))
+with open(os.path.join(summary_path, "profiles.txt"), 'w') as f:
+  f.write(profiles_text)
 
 for i, profile in enumerate(profiles):
   ts_print('Running %u/%u: %s' % (i + 1, len(profiles), profile[0]))
