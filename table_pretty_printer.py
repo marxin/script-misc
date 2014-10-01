@@ -8,6 +8,7 @@ import sys
 import fnmatch
 import datetime
 import string
+import numpy as np
 
 def my_map(func, list):
   result = []
@@ -43,10 +44,24 @@ parser.add_option("-a", "--default-padding", dest="default_padding", help="defau
 parser.add_option("-p", "--padding", dest="padding", help="padding in format [column]|[column_range]{l|r}")
 parser.add_option("-e", "--header", dest="header", action="store_true", help="first line is header")
 parser.add_option("-o", "--footer", dest="footer", action="store_true", help="last line is footer")
+parser.add_option("-t", "--transpose", dest="transpose", action="store_true", help="changes rows and columns")
 
 (options, args) = parser.parse_args()
 
 lines = [map(lambda y: ' ' + y + ' ', x.strip().split(options.delimiter)) for x in open(options.file).readlines()]
+
+if options.transpose:
+  h = len(lines)
+  w = len(lines[0])
+
+  new_lines = []
+  for i in range(w):
+    new_lines.append([None] * h)
+
+  for x, y in np.ndindex((w, h)):
+    new_lines[x][y] = lines[y][x]
+
+  lines = new_lines
 
 column_width_array = [0] * len(lines[0])
 column_padding_array = [options.default_padding] * len(lines[0])
