@@ -213,10 +213,10 @@ class ElfContainer:
     print()
 
     for s in self.symbols:
-      print('SOURCE:%s:%s:%s:%s' % (s.type, s.attribute, s.name, s.demangled_name), file = sys.stderr)
+      print('%s:%s:%s:%s:SOURCE' % (s.type, s.attribute, s.name, s.demangled_name), file = sys.stderr)
 
     for s in compared.symbols:
-      print('TARGET:%s:%s:%s:%s' % (s.type, s.attribute, s.name, s.demangled_name), file = sys.stderr)
+      print('%s:%s:%s:%s:TARGET' % (s.type, s.attribute, s.name, s.demangled_name), file = sys.stderr)
 
   """
     lf = set(map(lambda x: x.canonical_name, self.symbols_dictionary['FUNC_LOCAL']))
@@ -238,9 +238,13 @@ class ElfContainer:
       print ('%-20s%12s%12s%12s' % (s.section, to_percent(s.size, first.total_size), sizeof_fmt(s.size), str(s.size)), end = '')
 
       for rest in containers[1:]:
-        ss = [x for x in rest.sections if x.section == s.section][0]
-        print('%12s' % str(ss.size), end = '')
-        portion = to_percent (ss.size, s.size)
+        ss = [x for x in rest.sections if x.section == s.section]
+        ss_size = 0
+        if len(ss) > 0:
+          ss_size = ss[0].size
+
+        print('%12s' % str(ss_size), end = '')
+        portion = to_percent (ss_size, s.size)
         print('%12s' % portion, end = '')
 
       print()
