@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 
 from __future__ import print_function
+from tempfile import *
+
 import sys
 import os
 import datetime
@@ -43,6 +45,7 @@ benchmarks = [
 if len(sys.argv) != 3:
   sys.exit(1)
 
+real_script_folder = os.path.dirname(os.path.realpath(__file__))
 root_path = sys.argv[1]
 profile = sys.argv[2]
 
@@ -104,11 +107,10 @@ def parse_csv(path):
 def parse_binary_size(folder, profile, benchmark):
   subfolder = os.path.join(root_path, 'benchspec/CPU2006', benchmark, 'exe')
   if not os.path.exists(subfolder):
-    return
+    return None
 
   binary_file = None
-
-  size = 0
+  script_location = os.path.join(real_script_folder, 'readelf.py')
 
   for exe in os.listdir(subfolder):
     if exe.endswith(profile):
@@ -116,22 +118,21 @@ def parse_binary_size(folder, profile, benchmark):
       size = int(os.path.getsize(binary_file))
       break
 
-  f = open(os.path.join(folder, profile + '-size.csv'), 'a+')
-  f.write('%s:%u\n' % (benchmark, size))
-  f.close()
-
-  path = os.path.join(folder, profile + '-' + benchmark + '-size.csv')
-
-  """
-  script_location = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'readelf_sections.py')
-
+  d = {}
   if binary_file != None:
-    command = 'python ' + script_location + ' ' + binary_file + ' csv > ' + path
+    command = 'python ' + script_location + ' --strip --format=csv ' + binary_file
     r = commands.getstatusoutput(command)
     if r[0] != 0:
       print(r[1])
       exit(2)
-  """
+    else:
+      lines = r[1].split('\n')
+      for l in lines:
+	tokens = l.split(':')
+	if len(tokens) == 2:
+	  d[tokens[0]] = int(tokens[1])
+
+  return d
 
 def ts_print(*args):
   print('[%s]: ' % datetime.datetime.now(), end = '')
@@ -154,11 +155,16 @@ if not os.path.isdir(summary_path):
 
 ts_print('Starting group of tests')
 
-d = {}
+d = {'INT': {}, 'FP': {}}
 
 for j, benchmark in enumerate(reversed(benchmarks)):
   benchmark_name = get_benchmark_name(benchmark)
-  d[benchmark_name] = {}
+
+  locald = d['INT']
+  if benchmark[1] == False:
+    locald = d['FP']
+
+  locald[benchmark_name] = {}
 
   ts_print('Running subphase: %u/%u: %s' % (j + 1, len(benchmarks), benchmark[0]))
 
@@ -175,12 +181,13 @@ for j, benchmark in enumerate(reversed(benchmarks)):
   csv = ''
   for r in result:
     r = r.strip()
-    print(r, file = sys.stderr)
     if r.startswith('format: CSV'):
       csv = r[r.find('/'):].strip()
-      d[benchmark_name]['time'] = parse_csv(csv)
+      locald[benchmark_name]['time'] = parse_csv(csv)
 
-  parse_binary_size(summary_path, profile, benchmark[0])
+  locald[benchmark_name]['size'] = parse_binary_size(summary_path, profile, benchmark[0])
 
-ts_print('Finishing %u/%u: %s' % (i + 1, len(profiles), profile[0]))
-ts_print(d)
+f = NamedTemporaryFile(delete = False, suffix = '.json')
+json.dump(d, f, indent = 1)
+
+ts_print(f.name)
