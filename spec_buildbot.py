@@ -9,6 +9,7 @@ import datetime
 import shutil
 import json
 import commands
+import subprocess
 
 benchmarks = [
               ['400.perlbench', True],
@@ -96,12 +97,15 @@ def save_spec_log(folder, profile, benchmark, data):
 
 def parse_csv(path):
   for line in open(path, 'r'):
+    print(line)
     tokens = line.split(',')
 
     if line.startswith('"Selected Results Table"'):
       break
     
     if line.startswith('4') and len(tokens) >= 10 and len(tokens[2]) > 0:
+      print(tokens[2])
+      print(line)
       return float(tokens[2])
 
 def parse_binary_size(folder, profile, benchmark):
@@ -157,7 +161,7 @@ ts_print('Starting group of tests')
 
 d = {'INT': {}, 'FP': {}}
 
-for j, benchmark in enumerate(reversed(benchmarks)):
+for j, benchmark in enumerate(benchmarks):
   benchmark_name = get_benchmark_name(benchmark)
 
   locald = d['INT']
@@ -174,8 +178,14 @@ for j, benchmark in enumerate(reversed(benchmarks)):
   c = generate_config(profile, extra)
 
   cl = runspec_command('--config=' + c + ' --output-format=csv ' + runspec_arguments + benchmark_name)
-  ts_print(cl)
-  result = os.popen(cl).readlines()
+  proc = commands.getstatusoutput(cl)
+
+  if proc[0] != 0:
+    locald[benchmark_name]['time'] = None
+    locald[benchmark_name]['size'] = None
+    print('err')
+
+  result = proc[1] 
   save_spec_log(summary_path, profile, get_benchmark_name(benchmark), result)
 
   csv = ''
