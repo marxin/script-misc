@@ -5,10 +5,35 @@ from __future__ import print_function
 import os
 import sys
 import re
+import argparse
+import tempfile
+import shutil
+import time
+import subprocess
 
 from tempfile import *
 from collections import defaultdict
 from itertools import groupby
+
+parser = argparse.ArgumentParser(description='Display statistics about binaries.')
+parser.add_argument('files', metavar = 'FILES', nargs = '+', help = 'ELF files to be compared')
+parser.add_argument('--strip', dest = 'strip', action = 'store_true', help = 'strip binaries before comparison')
+parser.add_argument('--compare-symbols', dest = 'compare_symbols', action = 'store_true', help = 'compare number of symbols')
+parser.add_argument('--summary', dest = 'summary', action = 'store_true', help = 'summary ELF sections to: code, dynamic relocations, data, EH, rest')
+parser.add_argument('--detect-optimization', dest = 'detect_optimization', action = 'store_true', help = 'detect optimizations which produced a symbol')
+parser.add_argument('--format', dest = 'format', default = 'report', choices = ['report', 'csv'], help = 'output format')
+
+args = parser.parse_args()
+
+def create_temporary_copy(src):
+  tf = tempfile.NamedTemporaryFile(mode='r+b', prefix='__', suffix='.tmp', delete = False)
+
+  with open(src,'r+b') as f:
+    shutil.copyfileobj(f,tf)
+  
+  tf.seek(0) 
+  tf.close()
+  return tf.name
 
 def parse_section_name(line):
   s = line.find(']') + 2
@@ -36,6 +61,14 @@ def to_percent(a, b):
 symbol_categories = [('omp', re.compile('(.*)\._omp_fn\.[0-9]+')), ('isra', re.compile('(.*)\.isra\.[0-9]+')), ('constprop', re.compile('(.*)\.constprop\.[0-9]+')), ('part', re.compile('(.*)\.part\.[0-9]+')), ('global_ctor', re.compile('_GLOBAL__sub_I_(.*)')), ('GCC_except_table', re.compile('GCC_except_table(.*)'))]
 
 symbol_categories_demangled = [('ctor_vtable', 'construction vtable'), ('virt_thunk', 'virtual thunk'), ('non_virt_thunk', 'non-virtual thunk'), ('typeinfo', 'typeinfo name for')]
+
+section_summary = ['code', 'dynamic_relocations', 'data', 'EH', 'rest', 'TOTAL']
+section_summary_selectors = [lambda x: x == '.text',
+	lambda x: x.startswith('.dyn') or x.startswith('.rela') or x.startswith('.got') or x == '.hash',
+	lambda x: x.startswith('.data') or x == '.rodata',
+	lambda x: x.startswith('.eh'),
+	lambda x: x != 'TOTAL',
+	lambda x: x == 'TOTAL']
 
 class ElfSymbol:
   def __init__ (self, name, type, attribute):
@@ -81,17 +114,20 @@ class ElfSection:
 class ElfContainer:
   def __init__ (self, full_path):
     self.parse_sections(full_path)
-    self.parse_symbols(full_path)
-    self.parse_demangled_names()
 
-    for s in self.symbols:
-      s.detect_optimization()
+    if args.compare_symbols:
+      self.parse_symbols(full_path)
+      self.parse_demangled_names()
 
-    sorted_input = sorted(self.symbols, key = lambda x: x.group())
-    self.symbols_dictionary = {}
+      if args.detect_optimization:
+        for i, s in enumerate(self.symbols):
+          s.detect_optimization()
 
-    for k, g in groupby(sorted_input, key = lambda x: x.group()):
-      self.symbols_dictionary[k] = list(g)
+      sorted_input = sorted(self.symbols, key = lambda x: x.group())
+      self.symbols_dictionary = {}
+
+      for k, g in groupby(sorted_input, key = lambda x: x.group()):
+        self.symbols_dictionary[k] = list(g)
 
   def parse_demangled_names(self):
     names = '\n'.join(map(lambda x: x.name, self.symbols))
@@ -103,20 +139,24 @@ class ElfContainer:
 
     f.close()
 
-    result = [x.strip() for x in os.popen('cat %s | c++filt' % f.name).readlines()]
+    result = list([x.strip() for x in os.popen('cat %s | c++filt' % f.name).readlines()])
     os.unlink(f.name)
 
     for i, s in enumerate(self.symbols):
       s.demangled_name = result[i]
 
   def parse_sections (self, full_path):
+    if args.strip:
+      full_path = create_temporary_copy(full_path)      
+      proc = subprocess.Popen(['strip', '-s', full_path], shell = False, stdout=subprocess.PIPE)
+      proc.communicate()
+
     self.sections = []
     f = os.popen('readelf -S ' + full_path)
 
     lines = f.readlines()[5:-4]
 
     i = 0
-    total = 0
 
     while i < len(lines):
       line = lines[i].strip()
@@ -131,8 +171,24 @@ class ElfContainer:
 
       i += 1
 
-    self.total_size = sum(map(lambda x: x.size, self.sections))
+    self.total_size = os.stat(full_path).st_size
     self.sections.append(ElfSection('TOTAL', 0, self.total_size))
+
+    if args.summary:
+      old_sections = self.sections
+
+      d = {}
+      for s in section_summary:
+        d[s] = 0
+
+      for section in self.sections:
+        index = next(i for i,v in enumerate(section_summary_selectors) if v(section.section))
+        d[section_summary[index]] += section.size
+
+      self.sections = []
+
+      for k in d:
+        self.sections.append(ElfSection(k, 0, d[k]))
 
   def parse_symbols (self, full_path):
     f = os.popen('readelf --wide -s ' + full_path)
@@ -229,12 +285,16 @@ class ElfContainer:
       print('Just in CLANG: %s' % i)
   """
 
+  def print_csv (self):
+    for s in self.sections:
+      print('%s:%u' % (s.section, s.size))
+
   @staticmethod
   def print_containers (containers):
     first = containers[0]
 
     print('%-20s%12s%12s%12s%12s%12s' % ('section', 'portion', 'size', 'size', 'compared', 'comparison'))
-    for s in first.sections:
+    for s in sorted(first.sections, key = lambda x: x.size):
       print ('%-20s%12s%12s%12s' % (s.section, to_percent(s.size, first.total_size), sizeof_fmt(s.size), str(s.size)), end = '')
 
       for rest in containers[1:]:
@@ -249,12 +309,12 @@ class ElfContainer:
 
       print()
 
-if len(sys.argv) < 2:
-  print('usage: readelf_sections <executables>')
-  exit(-1)
+containers = list(map(lambda x: ElfContainer(x), args.files))
 
-containers = list(map(lambda x: ElfContainer(x), sys.argv[1:]))
+if len(args.files) > 1:
+  containers[0].compare_symbols(containers[1])
 
-containers[0].compare_symbols(containers[1])
-
-ElfContainer.print_containers(containers)
+if args.format == 'report':
+  ElfContainer.print_containers(containers)
+elif args.format == 'csv':
+  containers[0].print_csv()
