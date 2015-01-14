@@ -43,7 +43,7 @@ benchmarks = [
               ['483.xalancbmk', True]
             ]
 
-if len(sys.argv) != 3:
+if len(sys.argv) != 4:
   sys.exit(1)
 
 real_script_folder = os.path.dirname(os.path.realpath(__file__))
@@ -197,7 +197,6 @@ for j, benchmark in enumerate(benchmarks):
 
   locald[benchmark_name]['size'] = parse_binary_size(summary_path, profile, benchmark[0])
 
-f = NamedTemporaryFile(delete = False, suffix = '.json')
-json.dump(d, f, indent = 1)
+json.dump(d, sys.argv[3], indent = 1)
 
 ts_print(f.name)
