@@ -47,7 +47,7 @@ if len(sys.argv) != 4:
   sys.exit(1)
 
 real_script_folder = os.path.dirname(os.path.realpath(__file__))
-root_path = sys.argv[1]
+root_path = os.path.abspath(sys.argv[1])
 profile = sys.argv[2]
 
 config_folder = os.path.join(root_path, 'config')
@@ -58,7 +58,6 @@ default_flags = '-fno-strict-aliasing -fpeel-loops -ffast-math -march=native -O3
 runspec_arguments = '--size=test --no-reportable --iterations=1 '
 
 os.chdir(root_path)
-print(os.getcwd())
 
 def generate_config(profile, extra_flags = ''):
   lines = open(config_template, 'r').readlines()
