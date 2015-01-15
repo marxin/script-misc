@@ -103,7 +103,11 @@ def parse_csv(path):
       break
     
     if line.startswith('4') and len(tokens) >= 10 and len(tokens[2]) > 0:
-      return float(tokens[2])
+      # TODO: handle correctly!
+      if tokens[2] == '--':
+	return None
+      else:
+        return float(tokens[2])
 
 def parse_binary_size(folder, profile, benchmark):
   subfolder = os.path.join(root_path, 'benchspec/CPU2006', benchmark, 'exe')
@@ -177,21 +181,22 @@ for j, benchmark in enumerate(benchmarks):
   cl = runspec_command('--config=' + c + ' --output-format=csv ' + runspec_arguments + benchmark_name)
   proc = commands.getstatusoutput(cl)
 
+  ts_print('Command result: %u' % proc[0])
   if proc[0] != 0:
     locald[benchmark_name]['time'] = None
     locald[benchmark_name]['size'] = None
+    print('runspec command has failed')
     print(proc[1])
+  else:
+    result = proc[1] 
+    save_spec_log(summary_path, profile, get_benchmark_name(benchmark), result)
 
-  result = proc[1] 
-  save_spec_log(summary_path, profile, get_benchmark_name(benchmark), result)
-
-  csv = ''
-  for r in result.split('\n'):
-    r = r.strip()
-    print(r)
-    if r.startswith('format: CSV'):
-      csv = r[r.find('/'):].strip()
-      locald[benchmark_name]['time'] = parse_csv(csv)
+    csv = ''
+    for r in result.split('\n'):
+      r = r.strip()
+      if r.startswith('format: CSV'):
+	csv = r[r.find('/'):].strip()
+	locald[benchmark_name]['time'] = parse_csv(csv)
 
   locald[benchmark_name]['size'] = parse_binary_size(summary_path, profile, benchmark[0])
 
