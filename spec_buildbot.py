@@ -176,6 +176,7 @@ for j, benchmark in enumerate(benchmarks):
 
   c = generate_config(profile, extra)
 
+  tc_print('Running command: ' + cl)
   cl = runspec_command('--config=' + c + ' --output-format=csv ' + runspec_arguments + benchmark_name)
   proc = commands.getstatusoutput(cl)
 
