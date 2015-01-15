@@ -156,7 +156,7 @@ if not os.path.isdir(summary_path):
 
 ts_print('Starting group of tests')
 
-d = {'INT': {}, 'FP': {}, 'info': { 'flags': default_flags, 'runspec_flags': runspec_flags }}
+d = {'INT': {}, 'FP': {}, 'info': { 'flags': default_flags, 'runspec_flags': runspec_arguments }}
 
 for j, benchmark in enumerate(benchmarks):
   benchmark_name = get_benchmark_name(benchmark)
