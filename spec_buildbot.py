@@ -141,6 +141,8 @@ def ts_print(*args):
   for a in args:
     print(a)
 
+  sys.stdout.flush()
+
 def get_benchmark_name(benchmark):
   return benchmark[0].split('.')[1]
 
@@ -197,4 +199,4 @@ dump_file = sys.argv[3]
 with open(dump_file, 'w') as fp:
   json.dump(d, fp, indent = 1)
 
-print(json.dumps(d, indent = 1))
+ts_print(json.dumps(d, indent = 1))
