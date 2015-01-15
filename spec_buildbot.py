@@ -55,7 +55,7 @@ summary_folder = os.path.join(root_path, 'summary')
 config_template = os.path.join(config_folder, 'config-template.cfg')
 
 default_flags = '-fno-strict-aliasing -fpeel-loops -ffast-math -march=native -O3'
-runspec_arguments = '--size=test --no-reportable --iterations=1 '
+runspec_arguments = '--size=test --no-reportable --iterations=3 '
 
 os.chdir(root_path)
 
@@ -154,9 +154,9 @@ if not os.path.isdir(summary_path):
 
 ts_print('Starting group of tests')
 
-d = {'INT': {}, 'FP': {}}
+d = {'INT': {}, 'FP': {}, 'info': { 'flags': default_flags, 'runspec_flags': runspec_flags }}
 
-for j, benchmark in enumerate(benchmarks[0:2]):
+for j, benchmark in enumerate(benchmarks):
   benchmark_name = get_benchmark_name(benchmark)
 
   locald = d['INT']
