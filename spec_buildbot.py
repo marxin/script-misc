@@ -95,16 +95,14 @@ def save_spec_log(folder, profile, benchmark, data):
     f.write(l)
 
 def parse_csv(path):
+  ts_print('parse_csv called for: ' + path)
   for line in open(path, 'r'):
-    print(line)
     tokens = line.split(',')
 
     if line.startswith('"Selected Results Table"'):
       break
     
     if line.startswith('4') and len(tokens) >= 10 and len(tokens[2]) > 0:
-      print(tokens[2])
-      print(line)
       return float(tokens[2])
 
 def parse_binary_size(folder, profile, benchmark):
@@ -150,8 +148,6 @@ def runspec_command(cmd):
   return 'source ' + root_path + '/shrc && runspec ' + cmd
 
 # MAIN
-print(os.getcwd())
-
 summary_path = os.path.join(summary_folder, profile)
 if not os.path.isdir(summary_path):
   os.mkdir(summary_path)
@@ -160,7 +156,7 @@ ts_print('Starting group of tests')
 
 d = {'INT': {}, 'FP': {}}
 
-for j, benchmark in enumerate(benchmarks):
+for j, benchmark in enumerate(benchmarks[0:2]):
   benchmark_name = get_benchmark_name(benchmark)
 
   locald = d['INT']
@@ -176,7 +172,6 @@ for j, benchmark in enumerate(benchmarks):
 
   c = generate_config(profile, extra)
 
-  tc_print('Running command: ' + cl)
   cl = runspec_command('--config=' + c + ' --output-format=csv ' + runspec_arguments + benchmark_name)
   proc = commands.getstatusoutput(cl)
 
@@ -189,14 +184,17 @@ for j, benchmark in enumerate(benchmarks):
   save_spec_log(summary_path, profile, get_benchmark_name(benchmark), result)
 
   csv = ''
-  for r in result:
+  for r in result.split('\n'):
     r = r.strip()
+    print(r)
     if r.startswith('format: CSV'):
       csv = r[r.find('/'):].strip()
       locald[benchmark_name]['time'] = parse_csv(csv)
 
   locald[benchmark_name]['size'] = parse_binary_size(summary_path, profile, benchmark[0])
 
-json.dump(d, sys.argv[3], indent = 1)
+dump_file = sys.argv[3]
+with open(dump_file, 'w') as fp:
+  json.dump(d, fp, indent = 1)
 
-ts_print(f.name)
+print(json.dumps(d, indent = 1))
