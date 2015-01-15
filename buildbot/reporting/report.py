@@ -114,7 +114,7 @@ for i in range(len(first_benchmarks)):
   for br in benchreports:
     b = br.benchmarks[i]
     tr.td(str(b.size))
-    tr.td(str(br.size_comparison[i]) + ' %', klass = td_class(br.comparison[i]))
+    tr.td(str(br.size_comparison[i]) + ' %', klass = td_class(br.size_comparison[i]))
 
 tr = body.tr()
 tr.td.strong('AVERAGE')
