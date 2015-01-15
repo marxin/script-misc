@@ -182,7 +182,7 @@ for j, benchmark in enumerate(benchmarks):
   if proc[0] != 0:
     locald[benchmark_name]['time'] = None
     locald[benchmark_name]['size'] = None
-    print('err')
+    print(proc[1])
 
   result = proc[1] 
   save_spec_log(summary_path, profile, get_benchmark_name(benchmark), result)
