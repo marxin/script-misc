@@ -55,7 +55,7 @@ summary_folder = os.path.join(root_path, 'summary')
 config_template = os.path.join(config_folder, 'config-template.cfg')
 
 default_flags = '-fno-strict-aliasing -fpeel-loops -ffast-math -march=native -O3'
-runspec_arguments = '--size=test --no-reportable --iterations=3 '
+runspec_arguments = '--size=test --no-reportable --iterations=5 --tune=peak '
 
 os.chdir(root_path)
 
@@ -94,20 +94,16 @@ def save_spec_log(folder, profile, benchmark, data):
   for l in data:
     f.write(l)
 
-def parse_csv(path):
-  ts_print('parse_csv called for: ' + path)
-  for line in open(path, 'r'):
-    tokens = line.split(',')
+def parse_rsf(path):
+  reported = [l for l in open(path, 'r').readlines() if 'reported_time' in l]
+  results = []
 
-    if line.startswith('"Selected Results Table"'):
-      break
-    
-    if line.startswith('4') and len(tokens) >= 10 and len(tokens[2]) > 0:
-      # TODO: handle correctly!
-      if tokens[2] == '--':
-	return None
-      else:
-        return float(tokens[2])
+  for report in reported:
+    time = report.split(':')[-1].strip()
+    if time != '--':
+      results.append(float(time))
+
+  return results
 
 def parse_binary_size(folder, profile, benchmark):
   subfolder = os.path.join(root_path, 'benchspec/CPU2006', benchmark, 'exe')
@@ -178,12 +174,12 @@ for j, benchmark in enumerate(benchmarks):
 
   c = generate_config(profile, extra)
 
-  cl = runspec_command('--config=' + c + ' --output-format=csv ' + runspec_arguments + benchmark_name)
+  cl = runspec_command('--config=' + c + ' --output-format=raw ' + runspec_arguments + benchmark_name)
   proc = commands.getstatusoutput(cl)
 
   ts_print('Command result: %u' % proc[0])
   if proc[0] != 0:
-    locald[benchmark_name]['time'] = None
+    locald[benchmark_name]['times'] = None
     locald[benchmark_name]['size'] = None
     print('runspec command has failed')
     print(proc[1])
@@ -191,14 +187,15 @@ for j, benchmark in enumerate(benchmarks):
     result = proc[1] 
     save_spec_log(summary_path, profile, get_benchmark_name(benchmark), result)
 
-    csv = ''
+    rsf = ''
     for r in result.split('\n'):
       r = r.strip()
-      if r.startswith('format: CSV'):
-	csv = r[r.find('/'):].strip()
-	locald[benchmark_name]['time'] = parse_csv(csv)
+      if r.startswith('format: raw'):
+	rsf = r[r.find('/'):].strip()
+	locald[benchmark_name]['times'] = parse_rsf(rsf)
 
   locald[benchmark_name]['size'] = parse_binary_size(summary_path, profile, benchmark[0])
+  ts_print(locald)
 
 dump_file = sys.argv[3]
 with open(dump_file, 'w') as fp:
