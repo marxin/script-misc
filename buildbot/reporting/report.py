@@ -10,6 +10,9 @@ if len(sys.argv) < 2:
 
 data_folder = sys.argv[1]
 
+def average(values):
+  return sum(values) / len(values)
+
 def td_class(comparison):
   if comparison < 100:
     return 'success'
@@ -22,14 +25,19 @@ class BenchMarkResult:
   def __init__ (self, name, d):
     self.name = name
     self.d = d
-    self.time = d['time']
-    self.size = d['size']['TOTAL']
+
+    if len(d['times']) > 0:
+      self.time = average(d['times'])
+      self.size = d['size']['TOTAL']
+    else:
+      self.time = 0
 
 class BenchMarkReport:
   def __init__ (self, filename, d):
     self.d = d
     self.filename = filename
-    self.benchmarks = sorted(list(map(lambda x: BenchMarkResult(x, d['FP'][x]), d['FP'])), key = lambda x: x.name)
+    all_benchmarks = list(map(lambda x: BenchMarkResult(x, d['FP'][x]), d['FP'])) + list(map(lambda x: BenchMarkResult(x, d['INT'][x]), d['INT']))
+    self.benchmarks = sorted(filter(lambda x: x.time != 0, all_benchmarks), key = lambda x: x.name)
 
   def compare(self, comparer):
     self.comparison = []
@@ -39,8 +47,8 @@ class BenchMarkReport:
       self.comparison.append(round(100.0 * v.time / comparer.benchmarks[i].time, 2))
       self.size_comparison.append(round(100.0 * v.size / comparer.benchmarks[i].size, 2))
     
-    self.avg_comparison = round(sum(self.comparison) / len(self.comparison), 2)
-    self.avg_size_comparison = round(sum(self.size_comparison) / len(self.size_comparison), 2)
+    self.avg_comparison = round(average(self.comparison), 2)
+    self.avg_size_comparison = round(average(self.size_comparison), 2)
 
 benchreports = []
 
@@ -123,7 +131,5 @@ for br in benchreports:
   tr.td()
   td = tr.td(klass = td_class(br.avg_size_comparison))
   td.strong(str(br.avg_size_comparison) + ' %')
-
-
 
 print(h)
