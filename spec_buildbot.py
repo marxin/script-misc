@@ -86,6 +86,7 @@ def generate_config(profile, extra_flags = ''):
   for l in lines:
     f.write(l.strip() + '\n')
 
+  ts_print('generating config to: ' + config_name)
   return config_name
 
 def save_spec_log(folder, profile, benchmark, data):
