@@ -11,44 +11,64 @@ import json
 import commands
 import subprocess
 
+# columns: [benchmark name, INT component, is fortran]
 benchmarks = [
-              ['400.perlbench', True],
-              ['401.bzip2', True],
-              ['403.gcc', True],
-              ['410.bwaves', False],
-              ['416.gamess', False],
-              ['429.mcf', True],
-              ['433.milc', False],
-              ['434.zeusmp', False],
-              ['435.gromacs', False],
-              ['436.cactusADM', False],
-              ['437.leslie3d', False],
-              ['444.namd', False],
-              ['445.gobmk', True],
-              ['447.dealII', False],
-              ['450.soplex', False],
-              ['453.povray', False],
-              ['454.calculix', False],
-              ['456.hmmer', True],
-              ['458.sjeng', True],
-              ['459.GemsFDTD', False],
-              ['462.libquantum', True],
-              ['464.h264ref', True],
-              ['465.tonto', False],
-              ['470.lbm', False],
-              ['471.omnetpp', True],
-              ['473.astar', True],
-              ['481.wrf', False],
-              ['482.sphinx3', False],
-              ['483.xalancbmk', True]
+              ['400.perlbench', True, False],
+              ['401.bzip2', True, False],
+              ['403.gcc', True, False],
+              ['410.bwaves', False, True],
+              ['416.gamess', False, True],
+              ['429.mcf', True, False],
+              ['433.milc', False, False],
+              ['434.zeusmp', False, True],
+              ['435.gromacs', False, True],
+              ['436.cactusADM', False, True],
+              ['437.leslie3d', False, True],
+              ['444.namd', False, False],
+              ['445.gobmk', True, False],
+              ['447.dealII', False, False],
+              ['450.soplex', False, False],
+              ['453.povray', False, False],
+              ['454.calculix', False, True],
+              ['456.hmmer', True, False],
+              ['458.sjeng', True, False],
+              ['459.GemsFDTD', False, True],
+              ['462.libquantum', True, False],
+              ['464.h264ref', True, False],
+              ['465.tonto', False, True],
+              ['470.lbm', False, False],
+              ['471.omnetpp', True, False],
+              ['473.astar', True, False],
+              ['481.wrf', False, True],
+              ['482.sphinx3', False, False],
+              ['483.xalancbmk', True, False]
             ]
 
-if len(sys.argv) != 4:
+class GCCConfiguration:
+  def get_benchmarks():
+    return benchmarks
+  def compilers():
+    return { 'FC': 'gfortran', 'CXX': 'g++', 'CC': 'gcc' }
+
+class LLVMConfiguration:
+  def get_benchmarks():
+    return list(filter(lambda x: x[2], benchmarks))
+  def compilers():
+    return { 'FC': '', 'CXX': 'clang++', 'CC': 'clang' }
+
+if len(sys.argv) != 5:
   sys.exit(1)
 
 real_script_folder = os.path.dirname(os.path.realpath(__file__))
 root_path = os.path.abspath(sys.argv[1])
 profile = sys.argv[2]
+compiler = sys.argv[3]
+
+configuration = None
+if compiler == 'GCC':
+  configuration = GCCConfiguration()
+elif compiler == 'LLVM':
+  configuration = LLVMConfiguration()
 
 config_folder = os.path.join(root_path, 'config')
 summary_folder = os.path.join(root_path, 'summary')
@@ -59,7 +79,7 @@ runspec_arguments = '--size=test --no-reportable --iterations=3 --tune=peak '
 
 os.chdir(root_path)
 
-def generate_config(profile, extra_flags = ''):
+def generate_config(profile, configuration, extra_flags = ''):
   lines = open(config_template, 'r').readlines()
 
   p = 94
@@ -72,9 +92,10 @@ def generate_config(profile, extra_flags = ''):
 
   p = 54
 
-  lines.insert(p, 'FC = gfortran')
-  lines.insert(p, 'CXX = g++')
-  lines.insert(p, 'CC = gcc')
+  compilers = configuration.compilers()
+  lines.insert(p, 'FC = ' + compilers['FC'])
+  lines.insert(p, 'CXX = ' + compilers['CXX'])
+  lines.insert(p, 'CC = ' + compilers['CC'])
 
   p = 36
 
@@ -159,7 +180,7 @@ ts_print('Starting group of tests')
 
 d = {'INT': {}, 'FP': {}, 'info': { 'flags': default_flags, 'runspec_flags': runspec_arguments }}
 
-for j, benchmark in enumerate(benchmarks):
+for j, benchmark in enumerate(configuration.get_benchmarks()):
   benchmark_name = get_benchmark_name(benchmark)
 
   locald = d['INT']
@@ -173,7 +194,7 @@ for j, benchmark in enumerate(benchmarks):
   # Real benchmark run
   extra = ''
 
-  c = generate_config(profile, extra)
+  c = generate_config(profile, configuration, extra)
 
   cl = runspec_command('--config=' + c + ' --output-format=raw ' + runspec_arguments + benchmark_name)
   proc = commands.getstatusoutput(cl)
