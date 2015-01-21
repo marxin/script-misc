@@ -65,9 +65,9 @@ profile = sys.argv[2]
 compiler = sys.argv[3]
 
 configuration = None
-if compiler == 'GCC':
+if compiler == 'gcc':
   configuration = GCCConfiguration()
-elif compiler == 'LLVM':
+elif compiler == 'llvm':
   configuration = LLVMConfiguration()
 
 config_folder = os.path.join(root_path, 'config')
