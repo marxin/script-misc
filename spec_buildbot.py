@@ -46,15 +46,15 @@ benchmarks = [
             ]
 
 class GCCConfiguration:
-  def get_benchmarks():
+  def get_benchmarks(self):
     return benchmarks
-  def compilers():
+  def compilers(self):
     return { 'FC': 'gfortran', 'CXX': 'g++', 'CC': 'gcc' }
 
 class LLVMConfiguration:
-  def get_benchmarks():
+  def get_benchmarks(self):
     return list(filter(lambda x: x[2], benchmarks))
-  def compilers():
+  def compilers(self):
     return { 'FC': '', 'CXX': 'clang++', 'CC': 'clang' }
 
 if len(sys.argv) != 5:
