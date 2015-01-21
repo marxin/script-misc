@@ -77,7 +77,7 @@ summary_folder = os.path.join(root_path, 'summary')
 config_template = os.path.join(config_folder, 'config-template.cfg')
 
 default_flags = '-fno-strict-aliasing -fpeel-loops -ffast-math -march=native -O3'
-runspec_arguments = '--size=test --no-reportable --iterations=3 --tune=peak '
+runspec_arguments = '--size=test --no-reportable --iterations=5 --tune=peak '
 
 os.chdir(root_path)
 
