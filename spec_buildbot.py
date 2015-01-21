@@ -10,6 +10,7 @@ import shutil
 import json
 import commands
 import subprocess
+import platform
 
 # columns: [benchmark name, INT component, is fortran]
 benchmarks = [
@@ -178,7 +179,7 @@ if not os.path.isdir(summary_path):
 
 ts_print('Starting group of tests')
 
-d = {'INT': {}, 'FP': {}, 'info': { 'flags': default_flags, 'runspec_flags': runspec_arguments }}
+d = {'INT': {}, 'FP': {}, 'info': { 'flags': default_flags, 'runspec_flags': runspec_arguments, 'uname': ' '.join(platform.uname()) }}
 
 for j, benchmark in enumerate(configuration.get_benchmarks()):
   benchmark_name = get_benchmark_name(benchmark)
