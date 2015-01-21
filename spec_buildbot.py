@@ -63,7 +63,8 @@ if len(sys.argv) != 5:
 real_script_folder = os.path.dirname(os.path.realpath(__file__))
 root_path = os.path.abspath(sys.argv[1])
 profile = sys.argv[2]
-compiler = sys.argv[3]
+dump_file = sys.argv[3]
+compiler = sys.argv[4]
 
 configuration = None
 if compiler == 'gcc':
@@ -220,7 +221,6 @@ for j, benchmark in enumerate(configuration.get_benchmarks()):
   locald[benchmark_name]['size'] = parse_binary_size(summary_path, profile, benchmark[0])
   ts_print(locald)
 
-dump_file = sys.argv[3]
 with open(dump_file, 'w') as fp:
   json.dump(d, fp, indent = 1)
 
