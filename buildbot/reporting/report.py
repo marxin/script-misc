@@ -13,6 +13,12 @@ data_folder = sys.argv[1]
 def average(values):
   return sum(values) / len(values)
 
+def quad_different(values):
+  a = average(values)
+  s = sum(map(lambda x: (x - a)**2, values))
+  l = len(values)
+  return s / l
+
 def td_class(comparison):
   if comparison < 100:
     return 'success'
@@ -27,7 +33,9 @@ class BenchMarkResult:
     self.d = d
 
     if len(d['times']) > 0:
+      self.all_times = d['times']
       self.time = average(d['times'])
+      self.time_quad_difference = round(quad_different(d['times']), 4)
       self.size = d['size']['TOTAL']
     else:
       self.time = 0
@@ -36,6 +44,7 @@ class BenchMarkReport:
   def __init__ (self, filename, d):
     self.d = d
     self.filename = filename
+    self.version = self.d['info']['version']
     all_benchmarks = list(map(lambda x: BenchMarkResult(x, d['FP'][x]), d['FP'])) + list(map(lambda x: BenchMarkResult(x, d['INT'][x]), d['INT']))
     self.benchmarks = sorted(filter(lambda x: x.time != 0, all_benchmarks), key = lambda x: x.name)
 
@@ -77,7 +86,7 @@ tr = table.thead.tr
 tr.th('')
 
 for b in benchreports:
-  tr.th(b.filename)  
+  tr.th(b.version)
   tr.th('time %')
 
 body = table.body
@@ -90,7 +99,7 @@ for i in range(len(first_benchmarks)):
 
   for br in benchreports:
     b = br.benchmarks[i]
-    tr.td(str(b.time))
+    tr.td(str(b.time) + '(QD:' + str(b.time_quad_difference) + ')')
     tr.td(str(br.comparison[i]) + ' %', klass = td_class(br.comparison[i]))
 
 tr = body.tr()
@@ -108,7 +117,7 @@ tr = table.thead.tr
 tr.th('')
 
 for b in benchreports:
-  tr.th(b.filename)  
+  tr.th(b.version)
   tr.th('size %')
 
 body = table.body

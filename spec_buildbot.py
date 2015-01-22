@@ -53,9 +53,9 @@ class GCCConfiguration:
 
 class LLVMConfiguration:
   def get_benchmarks(self):
-    return list(filter(lambda x: x[2], benchmarks))
+    return list(filter(lambda x: x[2] == False, benchmarks))
   def compilers(self):
-    return { 'FC': '', 'CXX': 'clang++', 'CC': 'clang' }
+    return { 'FC': '___no_cf___', 'CXX': 'clang++', 'CC': 'clang' }
 
 if len(sys.argv) != 5:
   sys.exit(1)
@@ -182,7 +182,9 @@ ts_print('Starting group of tests')
 
 d = {'INT': {}, 'FP': {}, 'info': { 'flags': default_flags, 'runspec_flags': runspec_arguments, 'uname': ' '.join(platform.uname()) }}
 
-for j, benchmark in enumerate(configuration.get_benchmarks()):
+benchmarks = configuration.get_benchmarks()
+
+for j, benchmark in enumerate(benchmarks):
   benchmark_name = get_benchmark_name(benchmark)
 
   locald = d['INT']
