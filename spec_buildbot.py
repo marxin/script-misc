@@ -81,6 +81,19 @@ config_template = os.path.join(config_folder, 'config-template.cfg')
 default_flags = '-fno-strict-aliasing -fpeel-loops -ffast-math -march=native -O3'
 runspec_arguments = '--size=test --no-reportable --iterations=5 --tune=peak '
 
+d = {
+    'INT': {},
+    'FP': {},
+    'info':
+      {
+	'flags': default_flags,
+	'runspec_flags': runspec_arguments,
+	'uname': ' '.join(platform.uname()),
+	'node': platform.uname()[1],
+	'changes': changes
+      }
+    }
+
 os.chdir(root_path)
 
 def generate_config(profile, configuration, extra_flags = ''):
@@ -181,20 +194,6 @@ if not os.path.isdir(summary_path):
   os.mkdir(summary_path)
 
 ts_print('Starting group of tests')
-
-d =
-  {
-    'INT': {},
-    'FP': {},
-    'info':
-      {
-	'flags': default_flags,
-	'runspec_flags': runspec_arguments,
-	'uname': ' '.join(platform.uname()),
-	'node': platform.uname()[1],
-	'changes': changes
-      }
-    }
 
 benchmarks = configuration.get_benchmarks()
 
