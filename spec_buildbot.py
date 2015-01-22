@@ -2,6 +2,7 @@
 
 from __future__ import print_function
 from tempfile import *
+from base64 import *
 
 import sys
 import os
@@ -57,7 +58,7 @@ class LLVMConfiguration:
   def compilers(self):
     return { 'FC': '___no_cf___', 'CXX': 'clang++', 'CC': 'clang' }
 
-if len(sys.argv) != 5:
+if len(sys.argv) != 6:
   sys.exit(1)
 
 real_script_folder = os.path.dirname(os.path.realpath(__file__))
@@ -65,6 +66,7 @@ root_path = os.path.abspath(sys.argv[1])
 profile = sys.argv[2]
 dump_file = sys.argv[3]
 compiler = sys.argv[4]
+changes = b64decode(sys.argv[5])
 
 configuration = None
 if compiler == 'gcc':
@@ -180,7 +182,19 @@ if not os.path.isdir(summary_path):
 
 ts_print('Starting group of tests')
 
-d = {'INT': {}, 'FP': {}, 'info': { 'flags': default_flags, 'runspec_flags': runspec_arguments, 'uname': ' '.join(platform.uname()) }}
+d =
+  {
+    'INT': {},
+    'FP': {},
+    'info':
+      {
+	'flags': default_flags,
+	'runspec_flags': runspec_arguments,
+	'uname': ' '.join(platform.uname()),
+	'node': platform.uname()[1],
+	'changes': changes
+      }
+    }
 
 benchmarks = configuration.get_benchmarks()
 
