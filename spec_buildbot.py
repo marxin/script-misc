@@ -54,7 +54,8 @@ class GCCConfiguration:
 
 class LLVMConfiguration:
   def get_benchmarks(self):
-    return list(filter(lambda x: x[2] == False, benchmarks))
+    # dealII runs extremely slowly
+    return list(filter(lambda x: x[2] == False and x[0] != '447.dealII', benchmarks))
   def compilers(self):
     return { 'FC': '___no_cf___', 'CXX': 'clang++', 'CC': 'clang' }
 
