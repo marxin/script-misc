@@ -47,16 +47,21 @@ class BenchMarkReport:
     self.filename = filename
     self.node = self.d['info']['node']
     self.changes = self.d['info']['changes']
+    self.compiler = self.d['info']['compiler']
     all_benchmarks = list(map(lambda x: BenchMarkResult(x, d['FP'][x]), d['FP'])) + list(map(lambda x: BenchMarkResult(x, d['INT'][x]), d['INT']))
     self.benchmarks = sorted(filter(lambda x: x.time != 0, all_benchmarks), key = lambda x: x.name)
+    self.benchmarks_dictionary = {}
+    for b in self.benchmarks:
+      self.benchmarks_dictionary[b.name] = b
 
   def compare(self, comparer):
     self.comparison = []
     self.size_comparison = []
     
     for i, v in enumerate(self.benchmarks):
-      self.comparison.append(round(100.0 * v.time / comparer.benchmarks[i].time, 2))
-      self.size_comparison.append(round(100.0 * v.size / comparer.benchmarks[i].size, 2))
+      if v.name in comparer.benchmarks_dictionary:
+        self.comparison.append(round(100.0 * v.time / comparer.benchmarks_dictionary[v.name].time, 2))
+        self.size_comparison.append(round(100.0 * v.size / comparer.benchmarks_dictionary[v.name].size, 2))
     
     self.avg_comparison = round(average(self.comparison), 2)
     self.avg_size_comparison = round(average(self.size_comparison), 2)
@@ -78,7 +83,7 @@ def generate_comparison(html_root, reports):
   tr.th('')
 
   for b in reports:
-    tr.th(b.changes)
+    tr.th(b.compiler + '#' + b.changes)
     tr.th('time %')
 
   body = table.body
@@ -109,7 +114,7 @@ def generate_comparison(html_root, reports):
   tr.th('')
 
   for b in reports:
-    tr.th(b.changes)
+    tr.th(b.compiler + '#' + b.changes)
     tr.th('size %')
 
   body = table.body

@@ -48,7 +48,8 @@ benchmarks = [
 
 class GCCConfiguration:
   def get_benchmarks(self):
-    return benchmarks
+    # dealII runs extremely slowly
+    return list(filter(lambda and x[0] != '447.dealII', benchmarks))
   def compilers(self):
     return { 'FC': 'gfortran', 'CXX': 'g++', 'CC': 'gcc' }
 
