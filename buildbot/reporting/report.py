@@ -3,13 +3,25 @@
 import sys
 import os
 import json
+import argparse
+
 from itertools import *
 from html import *
 
-if len(sys.argv) < 2:
-  exit(1)
+parser = argparse.ArgumentParser(description='Generate HTML reports for SPEC results')
+parser.add_argument('folder', metavar = 'FOLDER', help = 'Folder with JSON results')
+parser.add_argument('--ignore', dest = 'ignore', nargs = '+', help = 'Ignored benchmarks')
 
-data_folder = sys.argv[1]
+args = parser.parse_args()
+
+if args.ignore == None:
+  args.ignore = []
+
+def percent(v):
+  return '%.2f %%' % v
+
+def flt_str(v):
+  return '%2.4f' % v
 
 def average(values):
   return sum(values) / len(values)
@@ -46,29 +58,30 @@ class BenchMarkReport:
     self.d = d
     self.filename = filename
     self.node = self.d['info']['node']
-    self.changes = self.d['info']['changes']
+    self.changes = self.d['info']['changes'].replace('buildbot: poke', '')
     self.compiler = self.d['info']['compiler']
+    self.full_name = self.compiler + '#' + self.changes
     all_benchmarks = list(map(lambda x: BenchMarkResult(x, d['FP'][x]), d['FP'])) + list(map(lambda x: BenchMarkResult(x, d['INT'][x]), d['INT']))
-    self.benchmarks = sorted(filter(lambda x: x.time != 0, all_benchmarks), key = lambda x: x.name)
+    self.benchmarks = sorted(filter(lambda x: x.time != 0 and not x.name in args.ignore, all_benchmarks), key = lambda x: x.name)
     self.benchmarks_dictionary = {}
     for b in self.benchmarks:
       self.benchmarks_dictionary[b.name] = b
 
   def compare(self, comparer):
-    self.comparison = []
-    self.size_comparison = []
+    self.comparison = {}
+    self.size_comparison = {}
     
     for i, v in enumerate(self.benchmarks):
       if v.name in comparer.benchmarks_dictionary:
-        self.comparison.append(round(100.0 * v.time / comparer.benchmarks_dictionary[v.name].time, 2))
-        self.size_comparison.append(round(100.0 * v.size / comparer.benchmarks_dictionary[v.name].size, 2))
+        self.comparison[v.name] = round(100.0 * v.time / comparer.benchmarks_dictionary[v.name].time, 2)
+        self.size_comparison[v.name] = round(100.0 * v.size / comparer.benchmarks_dictionary[v.name].size, 2)
     
-    self.avg_comparison = round(average(self.comparison), 2)
-    self.avg_size_comparison = round(average(self.size_comparison), 2)
+    self.avg_comparison = round(average(self.comparison.values()), 2)
+    self.avg_size_comparison = round(average(self.size_comparison.values()), 2)
 
 benchreports = []
 
-for root, dirs, files in os.walk(data_folder):
+for root, dirs, files in os.walk(args.folder):
   for f in files:
     abspath = os.path.join(root, f)
     benchreports.append(BenchMarkReport(f, json.loads(open(abspath).read())))
@@ -83,29 +96,34 @@ def generate_comparison(html_root, reports):
   tr.th('')
 
   for b in reports:
-    tr.th(b.compiler + '#' + b.changes)
+    tr.th(b.full_name)
     tr.th('time %')
 
   body = table.body
 
   first_benchmarks = reports[0].benchmarks
 
-  for i in range(len(first_benchmarks)):
+  for i in first_benchmarks:
     tr = body.tr()
-    tr.td(first_benchmarks[i].name)
+    tr.td(i.name)
 
     for br in reports:
-      b = br.benchmarks[i]
-      tr.td(str(b.time) + '(QD:' + str(b.time_quad_difference) + ')')
-      tr.td(str(br.comparison[i]) + ' %', klass = td_class(br.comparison[i]))
+      if i.name in br.benchmarks_dictionary:
+        b = br.benchmarks_dictionary[i.name]
+#      tr.td(str(b.time) + '(QD:' + str(b.time_quad_difference) + ')')
+        tr.td(flt_str(b.time), klass = "text-right")
+        tr.td(percent(br.comparison[i.name]), klass = td_class(br.comparison[i.name]) + ' text-right')
+      else:
+        tr.td('N/A', klass = 'text-right')
+        tr.td('N/A', klass = 'text-right')
 
   tr = body.tr()
   tr.td.strong('AVERAGE')
 
   for br in reports:
     tr.td()
-    td = tr.td(klass = td_class(br.avg_comparison))
-    td.strong(str(br.avg_comparison) + ' %')
+    td = tr.td(klass = td_class(br.avg_comparison) + ' text-right')
+    td.strong(percent(br.avg_comparison))
 
   row.h2('Size (smaller is better)')
 
@@ -114,29 +132,33 @@ def generate_comparison(html_root, reports):
   tr.th('')
 
   for b in reports:
-    tr.th(b.compiler + '#' + b.changes)
+    tr.th(b.full_name)
     tr.th('size %')
 
   body = table.body
 
   first_benchmarks = reports[0].benchmarks
 
-  for i in range(len(first_benchmarks)):
+  for i in first_benchmarks:
     tr = body.tr()
-    tr.td(first_benchmarks[i].name)
+    tr.td(i.name)
 
     for br in reports:
-      b = br.benchmarks[i]
-      tr.td(str(b.size))
-      tr.td(str(br.size_comparison[i]) + ' %', klass = td_class(br.size_comparison[i]))
+      if i.name in br.benchmarks_dictionary:
+        b = br.benchmarks_dictionary[i.name]
+        tr.td(str(b.size), klass = 'text-right')
+        tr.td(percent(br.size_comparison[i.name]), klass = td_class(br.size_comparison[i.name]) + ' text-right')
+      else:
+        tr.td('N/A', klass = 'text-right')
+        tr.td('N/A', klass = 'text-right')
 
   tr = body.tr()
   tr.td.strong('AVERAGE')
 
   for br in reports:
     tr.td()
-    td = tr.td(klass = td_class(br.avg_size_comparison))
-    td.strong(str(br.avg_size_comparison) + ' %')
+    td = tr.td(klass = td_class(br.avg_size_comparison) + ' text-right')
+    td.strong(percent(br.avg_size_comparison))
 
 # HTML REPORT
 h = HTML()
@@ -147,7 +169,7 @@ benchreports = sorted(benchreports, key = keyfunc)
 container = h.body.div(klass = 'container')
 
 for k, v in groupby(benchreports, keyfunc):
-  l = list(v)
+  l = sorted(list(v), key = lambda x: x.full_name)
   for i in l:
     i.compare(l[0])
 
