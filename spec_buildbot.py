@@ -91,7 +91,8 @@ d = {
 	'runspec_flags': runspec_arguments,
 	'uname': ' '.join(platform.uname()),
 	'node': platform.uname()[1],
-	'changes': changes
+	'changes': changes,
+	'compiler': compiler
       }
     }
 
