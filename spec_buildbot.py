@@ -265,8 +265,9 @@ for j, benchmark in enumerate(benchmarks):
       binary = os.path.join(binary_folder, [x for x in os.listdir(binary_folder) if profile in x][0])
       ts_print('Copy perf.data to: ' + perf_folder)
       shutil.copyfile('perf.data', os.path.join(perf_folder, 'perf.data'))      
-      ts_print('Copy binary: %s to: %s' % (binary, os.path.join(perf_folder, os.path.basename(binary))))
-      shutil.copyfile(binary, perf_folder)
+      dst = os.path.join(perf_folder, os.path.basename(binary))
+      ts_print('Copy binary: %s to: %s' % (binary, dst))
+      shutil.copyfile(binary, dst)
 
   locald[benchmark_name]['size'] = parse_binary_size(summary_path, profile, benchmark[0])
   ts_print(locald)
