@@ -209,7 +209,7 @@ if not os.path.isdir(summary_path):
 
 ts_print('Starting group of tests')
 
-benchmarks = configuration.get_benchmarks()[0:1]
+benchmarks = configuration.get_benchmarks()[5:6]
 
 for j, benchmark in enumerate(benchmarks):
   benchmark_name = get_benchmark_name(benchmark)
@@ -247,19 +247,21 @@ for j, benchmark in enumerate(benchmarks):
       if r.startswith('format: raw'):
 	rsf = r[r.find('/'):].strip()
 	locald[benchmark_name]['times'] = parse_rsf(rsf)
-      if 'specinvoke' in r:
+      if 'specinvoke' in r and invoke == None:
 	invoke = r
 
+    # prepare folder
+    perf_folder = os.path.join(perf_folder, benchmark_name)
+    os.makedirs(perf_folder)
+
     # process PERF record
-    perf_cmd = 'perf record --call-graph=dwarf ' + invoke
-    ts_print('Running perf command: ' + perf_cmd)
+    perf_cmd = 'perf record --call-graph=dwarf -- ' + invoke
+    ts_print('Running perf command: "' + perf_cmd + '"')
     proc = commands.getstatusoutput(perf_cmd)
     if proc[0] != 0:
       ts_print('Perf command failed: ' + proc[1])
     else:
       binary = invoke.split(' ')[2]
-      perf_folder = os.path.join(perf_folder, benchmark_name)
-      os.makedirs(perf_folder)
       ts_print('Copy perf.data to: ' + perf_folder)
       shutil.copyfile('perf.data', perf_folder)
       ts_print('Copy binary: %s to: %s' % (binary, perf_folder))
