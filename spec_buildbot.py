@@ -251,8 +251,8 @@ for j, benchmark in enumerate(benchmarks):
 	invoke = r
 
     # prepare folder
-    perf_folder = os.path.join(perf_folder, benchmark_name)
-    os.makedirs(perf_folder)
+    perf_folder_subdir = os.path.join(perf_folder, benchmark_name)
+    os.makedirs(perf_folder_subdir)
 
     # process PERF record
     perf_cmd = 'perf record --call-graph=dwarf -- ' + invoke
@@ -263,9 +263,9 @@ for j, benchmark in enumerate(benchmarks):
     else:
       binary_folder = invoke.split(' ')[2]
       binary = os.path.join(binary_folder, [x for x in os.listdir(binary_folder) if profile in x][0])
-      ts_print('Copy perf.data to: ' + perf_folder)
-      shutil.copyfile('perf.data', os.path.join(perf_folder, 'perf.data'))      
-      dst = os.path.join(perf_folder, os.path.basename(binary))
+      ts_print('Copy perf.data to: ' + perf_folder_subdir)
+      shutil.copyfile('perf.data', os.path.join(perf_folder_subdir, 'perf.data'))      
+      dst = os.path.join(perf_folder_subdir, os.path.basename(binary))
       ts_print('Copy binary: %s to: %s' % (binary, dst))
       shutil.copyfile(binary, dst)
 
