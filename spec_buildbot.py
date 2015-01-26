@@ -209,7 +209,7 @@ if not os.path.isdir(summary_path):
 
 ts_print('Starting group of tests')
 
-benchmarks = configuration.get_benchmarks()
+benchmarks = configuration.get_benchmarks()[0:1]
 
 for j, benchmark in enumerate(benchmarks):
   benchmark_name = get_benchmark_name(benchmark)
