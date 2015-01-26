@@ -60,6 +60,14 @@ class LLVMConfiguration:
   def compilers(self):
     return { 'FC': '___no_cf___', 'CXX': 'clang++', 'CC': 'clang' }
 
+class ICCConfiguration:
+  def get_benchmarks(self):
+    # dealII runs extremely slowly
+    return benchmarks
+  def compilers(self):
+    prefix = '~matz/bin/2015.1/bin/intel64/'
+    return { 'FC': os.path.join(prefix, 'ifort'), 'CXX': os.path.join(prefix, 'icpc', 'CC': os.path.join(prefix, 'icc') }
+
 if len(sys.argv) != 6:
   sys.exit(1)
 
@@ -75,6 +83,8 @@ if compiler == 'gcc':
   configuration = GCCConfiguration()
 elif compiler == 'llvm':
   configuration = LLVMConfiguration()
+elif compiler == 'icc':
+  configuration = ICCConfiguration()
 
 config_folder = os.path.join(root_path, 'config')
 summary_folder = os.path.join(root_path, 'summary')
