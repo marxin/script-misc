@@ -68,7 +68,7 @@ class ICCConfiguration:
     prefix = '~matz/bin/2015.1/bin/intel64/'
     return { 'FC': os.path.join(prefix, 'ifort'), 'CXX': os.path.join(prefix, 'icpc'), 'CC': os.path.join(prefix, 'icc') }
 
-if len(sys.argv) != 8:
+if len(sys.argv) != 7:
   sys.exit(1)
 
 real_script_folder = os.path.dirname(os.path.realpath(__file__))
@@ -77,8 +77,7 @@ profile = sys.argv[2]
 dump_file = sys.argv[3]
 compiler = sys.argv[4]
 changes = b64decode(sys.argv[5])
-perf_data = sys.argv[6]
-perf_binary = sys.argv[7]
+perf_folder = sys.argv[6]
 
 configuration = None
 if compiler == 'gcc':
@@ -259,10 +258,11 @@ for j, benchmark in enumerate(benchmarks):
       ts_print('Perf command failed: ' + proc[1])
     else:
       binary = invoke.split(' ')[2]
-      ts_print('Copy perf.data to: ' + perf_data)
-      shutil.copyfile('perf.data', perf_data)
-      ts_print('Copy binary: %s to: %s' % (binary, binary_file))
-      shutil.copyfile(binary, binary_file)
+      os.makedirs(perf_folder)
+      ts_print('Copy perf.data to: ' + perf_folder)
+      shutil.copyfile('perf.data', perf_folder)
+      ts_print('Copy binary: %s to: %s' % (binary, perf_folder))
+      shutil.copyfile(binary, perf_folder)
 
   locald[benchmark_name]['size'] = parse_binary_size(summary_path, profile, benchmark[0])
   ts_print(locald)
