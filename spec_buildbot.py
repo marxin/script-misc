@@ -66,7 +66,7 @@ class ICCConfiguration:
     return benchmarks
   def compilers(self):
     prefix = '~matz/bin/2015.1/bin/intel64/'
-    return { 'FC': os.path.join(prefix, 'ifort'), 'CXX': os.path.join(prefix, 'icpc', 'CC': os.path.join(prefix, 'icc') }
+    return { 'FC': os.path.join(prefix, 'ifort'), 'CXX': os.path.join(prefix, 'icpc'), 'CC': os.path.join(prefix, 'icc') }
 
 if len(sys.argv) != 6:
   sys.exit(1)
