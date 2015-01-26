@@ -261,7 +261,8 @@ for j, benchmark in enumerate(benchmarks):
     if proc[0] != 0:
       ts_print('Perf command failed: ' + proc[1])
     else:
-      binary = [x for x in os.listdir(invoke.split(' ')[2]) if profile in x][0]
+      binary_folder = invoke.split(' ')[2]
+      binary = os.path.join(binary_folder, [x for x in os.listdir(binary_folder) if profile in x][0])
       ts_print('Copy perf.data to: ' + perf_folder)
       shutil.copyfile('perf.data', os.path.join(perf_folder, 'perf.data'))      
       ts_print('Copy binary: %s to: %s' % (binary, os.path.join(perf_folder, os.path.basename(binary))))
