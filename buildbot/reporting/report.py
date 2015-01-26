@@ -86,7 +86,7 @@ for root, dirs, files in os.walk(args.folder):
     abspath = os.path.join(root, f)
     benchreports.append(BenchMarkReport(f, json.loads(open(abspath).read())))
 
-def generate_comparison(html_root, reports): 
+def generate_comparison(html_root, reports, svg_id): 
   row = html_root.div(klass = 'row')
 
   row.h2('Time (smaller is better)')
@@ -125,8 +125,8 @@ def generate_comparison(html_root, reports):
     td = tr.td(klass = td_class(br.avg_comparison) + ' text-right')
     td.strong(percent(br.avg_comparison))
 
+  row.svg(id = svg_id, style = 'height: 500px;')
   row.h2('Size (smaller is better)')
-
   table = row.table(klass = 'table table-condensed table-bordered')
   tr = table.thead.tr
   tr.th('')
@@ -160,13 +160,38 @@ def generate_comparison(html_root, reports):
     td = tr.td(klass = td_class(br.avg_size_comparison) + ' text-right')
     td.strong(percent(br.avg_size_comparison))
 
+def generate_graph(reports, id):
+  first_benchmarks = reports[0].benchmarks
+  names = list(map(lambda x: x.name, first_benchmarks))
+
+  data = []
+
+  for report in reports:
+    values = []
+    for i, v in enumerate(first_benchmarks):
+      if v.name in report.comparison:
+        values.append({'x': i, 'y': report.comparison[v.name]})
+
+    data.append({ 'key': report.full_name, 'values': values })
+
+  return 'var data%u = %s; var legend%u = %s;' % (id, json.dumps(data, indent = 2), id, json.dumps(names, indent = 2))
+
+
 # HTML REPORT
 h = HTML()
-h.head.link(rel = 'stylesheet', href = 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css')
+head = h.head()
+head.meta(charset = 'utf-8')
+head.link('', rel = 'stylesheet', href = 'https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.15-beta/nv.d3.css')
+head.link('', rel = 'stylesheet', href = 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css')
+head.script('', type = 'text/javascript', src = 'https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.js')
+head.script('', type = 'text/javascript', src = 'https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.15-beta/nv.d3.js') 
 
 keyfunc = lambda x: x.node
 benchreports = sorted(benchreports, key = keyfunc)
 container = h.body.div(klass = 'container')
+
+counter = 0
+script_content = ''
 
 for k, v in groupby(benchreports, keyfunc):
   l = sorted(list(v), key = lambda x: x.full_name)
@@ -174,6 +199,45 @@ for k, v in groupby(benchreports, keyfunc):
     i.compare(l[0])
 
   container.h2(k)
-  generate_comparison(container, l)
+  id = str(counter)
+  generate_comparison(container, l, 'data' + id)
+  script_content += generate_graph(l, counter)
+
+  script_content += '''var chart;
+nv.addGraph(function() {
+    chart = nv.models.multiBarChart()
+      .margin({bottom: 100})
+      .transitionDuration(300)
+      .delay(0)
+      .rotateLabels(45)
+      .groupSpacing(0.1)
+      ;
+
+    chart.multibar
+      .hideable(true);
+
+    chart.reduceXTicks(false).staggerLabels(true);
+
+    chart.xAxis
+        .tickFormat(function(v) { return legend''' + id + '''[v]; });
+
+    chart.yAxis
+        .tickFormat(d3.format(',.1f'));
+
+    d3.select("svg#data''' + id + '''")
+        .datum(data''' + id + ''')
+       .call(chart);
+
+    nv.utils.windowResize(chart.update);
+
+    chart.dispatch.on("stateChange", function(e) { nv.log("New State:", JSON.stringify(e)); });
+
+    return chart;
+});
+'''
+
+  counter += 1
+
+container.script(script_content)
 
 print(h)
