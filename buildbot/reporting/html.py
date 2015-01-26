@@ -329,7 +329,7 @@ class HTML(object):
             if k == 'klass':
                 self._attrs['class'] = cgi.escape(kw[k], True)
             else:
-                self._attrs[k] = cgi.escape(kw[k], True)
+                self._attrs[k.replace('_', '-')] = cgi.escape(kw[k], True)
         return self
 
     def __enter__(self):

@@ -125,7 +125,7 @@ def generate_comparison(html_root, reports, svg_id):
     td = tr.td(klass = td_class(br.avg_comparison) + ' text-right')
     td.strong(percent(br.avg_comparison))
 
-  row.svg(id = svg_id, style = 'height: 500px;')
+  row.svg(id = svg_id, style = 'height: 500px; width: 1150px;')
   row.h2('Size (smaller is better)')
   table = row.table(klass = 'table table-condensed table-bordered')
   tr = table.thead.tr
@@ -185,23 +185,38 @@ head.link('', rel = 'stylesheet', href = 'https://cdnjs.cloudflare.com/ajax/libs
 head.link('', rel = 'stylesheet', href = 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css')
 head.script('', type = 'text/javascript', src = 'https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.js')
 head.script('', type = 'text/javascript', src = 'https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.15-beta/nv.d3.js') 
+head.script('', type = 'text/javascript', src = 'https://code.jquery.com/jquery-2.1.3.js')
+head.script('', type = 'text/javascript', src = 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js')
 
 keyfunc = lambda x: x.node
-benchreports = sorted(benchreports, key = keyfunc)
+benchreports = sorted(benchreports, key = keyfunc, reverse = True)
 container = h.body.div(klass = 'container')
 
 counter = 0
 script_content = ''
 
+tabpanel = container.div(klass = 'tabpanel')
+nav = tabpanel.ul(klass = 'nav nav-tabs', role = 'tablist')
+tab_content = container.div(klass = 'tab-content')
+
+first = 'active'
 for k, v in groupby(benchreports, keyfunc):
   l = sorted(list(v), key = lambda x: x.full_name)
   for i in l:
     i.compare(l[0])
 
-  container.h2(k)
   id = str(counter)
-  generate_comparison(container, l, 'data' + id)
+  tabid = 'tab' + id
+  li = nav.li(role = 'presentation', klass = first)
+  li.a(k, href = '#' + tabid, role = 'tab', data_toggle = 'tab')
+
+  tab = tab_content.div(role = 'tabpanel', klass = 'tab-pane ' + first, id = tabid)
+  first = ''
+
+  tab.h2(k)
+  generate_comparison(tab, l, 'data' + id)
   script_content += generate_graph(l, counter)
+  first = ''
 
   script_content += '''var chart;
 nv.addGraph(function() {

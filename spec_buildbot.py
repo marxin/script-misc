@@ -68,7 +68,7 @@ class ICCConfiguration:
     prefix = '~matz/bin/2015.1/bin/intel64/'
     return { 'FC': os.path.join(prefix, 'ifort'), 'CXX': os.path.join(prefix, 'icpc'), 'CC': os.path.join(prefix, 'icc') }
 
-if len(sys.argv) != 6:
+if len(sys.argv) != 8:
   sys.exit(1)
 
 real_script_folder = os.path.dirname(os.path.realpath(__file__))
@@ -77,6 +77,8 @@ profile = sys.argv[2]
 dump_file = sys.argv[3]
 compiler = sys.argv[4]
 changes = b64decode(sys.argv[5])
+perf_data = sys.argv[6]
+perf_binary = sys.argv[7]
 
 configuration = None
 if compiler == 'gcc':
@@ -90,7 +92,7 @@ config_folder = os.path.join(root_path, 'config')
 summary_folder = os.path.join(root_path, 'summary')
 config_template = os.path.join(config_folder, 'config-template.cfg')
 
-default_flags = '-fno-strict-aliasing -fpeel-loops -ffast-math -march=native -O3'
+default_flags = '-Ofast -march=native -g'
 runspec_arguments = '--size=test --no-reportable --iterations=5 --tune=peak '
 
 d = {
@@ -240,11 +242,27 @@ for j, benchmark in enumerate(benchmarks):
     save_spec_log(summary_path, profile, get_benchmark_name(benchmark), result)
 
     rsf = ''
+    invoke = None
     for r in result.split('\n'):
       r = r.strip()
       if r.startswith('format: raw'):
 	rsf = r[r.find('/'):].strip()
 	locald[benchmark_name]['times'] = parse_rsf(rsf)
+      if 'specinvoke' in r:
+	invoke = r
+
+    # process PERF record
+    perf_cmd = 'perf record --call-graph=dwarf ' + invoke
+    ts_print('Running perf command: ' + perf_cmd)
+    proc = commands.getstatusoutput(perf_cmd)
+    if proc[0] != 0:
+      ts_print('Perf command failed: ' + proc[1])
+    else:
+      binary = invoke.split(' ')[2]
+      ts_print('Copy perf.data to: ' + perf_data)
+      shutil.copyfile('perf.data', perf_data)
+      ts_print('Copy binary: %s to: %s' % (binary, binary_file))
+      shutil.copyfile(binary, binary_file)
 
   locald[benchmark_name]['size'] = parse_binary_size(summary_path, profile, benchmark[0])
   ts_print(locald)
