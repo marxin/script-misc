@@ -265,6 +265,7 @@ for j, benchmark in enumerate(benchmarks):
 
     # process PERF record
     if invoke != None:
+      ts_print(os.getcwd())
       perf_cmd = 'perf record ' + perf_arguments + ' -- ' + invoke
       ts_print('Running perf command: "' + perf_cmd + '"')
       proc = commands.getstatusoutput(perf_cmd)
