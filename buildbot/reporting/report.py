@@ -107,7 +107,7 @@ for root, dirs, files in os.walk(args.folder):
     benchreports.append(BenchMarkReport(f, json.loads(open(abspath).read())))
 
 def generate_comparison(html_root, reports, svg_id): 
-  row = html_root.div(klass = 'row')
+  row = html_root.div()
 
   row.h2('Time (smaller is better)')
 
@@ -143,14 +143,14 @@ def generate_comparison(html_root, reports, svg_id):
           tr.td('N/A', klass = 'text-right')
 
     tr = body.tr()
-    tr.td.strong(category + ' GEOMEAN')
+    tr.td.strong(category + ' geom')
     tr.td()
     for br in reports:
       tr.td()
       td = tr.td(klass = td_class(br.categories_comparison[category]) + ' text-right')
       td.strong(percent(br.categories_comparison[category]))
 
-  row.svg(id = svg_id, style = 'height: 500px; width: 1150px;')
+  row.svg(id = svg_id, style = 'height: 500px; width: 1150px; margin: 0 auto;')
   row.h2('Size (smaller is better)')
   table = row.table(klass = 'table table-condensed table-bordered')
   tr = table.thead.tr
@@ -178,7 +178,7 @@ def generate_comparison(html_root, reports, svg_id):
         tr.td('N/A', klass = 'text-right')
 
   tr = body.tr()
-  tr.td.strong('GEOMEAN')
+  tr.td.strong('geom')
 
   for br in reports:
     tr.td()
@@ -215,7 +215,8 @@ head.script('', type = 'text/javascript', src = 'https://maxcdn.bootstrapcdn.com
 
 keyfunc = lambda x: x.node
 benchreports = sorted(benchreports, key = keyfunc, reverse = True)
-container = h.body.div(klass = 'container')
+body = h.body(style = 'margin: 30px;')
+container = body.div()
 
 counter = 0
 script_content = ''
