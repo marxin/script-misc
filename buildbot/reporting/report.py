@@ -10,12 +10,14 @@ from html import *
 
 parser = argparse.ArgumentParser(description='Generate HTML reports for SPEC results')
 parser.add_argument('folder', metavar = 'FOLDER', help = 'Folder with JSON results')
-parser.add_argument('--ignore', dest = 'ignore', nargs = '+', help = 'Ignored benchmarks')
+parser.add_argument('--ignore', dest = 'ignore', help = 'Ignored benchmarks')
 
 args = parser.parse_args()
 
 if args.ignore == None:
   args.ignore = []
+else:
+  args.ignore = args.ignore.split(',')
 
 def percent(v):
   return '%.2f %%' % v

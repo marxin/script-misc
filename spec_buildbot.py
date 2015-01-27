@@ -3,6 +3,7 @@
 from __future__ import print_function
 from tempfile import *
 from base64 import *
+from distutils.version import LooseVersion
 
 import sys
 import os
@@ -109,6 +110,14 @@ d = {
     }
 
 os.chdir(root_path)
+
+# perf argument detection
+proc = commands.getstatusoutput('perf --version')
+perf_version = proc[1].split(' ')[-1]
+
+perf_arguments = ' --callgraph=dwarf '
+if LooseVersion(perf_version) < LooseVersion('3.0.0'):
+  perf_arguments = '-g'
 
 def generate_config(profile, configuration, extra_flags = ''):
   lines = open(config_template, 'r').readlines()
@@ -255,7 +264,7 @@ for j, benchmark in enumerate(benchmarks):
     os.makedirs(perf_folder_subdir)
 
     # process PERF record
-    perf_cmd = 'perf record --call-graph=dwarf -- ' + invoke
+    perf_cmd = 'perf record ' + perf_arguments + ' -- ' + invoke
     ts_print('Running perf command: "' + perf_cmd + '"')
     proc = commands.getstatusoutput(perf_cmd)
     if proc[0] != 0:
