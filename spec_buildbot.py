@@ -264,19 +264,20 @@ for j, benchmark in enumerate(benchmarks):
     os.makedirs(perf_folder_subdir)
 
     # process PERF record
-    perf_cmd = 'perf record ' + perf_arguments + ' -- ' + invoke
-    ts_print('Running perf command: "' + perf_cmd + '"')
-    proc = commands.getstatusoutput(perf_cmd)
-    if proc[0] != 0:
-      ts_print('Perf command failed: ' + proc[1])
-    else:
-      binary_folder = invoke.split(' ')[2]
-      binary = os.path.join(binary_folder, [x for x in os.listdir(binary_folder) if profile in x][0])
-      ts_print('Copy perf.data to: ' + perf_folder_subdir)
-      shutil.copyfile('perf.data', os.path.join(perf_folder_subdir, 'perf.data'))      
-      dst = os.path.join(perf_folder_subdir, os.path.basename(binary))
-      ts_print('Copy binary: %s to: %s' % (binary, dst))
-      shutil.copyfile(binary, dst)
+    if invoce != None:
+      perf_cmd = 'perf record ' + perf_arguments + ' -- ' + invoke
+      ts_print('Running perf command: "' + perf_cmd + '"')
+      proc = commands.getstatusoutput(perf_cmd)
+      if proc[0] != 0:
+	ts_print('Perf command failed: ' + proc[1])
+      else:
+	binary_folder = invoke.split(' ')[2]
+	binary = os.path.join(binary_folder, [x for x in os.listdir(binary_folder) if profile in x][0])
+	ts_print('Copy perf.data to: ' + perf_folder_subdir)
+	shutil.copyfile('perf.data', os.path.join(perf_folder_subdir, 'perf.data'))      
+	dst = os.path.join(perf_folder_subdir, os.path.basename(binary))
+	ts_print('Copy binary: %s to: %s' % (binary, dst))
+	shutil.copyfile(binary, dst)
 
   locald[benchmark_name]['size'] = parse_binary_size(summary_path, profile, benchmark[0])
   ts_print(locald)
