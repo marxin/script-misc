@@ -7,6 +7,7 @@ import argparse
 
 from itertools import *
 from html import *
+from functools import *
 
 parser = argparse.ArgumentParser(description='Generate HTML reports for SPEC results')
 parser.add_argument('folder', metavar = 'FOLDER', help = 'Folder with JSON results')
@@ -28,6 +29,9 @@ def flt_str(v):
 def average(values):
   return sum(values) / len(values)
 
+def geomean(num_list):
+  return reduce(lambda x, y: x * y, num_list) ** (1.0 / len(num_list))
+
 def quad_different(values):
   a = average(values)
   s = sum(map(lambda x: (x - a)**2, values))
@@ -43,9 +47,10 @@ def td_class(comparison):
     return 'danger'
 
 class BenchMarkResult:
-  def __init__ (self, name, d):
+  def __init__ (self, name, d, category):
     self.name = name
     self.d = d
+    self.category = category
 
     if len(d['times']) > 0:
       self.all_times = d['times']
@@ -63,7 +68,7 @@ class BenchMarkReport:
     self.changes = self.d['info']['changes'].replace('buildbot: poke', '')
     self.compiler = self.d['info']['compiler']
     self.full_name = self.compiler + '#' + self.changes
-    all_benchmarks = list(map(lambda x: BenchMarkResult(x, d['FP'][x]), d['FP'])) + list(map(lambda x: BenchMarkResult(x, d['INT'][x]), d['INT']))
+    all_benchmarks = list(map(lambda x: BenchMarkResult(x, d['FP'][x], 'FP'), d['FP'])) + list(map(lambda x: BenchMarkResult(x, d['INT'][x], 'INT'), d['INT']))
     self.benchmarks = sorted(filter(lambda x: x.time != 0 and not x.name in args.ignore, all_benchmarks), key = lambda x: x.name)
     self.benchmarks_dictionary = {}
     for b in self.benchmarks:
@@ -78,8 +83,8 @@ class BenchMarkReport:
         self.comparison[v.name] = round(100.0 * v.time / comparer.benchmarks_dictionary[v.name].time, 2)
         self.size_comparison[v.name] = round(100.0 * v.size / comparer.benchmarks_dictionary[v.name].size, 2)
     
-    self.avg_comparison = round(average(self.comparison.values()), 2)
-    self.avg_size_comparison = round(average(self.size_comparison.values()), 2)
+    self.avg_comparison = round(geomean(self.comparison.values()), 2)
+    self.avg_size_comparison = round(geomean(self.size_comparison.values()), 2)
 
 benchreports = []
 
@@ -120,7 +125,7 @@ def generate_comparison(html_root, reports, svg_id):
         tr.td('N/A', klass = 'text-right')
 
   tr = body.tr()
-  tr.td.strong('AVERAGE')
+  tr.td.strong('GEOMEAN')
 
   for br in reports:
     tr.td()
@@ -155,7 +160,7 @@ def generate_comparison(html_root, reports, svg_id):
         tr.td('N/A', klass = 'text-right')
 
   tr = body.tr()
-  tr.td.strong('AVERAGE')
+  tr.td.strong('GEOMEAN')
 
   for br in reports:
     tr.td()
