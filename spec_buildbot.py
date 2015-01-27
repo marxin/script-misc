@@ -115,7 +115,7 @@ os.chdir(root_path)
 proc = commands.getstatusoutput('perf --version')
 perf_version = proc[1].split(' ')[-1]
 
-perf_arguments = ' --callgraph=dwarf '
+perf_arguments = ' --call-graph=dwarf '
 if LooseVersion(perf_version) < LooseVersion('3.0.0'):
   perf_arguments = '-g'
 

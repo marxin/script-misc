@@ -74,6 +74,16 @@ class BenchMarkReport:
     for b in self.benchmarks:
       self.benchmarks_dictionary[b.name] = b
 
+  def category_comparison(self, category_selector, value_selector):
+    values = list(map(value_selector, filter(category_selector, self.benchmarks)))
+    return geomean(values)
+
+  def get_categories(self):
+    return set(map(lambda x: x.category, self.benchmarks))
+
+  def get_category(self, category):
+    return list(filter(lambda x: x.category == category, self.benchmarks))
+
   def compare(self, comparer):
     self.comparison = {}
     self.size_comparison = {}
@@ -82,8 +92,11 @@ class BenchMarkReport:
       if v.name in comparer.benchmarks_dictionary:
         self.comparison[v.name] = round(100.0 * v.time / comparer.benchmarks_dictionary[v.name].time, 2)
         self.size_comparison[v.name] = round(100.0 * v.size / comparer.benchmarks_dictionary[v.name].size, 2)
-    
-    self.avg_comparison = round(geomean(self.comparison.values()), 2)
+   
+    self.categories_comparison = {}
+    for c in self.get_categories():
+      self.categories_comparison[c] = self.category_comparison(lambda x: x.name in self.comparison and x.category == c, lambda x: self.comparison[x.name])
+
     self.avg_size_comparison = round(geomean(self.size_comparison.values()), 2)
 
 benchreports = []
@@ -100,7 +113,8 @@ def generate_comparison(html_root, reports, svg_id):
 
   table = row.table(klass = 'table table-condensed table-bordered')
   tr = table.thead.tr
-  tr.th('')
+  tr.th('category')
+  tr.th('benchmark')
 
   for b in reports:
     tr.th(b.full_name)
@@ -108,29 +122,33 @@ def generate_comparison(html_root, reports, svg_id):
 
   body = table.body
 
-  first_benchmarks = reports[0].benchmarks
+  for category in reports[0].get_categories():
+    first_benchmarks = reports[0].get_category(category)
 
-  for i in first_benchmarks:
-    tr = body.tr()
-    tr.td(i.name)
+    for index, i in enumerate(first_benchmarks):
+      tr = body.tr()
+      if index == 0:
+        tr.td(category, rowspan = str(len(first_benchmarks)))
+      tr.td(i.name)
 
-    for br in reports:
-      if i.name in br.benchmarks_dictionary:
-        b = br.benchmarks_dictionary[i.name]
+      for br in reports:
+
+        if i.name in br.benchmarks_dictionary:
+          b = br.benchmarks_dictionary[i.name]
 #      tr.td(str(b.time) + '(QD:' + str(b.time_quad_difference) + ')')
-        tr.td(flt_str(b.time), klass = "text-right")
-        tr.td(percent(br.comparison[i.name]), klass = td_class(br.comparison[i.name]) + ' text-right')
-      else:
-        tr.td('N/A', klass = 'text-right')
-        tr.td('N/A', klass = 'text-right')
+          tr.td(flt_str(b.time), klass = "text-right")
+          tr.td(percent(br.comparison[i.name]), klass = td_class(br.comparison[i.name]) + ' text-right')
+        else:
+          tr.td('N/A', klass = 'text-right')
+          tr.td('N/A', klass = 'text-right')
 
-  tr = body.tr()
-  tr.td.strong('GEOMEAN')
-
-  for br in reports:
+    tr = body.tr()
+    tr.td.strong(category + ' GEOMEAN')
     tr.td()
-    td = tr.td(klass = td_class(br.avg_comparison) + ' text-right')
-    td.strong(percent(br.avg_comparison))
+    for br in reports:
+      tr.td()
+      td = tr.td(klass = td_class(br.categories_comparison[category]) + ' text-right')
+      td.strong(percent(br.categories_comparison[category]))
 
   row.svg(id = svg_id, style = 'height: 500px; width: 1150px;')
   row.h2('Size (smaller is better)')
