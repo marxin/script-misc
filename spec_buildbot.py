@@ -264,7 +264,7 @@ for j, benchmark in enumerate(benchmarks):
     os.makedirs(perf_folder_subdir)
 
     # process PERF record
-    if invoce != None:
+    if invoke != None:
       perf_cmd = 'perf record ' + perf_arguments + ' -- ' + invoke
       ts_print('Running perf command: "' + perf_cmd + '"')
       proc = commands.getstatusoutput(perf_cmd)
