@@ -266,7 +266,8 @@ for j, benchmark in enumerate(benchmarks):
     # process PERF record
     if invoke != None:
       ts_print(os.getcwd())
-      perf_cmd = 'perf record ' + perf_arguments + ' -- ' + invoke
+      perf_abspath = os.path.join(perf_folder_subdir, 'perf.data')
+      perf_cmd = 'perf record -o ' + perf_abspath + perf_arguments + ' -- ' + invoke
       ts_print('Running perf command: "' + perf_cmd + '"')
       proc = commands.getstatusoutput(perf_cmd)
       if proc[0] != 0:
@@ -274,8 +275,6 @@ for j, benchmark in enumerate(benchmarks):
       else:
 	binary_folder = invoke.split(' ')[2]
 	binary = os.path.join(binary_folder, [x for x in os.listdir(binary_folder) if profile in x][0])
-	ts_print('Copy perf.data to: ' + perf_folder_subdir)
-	shutil.copyfile('perf.data', os.path.join(perf_folder_subdir, 'perf.data'))      
 	dst = os.path.join(perf_folder_subdir, os.path.basename(binary))
 	ts_print('Copy binary: %s to: %s' % (binary, dst))
 	shutil.copyfile(binary, dst)
