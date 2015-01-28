@@ -73,7 +73,6 @@ if len(sys.argv) != 7:
   sys.exit(1)
 
 real_script_folder = os.path.dirname(os.path.realpath(__file__))
-script_folder = os.path.dirname(real_script_folder)
 
 root_path = os.path.abspath(sys.argv[1])
 profile = sys.argv[2]
@@ -92,7 +91,7 @@ elif compiler == 'icc':
 
 config_folder = os.path.join(root_path, 'config')
 summary_folder = os.path.join(root_path, 'summary')
-config_template = os.path.join(script_folder, 'config-template', 'config-template.cfg')
+config_template = os.path.join(real_script_folder, 'config-template', 'config-template.cfg')
 
 default_flags = '-Ofast -march=native -g'
 runspec_arguments = '--size=test --no-reportable --iterations=5 --tune=peak '
