@@ -275,7 +275,8 @@ for j, benchmark in enumerate(benchmarks[5:6]):
       if proc[0] != 0:
 	ts_print('Perf command failed: ' + proc[1])
       else:
-	proc2 = commands.getstatusoutput('perf script > ' + perf_callgraph)
+	ts_print('Running perf script')
+	proc2 = commands.getstatusoutput('perf script -i ' + perf_abspath + ' > ' + perf_callgraph)
         if proc2[0] != 0:
 	  ts_print('Perf command failed: ' + proc2[1])
 
