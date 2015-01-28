@@ -221,7 +221,7 @@ ts_print('Starting group of tests')
 
 benchmarks = configuration.get_benchmarks()
 
-for j, benchmark in enumerate(benchmarks):
+for j, benchmark in enumerate(benchmarks[5:6]):
   benchmark_name = get_benchmark_name(benchmark)
 
   locald = d['INT']
@@ -268,12 +268,22 @@ for j, benchmark in enumerate(benchmarks):
     if invoke != None:
       ts_print(os.getcwd())
       perf_abspath = os.path.join(perf_folder_subdir, 'perf.data')
+      perf_callgraph = os.path.join(perf_folder_subdir, 'perf-callgraph.data')
       perf_cmd = 'perf record -o ' + perf_abspath + perf_arguments + ' -- ' + invoke
       ts_print('Running perf command: "' + perf_cmd + '"')
       proc = commands.getstatusoutput(perf_cmd)
       if proc[0] != 0:
 	ts_print('Perf command failed: ' + proc[1])
       else:
+	proc2 = commands.getstatusoutput('perf script > ' + perf_callgraph)
+        if proc2[0] != 0:
+	  ts_print('Perf command failed: ' + proc2[1])
+
+        perf_cmd = 'perf record -o ' + perf_abspath + ' -- ' + invoke
+	proc3 = commands.getstatusoutput(perf_cmd)
+        if proc3[0] != 0:
+	  ts_print('Perf command failed: ' + proc3[1])
+
 	binary_folder = invoke.split(' ')[2]
 	binary = os.path.join(binary_folder, [x for x in os.listdir(binary_folder) if profile in x][0])
 	dst = os.path.join(perf_folder_subdir, os.path.basename(binary))
