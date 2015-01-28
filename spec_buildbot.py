@@ -268,22 +268,20 @@ for j, benchmark in enumerate(benchmarks[5:6]):
     if invoke != None:
       ts_print(os.getcwd())
       perf_abspath = os.path.join(perf_folder_subdir, 'perf.data')
-      perf_callgraph = os.path.join(perf_folder_subdir, 'perf-callgraph.data')
-      perf_cmd = 'perf record -o ' + perf_abspath + perf_arguments + ' -- ' + invoke
+      perf_archive = os.path.join(perf_folder_subdir, 'perf.data.tar.bz2')
+      perf_cmd = 'perf record ' + perf_arguments + ' -- ' + invoke
       ts_print('Running perf command: "' + perf_cmd + '"')
       proc = commands.getstatusoutput(perf_cmd)
       if proc[0] != 0:
 	ts_print('Perf command failed: ' + proc[1])
       else:
-	ts_print('Running perf script')
-	proc2 = commands.getstatusoutput('perf script -i ' + perf_abspath + ' > ' + perf_callgraph)
+	ts_print('Running perf archive')
+	proc2 = commands.getstatusoutput('perf archive')
         if proc2[0] != 0:
-	  ts_print('Perf command failed: ' + proc2[1])
+	  ts_print('Perf archive command failed: ' + proc2[1])
 
-        perf_cmd = 'perf record -o ' + perf_abspath + ' -- ' + invoke
-	proc3 = commands.getstatusoutput(perf_cmd)
-        if proc3[0] != 0:
-	  ts_print('Perf command failed: ' + proc3[1])
+	shutil.copyfile('perf.data', perf_abspath)
+	shutil.copyfile('perf.data.tar.bz2', perf_archive)
 
 	binary_folder = invoke.split(' ')[2]
 	binary = os.path.join(binary_folder, [x for x in os.listdir(binary_folder) if profile in x][0])
