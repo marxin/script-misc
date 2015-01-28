@@ -4,6 +4,7 @@ from __future__ import print_function
 from tempfile import *
 from base64 import *
 from distutils.version import LooseVersion
+from subprocess import *
 
 import sys
 import os
@@ -11,7 +12,6 @@ import datetime
 import shutil
 import json
 import commands
-import subprocess
 import platform
 
 # columns: [benchmark name, INT component, is fortran]
@@ -116,7 +116,7 @@ os.chdir(root_path)
 proc = commands.getstatusoutput('perf --version')
 perf_version = proc[1].split(' ')[-1]
 
-perf_arguments = ' --call-graph=dwarf '
+perf_arguments = '--call-graph=dwarf'
 if LooseVersion(perf_version) < LooseVersion('3.0.0'):
   perf_arguments = ' -g '
 
@@ -269,11 +269,11 @@ for j, benchmark in enumerate(benchmarks[5:6]):
       ts_print(os.getcwd())
       perf_abspath = os.path.join(perf_folder_subdir, 'perf.data')
       perf_archive = os.path.join(perf_folder_subdir, 'perf.data.tar.bz2')
-      perf_cmd = 'perf record ' + perf_arguments + ' -- ' + invoke
+      perf_cmd = ['perf', 'record', perf_arguments, '--', invoke.split(' ')]
       ts_print('Running perf command: "' + perf_cmd + '"')
       ts_print(str(os.getcwd()))
       ts_print(str(os.listdir('.')))
-      proc = commands.getstatusoutput(perf_cmd)
+      proc = Popen(perf_cmd)
       if proc[0] != 0:
 	ts_print('Perf command failed: ' + proc[1])
       else:
