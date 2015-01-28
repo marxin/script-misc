@@ -271,6 +271,8 @@ for j, benchmark in enumerate(benchmarks[5:6]):
       perf_archive = os.path.join(perf_folder_subdir, 'perf.data.tar.bz2')
       perf_cmd = 'perf record ' + perf_arguments + ' -- ' + invoke
       ts_print('Running perf command: "' + perf_cmd + '"')
+      ts_print(str(os.getcwd()))
+      ts_print(str(os.listdir('.')))
       proc = commands.getstatusoutput(perf_cmd)
       if proc[0] != 0:
 	ts_print('Perf command failed: ' + proc[1])
