@@ -273,7 +273,7 @@ for j, benchmark in enumerate(benchmarks[5:6]):
       perf_cmd = ['perf', 'record', perf_arguments, '--'] + invoke.split(' ')
       ts_print('Running perf command: "' + str(perf_cmd) + '"')
       FNULL = open(os.devnull, 'w')
-      proc = Popen(perf_cmd, stdout = subprocess.FNULL, stderr = subprocess.FNULL)
+      proc = Popen(perf_cmd, stdout = FNULL, stderr = FNULL)
       proc.wait()
       if proc.returncode != 0:
 	ts_print('Perf command failed')
