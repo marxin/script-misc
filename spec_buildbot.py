@@ -269,18 +269,18 @@ for j, benchmark in enumerate(benchmarks[5:6]):
       ts_print(os.getcwd())
       perf_abspath = os.path.join(perf_folder_subdir, 'perf.data')
       perf_archive = os.path.join(perf_folder_subdir, 'perf.data.tar.bz2')
-      perf_cmd = ['perf', 'record', perf_arguments, '--', invoke.split(' ')]
+      perf_cmd = ['perf', 'record', perf_arguments, '--'] + invoke.split(' ')
       ts_print('Running perf command: "' + perf_cmd + '"')
-      ts_print(str(os.getcwd()))
-      ts_print(str(os.listdir('.')))
       proc = Popen(perf_cmd)
-      if proc[0] != 0:
-	ts_print('Perf command failed: ' + proc[1])
+      proc.wait()
+      if proc.returncode != 0:
+	ts_print('Perf command failed')
       else:
 	ts_print('Running perf archive')
-	proc2 = commands.getstatusoutput('perf archive')
-        if proc2[0] != 0:
-	  ts_print('Perf archive command failed: ' + proc2[1])
+	proc2 = Popen(['perf', 'archive'])
+	proc2.wait()
+        if proc2.returncode != 0:
+	  ts_print('Perf archive command failed')
 
 	shutil.copyfile('perf.data', perf_abspath)
 	shutil.copyfile('perf.data.tar.bz2', perf_archive)
