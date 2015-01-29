@@ -118,9 +118,9 @@ os.chdir(root_path)
 proc = commands.getstatusoutput('perf --version')
 perf_version = proc[1].split(' ')[-1]
 
-perf_arguments = '--call-graph=dwarf'
+perf_arguments = ['--call-graph=dwarf']
 if LooseVersion(perf_version) < LooseVersion('3.0.0'):
-  perf_arguments = ' -g -f '
+  perf_arguments = [' -g', '-f']
 
 def generate_config(profile, configuration, extra_flags = ''):
   lines = open(config_template, 'r').readlines()
@@ -270,7 +270,7 @@ for j, benchmark in enumerate(benchmarks):
     if invoke != None:
       ts_print(os.getcwd())
       perf_abspath = os.path.join(perf_folder_subdir, 'perf.data')
-      perf_cmd = ['perf', 'record', perf_arguments, '--'] + invoke.split(' ')
+      perf_cmd = ['perf', 'record'] + perf_arguments + ['--'] + invoke.split(' ')
       ts_print('Running perf command: "' + str(perf_cmd) + '"')
       FNULL = open(os.devnull, 'w')
       proc = Popen(perf_cmd, stdout = FNULL, stderr = PIPE)
