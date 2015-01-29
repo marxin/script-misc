@@ -120,7 +120,7 @@ perf_version = proc[1].split(' ')[-1]
 
 perf_arguments = '--call-graph=dwarf'
 if LooseVersion(perf_version) < LooseVersion('3.0.0'):
-  perf_arguments = ' -g '
+  perf_arguments = ' -g -f '
 
 def generate_config(profile, configuration, extra_flags = ''):
   lines = open(config_template, 'r').readlines()
