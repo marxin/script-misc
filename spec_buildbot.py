@@ -270,7 +270,7 @@ for j, benchmark in enumerate(benchmarks[5:6]):
       perf_abspath = os.path.join(perf_folder_subdir, 'perf.data')
       perf_archive = os.path.join(perf_folder_subdir, 'perf.data.tar.bz2')
       perf_cmd = ['perf', 'record', perf_arguments, '--'] + invoke.split(' ')
-      ts_print('Running perf command: "' + perf_cmd + '"')
+      ts_print('Running perf command: "' + str(perf_cmd) + '"')
       proc = Popen(perf_cmd)
       proc.wait()
       if proc.returncode != 0:
