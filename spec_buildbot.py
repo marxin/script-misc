@@ -282,7 +282,7 @@ for j, benchmark in enumerate(benchmarks[5:6]):
 
 	binary_folder = invoke.split(' ')[2]
 	binary = os.path.join(binary_folder, [x for x in os.listdir(binary_folder) if profile in x][0])
-        binary_target = os.path.join(perf_folder_subdir, os.path.filename(binary))
+        binary_target = os.path.join(perf_folder_subdir, os.path.basename(binary))
 	ts_print('Copy binary file: %s -> %s' % (binary, binary_target))
 	shutil.copyfile(binary, binary_target)
 
