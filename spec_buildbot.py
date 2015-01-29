@@ -273,10 +273,10 @@ for j, benchmark in enumerate(benchmarks):
       perf_cmd = ['perf', 'record', perf_arguments, '--'] + invoke.split(' ')
       ts_print('Running perf command: "' + str(perf_cmd) + '"')
       FNULL = open(os.devnull, 'w')
-      proc = Popen(perf_cmd, stdout = FNULL, stderr = FNULL)
-      proc.wait()
+      proc = Popen(perf_cmd, stdout = FNULL, stderr = PIPE)
+      stdout, stderr = proc.communicate()
       if proc.returncode != 0:
-	ts_print('Perf command failed')
+	ts_print('Perf command failed: ' + stderr.decode('utf-8'))
       else:
 	shutil.copyfile('perf.data', perf_abspath)
 
