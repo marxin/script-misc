@@ -101,9 +101,9 @@ class BenchMarkReport:
 
 benchreports = []
 
-for root, dirs, files in os.walk(args.folder):
-  for f in files:
-    abspath = os.path.join(root, f)
+for f in os.listdir(args.folder):
+  if f.endswith('.json'):
+    abspath = os.path.join(args.folder, f)
     benchreports.append(BenchMarkReport(f, json.loads(open(abspath).read())))
 
 def generate_comparison(html_root, reports, svg_id): 

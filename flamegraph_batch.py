@@ -27,9 +27,11 @@ for root, dirs, files in os.walk(args.folder):
 for i, perf_data in enumerate(perf_data_locations):
   folder = os.path.dirname(perf_data)
   os.chdir(folder)
+  print(str(os.listdir()))
   data_tmp = tempfile.NamedTemporaryFile(delete = False)
-  print(data_tmp.name)
-  p1 = subprocess.Popen([args.perf, 'script', '--symfs=.'], stdout=subprocess.PIPE)
+  p0 = subprocess.Popen(['tar', 'xvjf', 'perf.data.tar.bz2', '-C', '/home/marxin/.debug'])
+  p0.wait()
+  p1 = subprocess.Popen([args.perf, 'script'], stdout=subprocess.PIPE)
   p2 = subprocess.Popen([os.path.join(args.flamegraph, 'stackcollapse-perf.pl')], stdin = p1.stdout, stdout = data_tmp)
   p1.stdout.close()
   p2.communicate()
