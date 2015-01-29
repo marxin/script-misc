@@ -13,6 +13,7 @@ import shutil
 import json
 import commands
 import platform
+import subprocess
 
 # columns: [benchmark name, INT component, is fortran]
 benchmarks = [
