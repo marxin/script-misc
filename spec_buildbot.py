@@ -14,6 +14,7 @@ import json
 import commands
 import platform
 import subprocess
+import tarfile
 
 # columns: [benchmark name, INT component, is fortran]
 benchmarks = [
@@ -222,7 +223,7 @@ ts_print('Starting group of tests')
 
 benchmarks = configuration.get_benchmarks()
 
-for j, benchmark in enumerate(benchmarks):
+for j, benchmark in enumerate(benchmarks[5:6]):
   benchmark_name = get_benchmark_name(benchmark)
 
   locald = d['INT']
@@ -269,7 +270,6 @@ for j, benchmark in enumerate(benchmarks):
     if invoke != None:
       ts_print(os.getcwd())
       perf_abspath = os.path.join(perf_folder_subdir, 'perf.data')
-      perf_archive = os.path.join(perf_folder_subdir, 'perf.data.tar.bz2')
       perf_cmd = ['perf', 'record', perf_arguments, '--'] + invoke.split(' ')
       ts_print('Running perf command: "' + str(perf_cmd) + '"')
       FNULL = open(os.devnull, 'w')
@@ -278,17 +278,13 @@ for j, benchmark in enumerate(benchmarks):
       if proc.returncode != 0:
 	ts_print('Perf command failed')
       else:
-	ts_print('Running perf archive')
-	proc2 = Popen(['perf', 'archive'])
-	proc2.wait()
-        if proc2.returncode != 0:
-	  ts_print('Perf archive command failed')
-
 	shutil.copyfile('perf.data', perf_abspath)
-	shutil.copyfile('perf.data.tar.bz2', perf_archive)
 
 	binary_folder = invoke.split(' ')[2]
 	binary = os.path.join(binary_folder, [x for x in os.listdir(binary_folder) if profile in x][0])
+        binary_target = os.path.join(perf_folder_subdir, os.path.filename(binary))
+	ts_print('Copy binary file: %s -> %s' % (binary, binary_target))
+	shutil.copyfile(binary, binary_target)
 
   locald[benchmark_name]['size'] = parse_binary_size(summary_path, profile, benchmark[0])
   ts_print(locald)
