@@ -223,7 +223,7 @@ ts_print('Starting group of tests')
 
 benchmarks = configuration.get_benchmarks()
 
-for j, benchmark in enumerate(benchmarks[5:6]):
+for j, benchmark in enumerate(benchmarks):
   benchmark_name = get_benchmark_name(benchmark)
 
   locald = d['INT']

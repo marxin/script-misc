@@ -21,7 +21,7 @@ parser = argparse.ArgumentParser(description='Generate SVG perf reports for vari
 parser.add_argument('folder', metavar = 'FOLDER', help = 'Folder with perf data')
 parser.add_argument('--perf', dest = 'perf', help = 'perf binary location', default = 'perf')
 parser.add_argument('--flamegraph', dest = 'flamegraph', help = 'flamegraph project location', required = True)
-parser.add_argument('--spec', dest = 'spec', help = 'SPEc source code location', required = True)
+parser.add_argument('--spec', dest = 'spec', help = 'SPEC source code location')
 
 args = parser.parse_args()
 
@@ -79,6 +79,6 @@ for i, perf_data in enumerate(perf_data_locations):
 
   # create flamegraph
   svg_path = os.path.join(folder, 'perf-report.svg')
-  print('Generating %u/%u: %s' % (i, len(perf_data_locations), svg_path))
+  print('Generating %u/%u: %s' % (i + 1, len(perf_data_locations), svg_path))
   with open(svg_path, 'w') as svg:
     p3 = subprocess.Popen([os.path.join(args.flamegraph, 'flamegraph.pl'), data_tmp.name], stdout = svg)
