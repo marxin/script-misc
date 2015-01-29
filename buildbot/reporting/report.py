@@ -12,8 +12,10 @@ from functools import *
 parser = argparse.ArgumentParser(description='Generate HTML reports for SPEC results')
 parser.add_argument('folder', metavar = 'FOLDER', help = 'Folder with JSON results')
 parser.add_argument('--ignore', dest = 'ignore', help = 'Ignored benchmarks')
-
 args = parser.parse_args()
+
+def in_good_range(v):
+  return 50 <= v and v <= 200
 
 if args.ignore == None:
   args.ignore = []
@@ -39,12 +41,15 @@ def quad_different(values):
   return s / l
 
 def td_class(comparison):
+  if not in_good_range(comparison):
+    return 'danger'
+
   if comparison < 100:
     return 'success'
   elif comparison == 100:
     return 'info'
   else:
-    return 'danger'
+    return 'warning'
 
 class BenchMarkResult:
   def __init__ (self, name, d, category):
@@ -75,7 +80,7 @@ class BenchMarkReport:
       self.benchmarks_dictionary[b.name] = b
 
   def category_comparison(self, category_selector, value_selector):
-    values = list(map(value_selector, filter(category_selector, self.benchmarks)))
+    values = list(filter(in_good_range, map(value_selector, filter(category_selector, self.benchmarks))))
     return geomean(values)
 
   def get_categories(self):
@@ -90,7 +95,8 @@ class BenchMarkReport:
     
     for i, v in enumerate(self.benchmarks):
       if v.name in comparer.benchmarks_dictionary:
-        self.comparison[v.name] = round(100.0 * v.time / comparer.benchmarks_dictionary[v.name].time, 2)
+        value = round(100.0 * v.time / comparer.benchmarks_dictionary[v.name].time, 2)
+        self.comparison[v.name] = value
         self.size_comparison[v.name] = round(100.0 * v.size / comparer.benchmarks_dictionary[v.name].size, 2)
    
     self.categories_comparison = {}
@@ -137,7 +143,10 @@ def generate_comparison(html_root, reports, svg_id):
           b = br.benchmarks_dictionary[i.name]
 #      tr.td(str(b.time) + '(QD:' + str(b.time_quad_difference) + ')')
           tr.td(flt_str(b.time), klass = "text-right")
-          tr.td(percent(br.comparison[i.name]), klass = td_class(br.comparison[i.name]) + ' text-right')
+          if i.name in br.comparison:
+            tr.td(percent(br.comparison[i.name]), klass = td_class(br.comparison[i.name]) + ' text-right')
+          else:
+            tr.td()
         else:
           tr.td('N/A', klass = 'text-right')
           tr.td('N/A', klass = 'text-right')

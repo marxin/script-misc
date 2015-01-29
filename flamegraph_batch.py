@@ -37,9 +37,10 @@ for i, perf_data in enumerate(perf_data_locations):
   os.chdir(folder)
   data_tmp = tempfile.NamedTemporaryFile(delete = False)
   original_location = open(os.path.join(folder, 'location.txt')).read()
-  binary_file = os.path.basename(original_location)
+  binary_file = os.path.abspath(os.path.basename(original_location))
   debug = os.path.expanduser('~/.debug')
 
+  print('calling build-id from: ' + binary_file)
   proc = subprocess.Popen([script_folder, binary_file], stdout = subprocess.PIPE)
   id = proc.stdout.read().decode('utf-8').strip()
   proc.communicate()
