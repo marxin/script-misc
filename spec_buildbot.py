@@ -160,15 +160,17 @@ def save_spec_log(folder, profile, benchmark, data):
     f.write(l)
 
 def parse_rsf(path):
-  reported = [l for l in open(path, 'r').readlines() if 'reported_time' in l]
+  lines = open(path, 'r').readlines()
+  reported = [l for l in lines if 'reported_time' in l]
   results = []
+  has_error = any(map(lambda x: 'non-zero return code' in x, lines))
 
   for report in reported:
     time = report.split(':')[-1].strip()
     if time != '--':
       results.append(float(time))
 
-  return results
+  return (results, has_error)
 
 def parse_binary_size(folder, profile, benchmark):
   subfolder = os.path.join(root_path, 'benchspec/CPU2006', benchmark, 'exe')
@@ -258,7 +260,9 @@ for j, benchmark in enumerate(benchmarks):
       r = r.strip()
       if r.startswith('format: raw'):
 	rsf = r[r.find('/'):].strip()
-	locald[benchmark_name]['times'] = parse_rsf(rsf)
+	rsf_result = parse_rsf(rsf)
+	locald[benchmark_name]['times'] = rsf_result[0]
+	locald[benchmark_name]['error'] = rsf_result[1]
       if 'specinvoke' in r and invoke == None:
 	invoke = r
 
