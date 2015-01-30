@@ -122,6 +122,9 @@ perf_arguments = ['--call-graph=dwarf']
 if LooseVersion(perf_version) < LooseVersion('3.0.0'):
   perf_arguments = ['-g', '-f']
 
+# TODO
+perf_arguments = []
+
 def generate_config(profile, configuration, extra_flags = ''):
   lines = open(config_template, 'r').readlines()
 
