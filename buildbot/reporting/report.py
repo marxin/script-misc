@@ -203,7 +203,7 @@ def generate_graph(reports, id):
   for report in reports:
     values = []
     for i, v in enumerate(first_benchmarks):
-      if v.name in report.comparison:
+      if v.name in report.comparison and in_good_range(report.comparison[v.name]):
         values.append({'x': i, 'y': report.comparison[v.name]})
 
     data.append({ 'key': report.full_name, 'values': values })

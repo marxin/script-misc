@@ -270,6 +270,9 @@ for j, benchmark in enumerate(benchmarks):
     if invoke != None:
       ts_print(os.getcwd())
       perf_abspath = os.path.join(perf_folder_subdir, 'perf.data')
+      if os.path.isfile('perf.data'):
+        os.remove('perf.data')
+
       perf_cmd = ['perf', 'record'] + perf_arguments + ['--'] + invoke.split(' ')
       ts_print('Running perf command: "' + str(perf_cmd) + '"')
       FNULL = open(os.devnull, 'w')
