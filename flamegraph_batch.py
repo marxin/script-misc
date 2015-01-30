@@ -22,6 +22,7 @@ parser.add_argument('folder', metavar = 'FOLDER', help = 'Folder with perf data'
 parser.add_argument('--perf', dest = 'perf', help = 'perf binary location', default = 'perf')
 parser.add_argument('--flamegraph', dest = 'flamegraph', help = 'flamegraph project location', required = True)
 parser.add_argument('--spec', dest = 'spec', help = 'SPEC source code location')
+parser.add_argument('--dry-run', dest = 'dryrun', help = 'Dry run', action = 'store_true')
 
 args = parser.parse_args()
 
@@ -50,22 +51,7 @@ for i, perf_data in enumerate(perf_data_locations):
   binary_target = os.path.join(debug, './' + original_location)
   debug_symlink = os.path.join(debug, '.build-id', id_prefix, id)
 
-  # copy binary to .debug folder
-  try_makedirs(os.path.dirname(binary_target))
-  shutil.copyfile(binary_file, binary_target)
-
-  # create symlink from .debug build ID database
-  try_makedirs(os.path.dirname(debug_symlink))
-
-  if not os.path.exists(debug_symlink):
-    os.symlink(binary_target, debug_symlink)
-
   print('Symlink: %s->%s' % (debug_symlink, binary_target))
-
-  p1 = subprocess.Popen([args.perf, 'script'], stdout=subprocess.PIPE)
-  p2 = subprocess.Popen([os.path.join(args.flamegraph, 'stackcollapse-perf.pl')], stdin = p1.stdout, stdout = data_tmp)
-  p1.stdout.close()
-  p2.communicate()
 
   # print perf report arguments
   if args.spec != None:
@@ -78,8 +64,27 @@ for i, perf_data in enumerate(perf_data_locations):
     p = '~/Programming/linux/tools/perf/'
     print('Try perf report:\n%sperf report --objdump-prefix=%s --objdump-prefix-strip=%u -i %s' % (p, prefix, parts, os.path.join(folder, 'perf.data')))
 
-  # create flamegraph
-  svg_path = os.path.join(folder, 'perf-report.svg')
-  print('Generating %u/%u: %s' % (i + 1, len(perf_data_locations), svg_path))
-  with open(svg_path, 'w') as svg:
-    p3 = subprocess.Popen([os.path.join(args.flamegraph, 'flamegraph.pl'), data_tmp.name], stdout = svg)
+  if not args.dryrun:
+    # copy binary to .debug folder
+    try_makedirs(os.path.dirname(binary_target))
+    shutil.copyfile(binary_file, binary_target)
+
+    # create symlink from .debug build ID database
+    try_makedirs(os.path.dirname(debug_symlink))
+
+    if not os.path.exists(debug_symlink):
+      try:
+        os.symlink(binary_target, debug_symlink)
+      except FileExistsError:
+        pass
+
+    p1 = subprocess.Popen([args.perf, 'script'], stdout=subprocess.PIPE)
+    p2 = subprocess.Popen([os.path.join(args.flamegraph, 'stackcollapse-perf.pl')], stdin = p1.stdout, stdout = data_tmp)
+    p1.stdout.close()
+    p2.communicate()
+
+    # create flamegraph
+    svg_path = os.path.join(folder, 'perf-report.svg')
+    print('Generating %u/%u: %s' % (i + 1, len(perf_data_locations), svg_path))
+    with open(svg_path, 'w') as svg:
+      p3 = subprocess.Popen([os.path.join(args.flamegraph, 'flamegraph.pl'), data_tmp.name], stdout = svg)

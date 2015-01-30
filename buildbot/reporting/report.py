@@ -69,10 +69,11 @@ class BenchMarkReport:
   def __init__ (self, filename, d):
     self.d = d
     self.filename = filename
+    self.revision = filename[filename.rfind('-') + 1:].rstrip('.json')
     self.node = self.d['info']['node']
     self.changes = self.d['info']['changes'].replace('buildbot: poke', '')
     self.compiler = self.d['info']['compiler']
-    self.full_name = self.compiler + '#' + self.changes
+    self.full_name = self.compiler + '#' + self.changes + '#' + self.revision[0:6]
     all_benchmarks = list(map(lambda x: BenchMarkResult(x, d['FP'][x], 'FP'), d['FP'])) + list(map(lambda x: BenchMarkResult(x, d['INT'][x], 'INT'), d['INT']))
     self.benchmarks = sorted(filter(lambda x: x.time != 0 and not x.name in args.ignore, all_benchmarks), key = lambda x: x.name)
     self.benchmarks_dictionary = {}
@@ -123,8 +124,7 @@ def generate_comparison(html_root, reports, svg_id):
   tr.th('benchmark')
 
   for b in reports:
-    tr.th(b.full_name)
-    tr.th('time %')
+    tr.th(b.full_name, colspan = '2')
 
   body = table.body
 
@@ -166,8 +166,7 @@ def generate_comparison(html_root, reports, svg_id):
   tr.th('')
 
   for b in reports:
-    tr.th(b.full_name)
-    tr.th('size %')
+    tr.th(b.full_name, colspan = '2')
 
   body = table.body
 
