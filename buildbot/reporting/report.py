@@ -54,6 +54,9 @@ def td_class(comparison):
 class BenchMarkResult:
   def __init__ (self, name, d, category):
     self.name = name
+    self.error = False
+    if 'error' in d:
+      self.error = d['error']
     self.d = d
     self.category = category
 
@@ -102,7 +105,7 @@ class BenchMarkReport:
    
     self.categories_comparison = {}
     for c in self.get_categories():
-      self.categories_comparison[c] = self.category_comparison(lambda x: x.name in self.comparison and x.category == c, lambda x: self.comparison[x.name])
+      self.categories_comparison[c] = self.category_comparison(lambda x: not x.error and x.name in self.comparison and x.category == c, lambda x: self.comparison[x.name])
 
     self.avg_size_comparison = round(geomean(self.size_comparison.values()), 2)
 
@@ -143,7 +146,9 @@ def generate_comparison(html_root, reports, svg_id):
           b = br.benchmarks_dictionary[i.name]
 #      tr.td(str(b.time) + '(QD:' + str(b.time_quad_difference) + ')')
           tr.td(flt_str(b.time), klass = "text-right")
-          if i.name in br.comparison:
+          if i.error:
+            tr.td('non-zero retcode', klass = 'danger')
+          elif i.name in br.comparison:
             tr.td(percent(br.comparison[i.name]), klass = td_class(br.comparison[i.name]) + ' text-right')
           else:
             tr.td()
