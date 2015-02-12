@@ -54,14 +54,14 @@ class GCCConfiguration:
     # dealII runs extremely slowly
     return list(filter(lambda x: x[0] != '447.dealII', benchmarks))
   def compilers(self):
-    return { 'FC': 'gfortran', 'CXX': 'g++', 'CC': 'gcc' }
+    return { 'FC': 'gfortran', 'CXX': 'g++', 'CC': 'gcc', 'LD': '' }
 
 class LLVMConfiguration:
   def get_benchmarks(self):
     # dealII runs extremely slowly
     return list(filter(lambda x: x[2] == False and x[0] != '447.dealII', benchmarks))
   def compilers(self):
-    return { 'FC': '___no_cf___', 'CXX': 'clang++', 'CC': 'clang' }
+    return { 'FC': '___no_cf___', 'CXX': 'clang++', 'CC': 'clang', 'LD': '' }
 
 class ICCConfiguration:
   def get_benchmarks(self):
@@ -69,7 +69,7 @@ class ICCConfiguration:
     return benchmarks
   def compilers(self):
     prefix = '~matz/bin/2015.1/bin/intel64/'
-    return { 'FC': os.path.join(prefix, 'ifort'), 'CXX': os.path.join(prefix, 'icpc'), 'CC': os.path.join(prefix, 'icc') }
+    return { 'FC': os.path.join(prefix, 'ifort'), 'CXX': os.path.join(prefix, 'icpc'), 'CC': os.path.join(prefix, 'icc'), 'LD': '/suse/mliska/override-intel.o' }
 
 if len(sys.argv) != 7:
   sys.exit(1)
@@ -142,6 +142,7 @@ def generate_config(profile, configuration, extra_flags = ''):
   lines.insert(p, 'FC = ' + compilers['FC'])
   lines.insert(p, 'CXX = ' + compilers['CXX'])
   lines.insert(p, 'CC = ' + compilers['CC'])
+  lines.insert(p, 'EXTRA_LDFLAGS = ' + compilers['LD'])
 
   p = 36
 
