@@ -163,7 +163,7 @@ class GCCConfiguration:
 
 class LLVMConfiguration:
   def filter_benchmarks(self):
-    return list(filter(, benchmarks))
+    return list(filter(f, benchmarks))
   def compilers(self):
     return { 'FC': '___no_cf___', 'CXX': 'clang++', 'CC': 'clang', 'LD': '' }
 
