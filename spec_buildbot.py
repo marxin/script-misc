@@ -155,19 +155,19 @@ class Cpu2006:
 ### compiler configurations ###
 class GCCConfiguration:
   def filter_benchmarks(self, benchmarks):
-    return benchmarks
+    return list(filter(lambda x: x.pure_name != 'facesim_s', benchmarks))
   def compilers(self):
     return { 'FC': 'gfortran', 'CXX': 'g++', 'CC': 'gcc', 'LD': '' }
 
 class LLVMConfiguration:
   def filter_benchmarks(self):
-    return benchmarks
+    return list(filter(lambda x: x.pure_name != 'facesim_s', benchmarks))
   def compilers(self):
     return { 'FC': '___no_cf___', 'CXX': 'clang++', 'CC': 'clang', 'LD': '' }
 
 class ICCConfiguration:
   def filter_benchmarks(self, benchmarks):
-    return benchmarks
+    return list(filter(lambda x: x.pure_name != 'facesim_s', benchmarks))
   def compilers(self):
     prefix = '~matz/bin/2015.1/bin/intel64/'
     return { 'FC': os.path.join(prefix, 'ifort'), 'CXX': os.path.join(prefix, 'icpc'), 'CC': os.path.join(prefix, 'icc'), 'LD': '/suse/mliska/override-intel.o /suse/matz/bin/2015.1/compiler/lib/intel64/libirc.a' }
