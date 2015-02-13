@@ -17,67 +17,6 @@ import platform
 import subprocess
 import tarfile
 
-# columns: [benchmark name, INT component, is fortran]
-benchmarks_old = [
-              ['400.perlbench', True, False],
-              ['401.bzip2', True, False],
-              ['403.gcc', True, False],
-              ['410.bwaves', False, True],
-              ['416.gamess', False, True],
-              ['429.mcf', True, False],
-              ['433.milc', False, False],
-              ['434.zeusmp', False, True],
-              ['435.gromacs', False, True],
-              ['436.cactusADM', False, True],
-              ['437.leslie3d', False, True],
-              ['444.namd', False, False],
-              ['445.gobmk', True, False],
-              ['447.dealII', False, False],
-              ['450.soplex', False, False],
-              ['453.povray', False, False],
-              ['454.calculix', False, True],
-              ['456.hmmer', True, False],
-              ['458.sjeng', True, False],
-              ['459.GemsFDTD', False, True],
-              ['462.libquantum', True, False],
-              ['464.h264ref', True, False],
-              ['465.tonto', False, True],
-              ['470.lbm', False, False],
-              ['471.omnetpp', True, False],
-              ['473.astar', True, False],
-              ['481.wrf', False, True],
-              ['482.sphinx3', False, False],
-              ['483.xalancbmk', True, False]
-            ]
-
-class GCCConfiguration:
-  def get_benchmarks(self):
-    # dealII runs extremely slowly
-    return list(filter(lambda x: x[0] != '447.dealII', benchmarks))
-  def compilers(self):
-    return { 'FC': 'gfortran', 'CXX': 'g++', 'CC': 'gcc', 'LD': '' }
-
-class LLVMConfiguration:
-  def get_benchmarks(self):
-    # dealII runs extremely slowly
-    return list(filter(lambda x: x[2] == False and x[0] != '447.dealII', benchmarks))
-  def compilers(self):
-    return { 'FC': '___no_cf___', 'CXX': 'clang++', 'CC': 'clang', 'LD': '' }
-
-class ICCConfiguration:
-  def get_benchmarks(self):
-    # dealII runs extremely slowly
-    return benchmarks
-  def compilers(self):
-    prefix = '~matz/bin/2015.1/bin/intel64/'
-    return { 'FC': os.path.join(prefix, 'ifort'), 'CXX': os.path.join(prefix, 'icpc'), 'CC': os.path.join(prefix, 'icc'), 'LD': '/suse/mliska/override-intel.o' }
-
-class Benchmark:
-  def __init__(self, name, is_int):
-    self.name = name
-    self.pure_name = name[name.find('.') + 1:]
-    self.is_int = is_int
-
 ### SPECv6 class ###
 class CpuV6:
   def get_benchmarks(self):
@@ -142,6 +81,103 @@ class CpuV6:
     ts_print('generating config to: ' + config_name)
     return config_name
 
+
+### SPEC2006 class ###
+class Cpu2006:
+  def get_benchmarks(self):
+    return [
+      Benchmark('400.perlbench', True, False),
+      Benchmark('401.bzip2', True, False),
+      Benchmark('403.gcc', True, False),
+      Benchmark('410.bwaves', False, True),
+      Benchmark('416.gamess', False, True),
+      Benchmark('429.mcf', True, False),
+      Benchmark('433.milc', False, False),
+      Benchmark('434.zeusmp', False, True),
+      Benchmark('435.gromacs', False, True),
+      Benchmark('436.cactusADM', False, True),
+      Benchmark('437.leslie3d', False, True),
+      Benchmark('444.namd', False, False),
+      Benchmark('445.gobmk', True, False),
+      Benchmark('447.dealII', False, False),
+      Benchmark('450.soplex', False, False),
+      Benchmark('453.povray', False, False),
+      Benchmark('454.calculix', False, True),
+      Benchmark('456.hmmer', True, False),
+      Benchmark('458.sjeng', True, False),
+      Benchmark('459.GemsFDTD', False, True),
+      Benchmark('462.libquantum', True, False),
+      Benchmark('464.h264ref', True, False),
+      Benchmark('465.tonto', False, True),
+      Benchmark('470.lbm', False, False),
+      Benchmark('471.omnetpp', True, False),
+      Benchmark('473.astar', True, False),
+      Benchmark('481.wrf', False, True),
+      Benchmark('482.sphinx3', False, False),
+      Benchmark('483.xalancbmk', True, False)
+    ]
+
+  def generate_config(profile, configuration, extra_flags = ''):
+    lines = open(config_template, 'r').readlines()
+
+    p = 94
+
+    flags = default_flags
+
+    lines.insert(p, 'FOPTIMIZE = ' + flags)
+    lines.insert(p, 'CXXOPTIMIZE= ' + flags)
+    lines.insert(p, 'COPTIMIZE= ' + flags)
+
+    p = 54
+
+    compilers = configuration.compilers()
+    lines.insert(p, 'FC = ' + compilers['FC'])
+    lines.insert(p, 'CXX = ' + compilers['CXX'])
+    lines.insert(p, 'CC = ' + compilers['CC'])
+    lines.insert(p, 'EXTRA_LDFLAGS = ' + compilers['LD'])
+
+    p = 36
+
+    lines.insert(p, 'ext = ' + profile)
+
+    config_name = os.path.join(config_folder, profile)
+    f = open(config_name, 'w+')
+
+    for l in lines:
+      f.write(l.strip() + '\n')
+
+    ts_print('generating config to: ' + config_name)
+    return config_name
+
+### compiler configurations ###
+class GCCConfiguration:
+  def get_benchmarks(self):
+    # dealII runs extremely slowly
+    return list(filter(lambda x: x[0] != '447.dealII', benchmarks))
+  def compilers(self):
+    return { 'FC': 'gfortran', 'CXX': 'g++', 'CC': 'gcc', 'LD': '' }
+
+class LLVMConfiguration:
+  def get_benchmarks(self):
+    # dealII runs extremely slowly
+    return list(filter(lambda x: x[2] == False and x[0] != '447.dealII', benchmarks))
+  def compilers(self):
+    return { 'FC': '___no_cf___', 'CXX': 'clang++', 'CC': 'clang', 'LD': '' }
+
+class ICCConfiguration:
+  def get_benchmarks(self):
+    # dealII runs extremely slowly
+    return benchmarks
+  def compilers(self):
+    prefix = '~matz/bin/2015.1/bin/intel64/'
+    return { 'FC': os.path.join(prefix, 'ifort'), 'CXX': os.path.join(prefix, 'icpc'), 'CC': os.path.join(prefix, 'icc'), 'LD': '/suse/mliska/override-intel.o' }
+
+class Benchmark:
+  def __init__(self, name, is_int):
+    self.name = name
+    self.pure_name = name[name.find('.') + 1:]
+    self.is_int = is_int
+
 if len(sys.argv) != 7:
   sys.exit(1)
 
@@ -197,38 +233,6 @@ if LooseVersion(perf_version) < LooseVersion('3.0.0'):
 
 # TODO
 perf_arguments = []
-
-def generate_config(profile, configuration, extra_flags = ''):
-  lines = open(config_template, 'r').readlines()
-
-  p = 94
-
-  flags = default_flags
-
-  lines.insert(p, 'FOPTIMIZE = ' + flags)
-  lines.insert(p, 'CXXOPTIMIZE= ' + flags)
-  lines.insert(p, 'COPTIMIZE= ' + flags)
-
-  p = 54
-
-  compilers = configuration.compilers()
-  lines.insert(p, 'FC = ' + compilers['FC'])
-  lines.insert(p, 'CXX = ' + compilers['CXX'])
-  lines.insert(p, 'CC = ' + compilers['CC'])
-  lines.insert(p, 'EXTRA_LDFLAGS = ' + compilers['LD'])
-
-  p = 36
-
-  lines.insert(p, 'ext = ' + profile)
-
-  config_name = os.path.join(config_folder, profile)
-  f = open(config_name, 'w+')
-
-  for l in lines:
-    f.write(l.strip() + '\n')
-
-  ts_print('generating config to: ' + config_name)
-  return config_name
 
 def save_spec_log(folder, profile, benchmark, data):
   f = open(os.path.join(folder, profile + '_' + benchmark + '.log'), 'w+')
