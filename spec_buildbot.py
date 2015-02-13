@@ -297,6 +297,7 @@ ts_print('Starting group of tests')
 
 v6 = CpuV6()
 benchmarks = configuration.filter_benchmarks(v6.get_benchmarks())
+c = v6.build_config(configuration, profile)
 
 for j, b in enumerate(benchmarks[20:25]):
   locald = d['INT'] if b.is_int else d['FP']
@@ -306,8 +307,6 @@ for j, b in enumerate(benchmarks[20:25]):
 
   # Real benchmark run
   extra = ''
-
-  c = v6.build_config(configuration, profile)
 
   cl = runspec_command('--config=' + c + ' --output-format=raw ' + runspec_arguments + b.name)
   proc = commands.getstatusoutput(cl)
