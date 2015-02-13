@@ -170,7 +170,7 @@ class ICCConfiguration:
     return benchmarks
   def compilers(self):
     prefix = '~matz/bin/2015.1/bin/intel64/'
-    return { 'FC': os.path.join(prefix, 'ifort'), 'CXX': os.path.join(prefix, 'icpc'), 'CC': os.path.join(prefix, 'icc'), 'LD': '/suse/mliska/override-intel.o' }
+    return { 'FC': os.path.join(prefix, 'ifort'), 'CXX': os.path.join(prefix, 'icpc'), 'CC': os.path.join(prefix, 'icc'), 'LD': '/suse/mliska/override-intel.o /suse/matz/bin/2015.1/compiler/lib/intel64/libirc.a' }
 
 class Benchmark:
   def __init__(self, name, is_int):
