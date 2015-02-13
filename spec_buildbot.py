@@ -5,6 +5,7 @@ from tempfile import *
 from base64 import *
 from distutils.version import LooseVersion
 from subprocess import *
+from multiprocessing import *
 
 import sys
 import os
@@ -61,8 +62,10 @@ class CpuV6:
     p = 133
 
     flags = default_flags
-
     lines.insert(p, 'OPTIMIZE = ' + flags)
+
+    p = 114
+    lines.insert(p, 'makeflags = -j' + str(cpu_count()))
 
     p = 54
 
