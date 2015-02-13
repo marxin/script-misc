@@ -72,10 +72,48 @@ class ICCConfiguration:
     prefix = '~matz/bin/2015.1/bin/intel64/'
     return { 'FC': os.path.join(prefix, 'ifort'), 'CXX': os.path.join(prefix, 'icpc'), 'CC': os.path.join(prefix, 'icc'), 'LD': '/suse/mliska/override-intel.o' }
 
-### SPEC class ###
+class Benchmark:
+  def __init__(self, name, is_int):
+    self.name = name
+    self.pure_name = name[name.find('.') + 1:]
+    self.is_int = is_int
+
+### SPECv6 class ###
 class CpuV6:
   def get_benchmarks(self):
-    return ['600.perlbench_s', '602.gcc_s', '603.bwaves_s', '605.mcf_s', '607.cactuBSSN_s', '608.namd_s', '610.parest_s', '611.povray_s', '613.hmmer_s', '619.lbm_s', '620.omnetpp_s', '621.wrf_s', '623.xalancbmk_s', '625.x264_s', '626.blender_s', '627.cam4_s', '628.pop2_s', '631.deepsjeng_s', '632.facesim_s', '638.imagick_s', '639.bodytrack_s', '641.leela_s', '644.nab_s', '647.drops_s', '648.exchange2_s', '649.fotonik3d_s', '651.qe_s', '652.mdwp_s', '653.johnripper_s', '654.roms_s', '656.ferret_s', '657.xz_s']
+    return [
+    Benchmark('600.perlbench_s', True),
+    Benchmark('602.gcc_s', True),
+    Benchmark('603.bwaves_s', False),
+    Benchmark('605.mcf_s', True),
+    Benchmark('607.cactuBSSN_s', False),
+    Benchmark('608.namd_s', False),
+    Benchmark('610.parest_s', False),
+    Benchmark('611.povray_s', False),
+    Benchmark('613.hmmer_s', True),
+    Benchmark('619.lbm_s', False),
+    Benchmark('620.omnetpp_s', True),
+    Benchmark('621.wrf_s', False),
+    Benchmark('623.xalancbmk_s', True),
+    Benchmark('625.x264_s', True),
+    Benchmark('626.blender_s', False),
+    Benchmark('627.cam4_s', False),
+    Benchmark('628.pop2_s', True),
+    Benchmark('631.deepsjeng_s', True),
+    Benchmark('632.facesim_s', False),
+    Benchmark('638.imagick_s', False),
+    Benchmark('639.bodytrack_s', False),
+    Benchmark('641.leela_s', True),
+    Benchmark('644.nab_s', False),
+    Benchmark('647.drops_s', False),
+    Benchmark('648.exchange2_s', True),
+    Benchmark('649.fotonik3d_s', False),
+    Benchmark('651.qe_s', False),
+    Benchmark('652.mdwp_s', True), 
+    Benchmark('653.johnripper_s', True),
+    Benchmark('654.roms_s', False),
+    Benchmark('656.ferret_s', False),
+    Benchmark('657.xz_s', True)]
 
   def build_config(self, configuration, profile):
     config_template_path = os.path.join(real_script_folder, 'config-template', 'config-template-v6.cfg')
@@ -109,6 +147,7 @@ if len(sys.argv) != 7:
 
 real_script_folder = os.path.dirname(os.path.realpath(__file__))
 
+# ARGUMENT parsing
 root_path = os.path.abspath(sys.argv[1])
 # TODO
 profile = 'cpuv6'
@@ -236,9 +275,6 @@ def ts_print(*args):
 
   sys.stdout.flush()
 
-def get_benchmark_name(benchmark):
-  return benchmark[0].split('.')[1]
-
 def runspec_command(cmd):
   return 'source ' + root_path + '/shrc && runspec ' + cmd
 
@@ -259,34 +295,29 @@ ts_print('Starting group of tests')
 v6 = CpuV6()
 benchmarks = v6.get_benchmarks()
 
-for j, benchmark in enumerate(benchmarks[20:25]):
-  benchmark_name = benchmark
-  benchmark_without_number = benchmark[benchmark.find('.') + 1:]
+for j, b in enumerate(benchmarks[20:25]):
+  locald = d['INT'] if b.is_int else d['FP']
+  locald[b.name] = {}
 
-  locald = d['INT']
-# TODO
-
-  locald[benchmark_name] = {}
-
-  ts_print('Running subphase: %u/%u: %s' % (j + 1, len(benchmarks), benchmark))
+  ts_print('Running subphase: %u/%u: %s' % (j + 1, len(benchmarks), b.name))
 
   # Real benchmark run
   extra = ''
 
   c = v6.build_config(configuration, profile)
 
-  cl = runspec_command('--config=' + c + ' --output-format=raw ' + runspec_arguments + benchmark_name)
+  cl = runspec_command('--config=' + c + ' --output-format=raw ' + runspec_arguments + b.name)
   proc = commands.getstatusoutput(cl)
 
   ts_print('Command result: %u' % proc[0])
   if proc[0] != 0:
-    locald[benchmark_name]['times'] = None
-    locald[benchmark_name]['size'] = None
+    locald[b.name]['times'] = None
+    locald[b.name]['size'] = None
     print('runspec command has failed')
     print(proc[1])
   else:
     result = proc[1] 
-    save_spec_log(summary_path, profile, benchmark, result)
+    save_spec_log(summary_path, profile, b.name, result)
 
     rsf = ''
     for r in result.split('\n'):
@@ -295,11 +326,11 @@ for j, benchmark in enumerate(benchmarks[20:25]):
 	rsf = r[r.find('/'):].strip()
 	ts_print(rsf)
 	rsf_result = parse_rsf(rsf)
-	locald[benchmark_name]['times'] = rsf_result[0]
-	locald[benchmark_name]['error'] = rsf_result[1]
+	locald[b.name]['times'] = rsf_result[0]
+	locald[b.name]['error'] = rsf_result[1]
 
     # prepare folder
-    perf_folder_subdir = os.path.join(perf_folder, benchmark_name)
+    perf_folder_subdir = os.path.join(perf_folder, b.name)
     os.makedirs(perf_folder_subdir)
 
     # process PERF record
@@ -328,7 +359,7 @@ for j, benchmark in enumerate(benchmarks[20:25]):
 	shutil.copyfile('perf.data', perf_abspath)
 
 	binary_folder = invoke.split(' ')[2]
-	binary = os.path.join(binary_folder, [x for x in os.listdir(binary_folder) if x.startswith(benchmark_without_number)][0])
+	binary = os.path.join(binary_folder, [x for x in os.listdir(binary_folder) if x.startswith(b.pure_name)][0])
         binary_target = os.path.join(perf_folder_subdir, os.path.basename(binary))
 	ts_print('Copy binary file: %s -> %s' % (binary, binary_target))
 	shutil.copyfile(binary, binary_target)
@@ -339,7 +370,7 @@ for j, benchmark in enumerate(benchmarks[20:25]):
         with open(os.path.join(perf_folder_subdir, 'location.txt'), 'w') as f:
           f.write(binary)	
 
-        locald[benchmark_name]['size'] = parse_binary_size(binary)
+        locald[b.name]['size'] = parse_binary_size(binary)
 
   ts_print(locald)
 
