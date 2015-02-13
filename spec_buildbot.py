@@ -299,7 +299,7 @@ v6 = CpuV6()
 benchmarks = configuration.filter_benchmarks(v6.get_benchmarks())
 c = v6.build_config(configuration, profile)
 
-for j, b in enumerate(benchmarks[20:25]):
+for j, b in enumerate(benchmarks):
   locald = d['INT'] if b.is_int else d['FP']
   locald[b.name] = {}
 
@@ -361,7 +361,7 @@ for j, b in enumerate(benchmarks[20:25]):
 	shutil.copyfile('perf.data', perf_abspath)
 
 	binary_folder = invoke.split(' ')[2]
-	binary = os.path.join(binary_folder, [x for x in os.listdir(binary_folder) if x.startswith(b.pure_name)][0])
+	binary = os.path.join(binary_folder, [x for x in os.listdir(binary_folder) if x.endswith('compsys')][0])
         binary_target = os.path.join(perf_folder_subdir, os.path.basename(binary))
 	ts_print('Copy binary file: %s -> %s' % (binary, binary_target))
 	shutil.copyfile(binary, binary_target)
