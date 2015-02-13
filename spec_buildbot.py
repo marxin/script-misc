@@ -296,7 +296,7 @@ ts_print('Starting group of tests')
 
 
 v6 = CpuV6()
-benchmarks = configuration.filter_benchmarks(v6.get_benchmarks())
+benchmarks = configuration.filter_benchmarks(v6.get_benchmarks()[0:10])
 c = v6.build_config(configuration, profile)
 
 for j, b in enumerate(benchmarks):
