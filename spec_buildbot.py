@@ -151,22 +151,19 @@ class Cpu2006:
 
 ### compiler configurations ###
 class GCCConfiguration:
-  def get_benchmarks(self):
-    # dealII runs extremely slowly
-    return list(filter(lambda x: x[0] != '447.dealII', benchmarks))
+  def filter_benchmarks(self, benchmarks):
+    return benchmarks
   def compilers(self):
     return { 'FC': 'gfortran', 'CXX': 'g++', 'CC': 'gcc', 'LD': '' }
 
 class LLVMConfiguration:
-  def get_benchmarks(self):
-    # dealII runs extremely slowly
-    return list(filter(lambda x: x[2] == False and x[0] != '447.dealII', benchmarks))
+  def filter_benchmarks(self):
+    return benchmarks
   def compilers(self):
     return { 'FC': '___no_cf___', 'CXX': 'clang++', 'CC': 'clang', 'LD': '' }
 
 class ICCConfiguration:
-  def get_benchmarks(self):
-    # dealII runs extremely slowly
+  def filter_benchmarks(self, benchmarks):
     return benchmarks
   def compilers(self):
     prefix = '~matz/bin/2015.1/bin/intel64/'
@@ -178,19 +175,18 @@ class Benchmark:
     self.pure_name = name[name.find('.') + 1:]
     self.is_int = is_int
 
-if len(sys.argv) != 7:
+if len(sys.argv) != 6:
   sys.exit(1)
 
 real_script_folder = os.path.dirname(os.path.realpath(__file__))
 
 # ARGUMENT parsing
 root_path = os.path.abspath(sys.argv[1])
-# TODO
+dump_file = sys.argv[2]
+compiler = sys.argv[3]
+changes = b64decode(sys.argv[4])
+perf_folder = sys.argv[5]
 profile = 'cpuv6'
-dump_file = sys.argv[3]
-compiler = sys.argv[4]
-changes = b64decode(sys.argv[5])
-perf_folder = sys.argv[6]
 
 configuration = None
 if compiler == 'gcc':
@@ -297,7 +293,7 @@ ts_print('Starting group of tests')
 
 
 v6 = CpuV6()
-benchmarks = v6.get_benchmarks()
+benchmarks = configuration.filter_benchmarks(v6.get_benchmarks())
 
 for j, b in enumerate(benchmarks[20:25]):
   locald = d['INT'] if b.is_int else d['FP']
