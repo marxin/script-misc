@@ -153,7 +153,7 @@ class Cpu2006:
     return config_name
 
 ### compiler configurations ###
-f = lambda x: x.pure_name != 'facesim_s' and x.pure_name != 'wrf'
+f = lambda x: x.pure_name != 'facesim_s' and x.pure_name != 'wrf_s'
 
 class GCCConfiguration:
   def filter_benchmarks(self, benchmarks):
