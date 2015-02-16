@@ -207,7 +207,6 @@ config_template = os.path.join(real_script_folder, 'config-template', 'config-te
 
 default_flags = '-Ofast -march=native -g'
 runspec_arguments = '--size=test --no-reportable --iterations=5 --tune=peak '
-runspec_arguments = '--size=ref --no-reportable --iterations=1 --tune=peak '
 
 d = {
     'INT': {},
@@ -324,7 +323,7 @@ for j, b in enumerate(benchmarks):
     result = proc[1] 
     save_spec_log(summary_path, profile, b.name, result)
 
-    rsf = ''
+    rsf = None
     for r in result.split('\n'):
       r = r.strip()
       if r.startswith('format: raw'):
