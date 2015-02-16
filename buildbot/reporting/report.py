@@ -60,7 +60,7 @@ class BenchMarkResult:
     self.d = d
     self.category = category
 
-    if len(d['times']) > 0:
+    if d['times'] != None and len(d['times']) > 0:
       self.all_times = d['times']
       self.time = average(d['times'])
       self.time_quad_difference = round(quad_different(d['times']), 4)
