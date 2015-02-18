@@ -216,13 +216,11 @@ def ts_print(*args):
 
   sys.stdout.flush()
 
-
-
 # parse optimize options from commit message
 kv = 'flags:'
 if kv in changes:
   i = changes.find(kv) + len(kv) + 1
-  default_flags = kv[i:]
+  default_flags = changes[i:]
   ts_print('default flags changed from commit message: ' + default_flags)
 
 d = {
