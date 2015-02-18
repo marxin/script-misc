@@ -208,6 +208,16 @@ config_template = os.path.join(real_script_folder, 'config-template', 'config-te
 default_flags = '-Ofast -march=native -g'
 runspec_arguments = '--size=test --no-reportable --iterations=5 --tune=peak '
 
+def ts_print(*args):
+  print('[%s]: ' % datetime.datetime.now(), end = '')
+
+  for a in args:
+    print(a)
+
+  sys.stdout.flush()
+
+
+
 # parse optimize options from commit message
 kv = 'flags:'
 if kv in changes:
@@ -278,14 +288,6 @@ def parse_binary_size(binary_file):
 	  d[tokens[0]] = int(tokens[1])
 
   return d
-
-def ts_print(*args):
-  print('[%s]: ' % datetime.datetime.now(), end = '')
-
-  for a in args:
-    print(a)
-
-  sys.stdout.flush()
 
 def runspec_command(cmd):
   return 'source ' + root_path + '/shrc && runspec ' + cmd
