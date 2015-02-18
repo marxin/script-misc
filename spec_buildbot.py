@@ -208,6 +208,13 @@ config_template = os.path.join(real_script_folder, 'config-template', 'config-te
 default_flags = '-Ofast -march=native -g'
 runspec_arguments = '--size=test --no-reportable --iterations=5 --tune=peak '
 
+# parse optimize options from commit message
+kv = 'flags:'
+if kv in changes:
+  i = changes.find(kv) + len(kv) + 1
+  default_flags = kv[i:]
+  ts_print('default flags changed from commit message: ' + default_flags)
+
 d = {
     'INT': {},
     'FP': {},
