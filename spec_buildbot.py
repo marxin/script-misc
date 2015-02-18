@@ -205,8 +205,8 @@ config_folder = os.path.join(root_path, 'config')
 summary_folder = os.path.join(root_path, 'summary')
 config_template = os.path.join(real_script_folder, 'config-template', 'config-template.cfg')
 
-default_flags = '-Ofast -march=native -g'
-runspec_arguments = '--size=test --no-reportable --iterations=5 --tune=peak '
+default_flags = '-O3 -march=native -g'
+runspec_arguments = '--size=train --no-reportable --iterations=5 --tune=peak '
 
 def ts_print(*args):
   print('[%s]: ' % datetime.datetime.now(), end = '')
