@@ -15,7 +15,9 @@ parser.add_argument('--ignore', dest = 'ignore', help = 'Ignored benchmarks')
 args = parser.parse_args()
 
 def in_good_range(v):
-  return 50 <= v and v <= 200
+  if v == None:
+    return False
+  return 0.1 <= v and v <= 4
 
 if args.ignore == None:
   args.ignore = []
@@ -25,17 +27,23 @@ else:
 def percent(v):
   return '%.2f %%' % v
 
+def ratio(v):
+  if v == None:
+    return 'N/A'
+  return '%.2f' % v
+
 def flt_str(v):
-  return '%2.4f' % v
+  return '%2.4f' % v if v != 0 else ''
 
 def average(values):
   return sum(values) / len(values)
 
 def geomean(num_list):
+  num_list = list(filter(lambda x: x != None, num_list))
   return reduce(lambda x, y: x * y, num_list) ** (1.0 / len(num_list))
 
 def quad_different(values):
-  a = average(values)
+  a = geomean(values)
   s = sum(map(lambda x: (x - a)**2, values))
   l = len(values)
   return s / l
@@ -44,9 +52,9 @@ def td_class(comparison):
   if not in_good_range(comparison):
     return 'danger'
 
-  if comparison < 100:
+  if comparison < 1:
     return 'success'
-  elif comparison == 100:
+  elif comparison == 1:
     return 'info'
   else:
     return 'warning'
@@ -67,6 +75,7 @@ class BenchMarkResult:
       self.size = d['size']['TOTAL']
     else:
       self.time = 0
+      self.size = 0
 
 class BenchMarkReport:
   def __init__ (self, filename, d):
@@ -77,8 +86,10 @@ class BenchMarkReport:
     self.changes = self.d['info']['changes'].replace('buildbot: poke', '')
     self.compiler = self.d['info']['compiler']
     self.full_name = self.compiler + '#' + self.changes + '#' + self.revision[0:6]
+    if self.compiler == 'icc':
+      self.full_name = '_' + self.full_name
     all_benchmarks = list(map(lambda x: BenchMarkResult(x, d['FP'][x], 'FP'), d['FP'])) + list(map(lambda x: BenchMarkResult(x, d['INT'][x], 'INT'), d['INT']))
-    self.benchmarks = sorted(filter(lambda x: x.time != 0 and not x.name in args.ignore, all_benchmarks), key = lambda x: x.name)
+    self.benchmarks = sorted(filter(lambda x: not x.name in args.ignore, all_benchmarks), key = lambda x: x.name)
     self.benchmarks_dictionary = {}
     for b in self.benchmarks:
       self.benchmarks_dictionary[b.name] = b
@@ -99,9 +110,14 @@ class BenchMarkReport:
     
     for i, v in enumerate(self.benchmarks):
       if v.name in comparer.benchmarks_dictionary:
-        value = round(100.0 * v.time / comparer.benchmarks_dictionary[v.name].time, 2)
+        time2 = comparer.benchmarks_dictionary[v.name].time 
+        value = None
+        if v.time != 0 and time2 != 0:
+          value = round(v.time / time2, 2)
+          self.size_comparison[v.name] = round(v.size / comparer.benchmarks_dictionary[v.name].size, 2)
+        else:
+          self.size_comparison[v.name] = None
         self.comparison[v.name] = value
-        self.size_comparison[v.name] = round(100.0 * v.size / comparer.benchmarks_dictionary[v.name].size, 2)
    
     self.categories_comparison = {}
     for c in self.get_categories():
@@ -149,7 +165,7 @@ def generate_comparison(html_root, reports, svg_id):
           if i.error:
             tr.td('non-zero retcode', klass = 'danger')
           elif i.name in br.comparison:
-            tr.td(percent(br.comparison[i.name]), klass = td_class(br.comparison[i.name]) + ' text-right')
+            tr.td(ratio(br.comparison[i.name]), klass = td_class(br.comparison[i.name]) + ' text-right')
           else:
             tr.td()
         else:
@@ -162,7 +178,7 @@ def generate_comparison(html_root, reports, svg_id):
     for br in reports:
       tr.td()
       td = tr.td(klass = td_class(br.categories_comparison[category]) + ' text-right')
-      td.strong(percent(br.categories_comparison[category]))
+      td.strong(ratio(br.categories_comparison[category]))
 
   row.svg(id = svg_id, style = 'height: 500px; width: 1150px; margin: 0 auto;')
   row.h2('Size (smaller is better)')
@@ -185,7 +201,7 @@ def generate_comparison(html_root, reports, svg_id):
       if i.name in br.benchmarks_dictionary:
         b = br.benchmarks_dictionary[i.name]
         tr.td(str(b.size), klass = 'text-right')
-        tr.td(percent(br.size_comparison[i.name]), klass = td_class(br.size_comparison[i.name]) + ' text-right')
+        tr.td(ratio(br.size_comparison[i.name]), klass = td_class(br.size_comparison[i.name]) + ' text-right')
       else:
         tr.td('N/A', klass = 'text-right')
         tr.td('N/A', klass = 'text-right')
@@ -196,7 +212,7 @@ def generate_comparison(html_root, reports, svg_id):
   for br in reports:
     tr.td()
     td = tr.td(klass = td_class(br.avg_size_comparison) + ' text-right')
-    td.strong(percent(br.avg_size_comparison))
+    td.strong(ratio(br.avg_size_comparison))
 
 def generate_graph(reports, id):
   first_benchmarks = reports[0].benchmarks
