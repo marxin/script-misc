@@ -162,7 +162,7 @@ class GCCConfiguration:
     return { 'FC': 'gfortran', 'CXX': 'g++', 'CC': 'gcc', 'LD': '' }
 
 class LLVMConfiguration:
-  def filter_benchmarks(self):
+  def filter_benchmarks(self, benchmarks):
     return list(filter(f, benchmarks))
   def compilers(self):
     return { 'FC': '___no_cf___', 'CXX': 'clang++', 'CC': 'clang', 'LD': '' }
