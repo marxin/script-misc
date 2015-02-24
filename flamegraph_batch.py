@@ -48,10 +48,23 @@ for i, perf_data in enumerate(perf_data_locations):
   id_prefix = id[0:2]
   id = id[2:]
 
-  binary_target = os.path.join(debug, './' + original_location)
+  binary_target = os.path.join(debug, './' + original_location + id)
   debug_symlink = os.path.join(debug, '.build-id', id_prefix, id)
 
   print('Symlink: %s->%s' % (debug_symlink, binary_target))
+
+  # copy binary to .debug folder
+  try_makedirs(os.path.dirname(binary_target))
+  shutil.copyfile(binary_file, binary_target)
+
+  # create symlink from .debug build ID database
+  try_makedirs(os.path.dirname(debug_symlink))
+
+  if not os.path.exists(debug_symlink):
+    try:
+      os.symlink(binary_target, debug_symlink)
+    except FileExistsError:
+      pass
 
   # print perf report arguments
   if args.spec != None:
@@ -65,19 +78,6 @@ for i, perf_data in enumerate(perf_data_locations):
     print('Try perf report:\n%sperf report --objdump-prefix=%s --objdump-prefix-strip=%u -i %s' % (p, prefix, parts, os.path.join(folder, 'perf.data')))
 
   if not args.dryrun:
-    # copy binary to .debug folder
-    try_makedirs(os.path.dirname(binary_target))
-    shutil.copyfile(binary_file, binary_target)
-
-    # create symlink from .debug build ID database
-    try_makedirs(os.path.dirname(debug_symlink))
-
-    if not os.path.exists(debug_symlink):
-      try:
-        os.symlink(binary_target, debug_symlink)
-      except FileExistsError:
-        pass
-
     p1 = subprocess.Popen([args.perf, 'script'], stdout=subprocess.PIPE)
     p2 = subprocess.Popen([os.path.join(args.flamegraph, 'stackcollapse-perf.pl')], stdin = p1.stdout, stdout = data_tmp)
     p1.stdout.close()
