@@ -337,6 +337,9 @@ for j, b in enumerate(benchmarks):
 	rsf_result = parse_rsf(rsf)
 	locald[b.name]['times'] = rsf_result[0]
 	locald[b.name]['error'] = rsf_result[1]
+
+    ts_print(locald)
+
 """
     # prepare folder
     perf_folder_subdir = os.path.join(perf_folder, b.name)
@@ -382,7 +385,6 @@ for j, b in enumerate(benchmarks):
         locald[b.name]['size'] = parse_binary_size(binary)
 """
 
-  ts_print(locald)
 
 with open(dump_file, 'w') as fp:
   json.dump(d, fp, indent = 1)
