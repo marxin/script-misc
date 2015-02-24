@@ -99,7 +99,7 @@ class BenchMarkReport:
     return geomean(values)
 
   def get_categories(self):
-    return set(map(lambda x: x.category, self.benchmarks))
+    return set(map(lambda x: x.category, self.benchmarks)).union(set(['ALL']))
 
   def get_category(self, category):
     return list(filter(lambda x: x.category == category, self.benchmarks))
@@ -121,7 +121,7 @@ class BenchMarkReport:
    
     self.categories_comparison = {}
     for c in self.get_categories():
-      self.categories_comparison[c] = self.category_comparison(lambda x: not x.error and x.name in self.comparison and x.category == c, lambda x: self.comparison[x.name])
+      self.categories_comparison[c] = self.category_comparison(lambda x: not x.error and x.name in self.comparison and (x.category == c or c == 'ALL'), lambda x: self.comparison[x.name])
 
     self.avg_size_comparison = round(geomean(self.size_comparison.values()), 2)
 
@@ -147,7 +147,7 @@ def generate_comparison(html_root, reports, svg_id):
 
   body = table.body
 
-  for category in reports[0].get_categories():
+  for category in sorted(reports[0].get_categories()):
     first_benchmarks = reports[0].get_category(category)
 
     for index, i in enumerate(first_benchmarks):
