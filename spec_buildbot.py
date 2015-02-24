@@ -204,7 +204,7 @@ summary_folder = os.path.join(root_path, 'summary')
 config_template = os.path.join(real_script_folder, 'config-template', 'config-template.cfg')
 
 default_flags = '-O3 -march=native -g'
-runspec_arguments = '--size=train --no-reportable --iterations=5 --tune=peak '
+runspec_arguments = '--size=train --no-reportable --iterations=1 --tune=peak '
 
 def ts_print(*args):
   print('[%s]: ' % datetime.datetime.now(), end = '')
@@ -337,7 +337,7 @@ for j, b in enumerate(benchmarks):
 	rsf_result = parse_rsf(rsf)
 	locald[b.name]['times'] = rsf_result[0]
 	locald[b.name]['error'] = rsf_result[1]
-
+"""
     # prepare folder
     perf_folder_subdir = os.path.join(perf_folder, b.name)
     os.makedirs(perf_folder_subdir)
@@ -380,6 +380,7 @@ for j, b in enumerate(benchmarks):
           f.write(binary)	
 
         locald[b.name]['size'] = parse_binary_size(binary)
+"""
 
   ts_print(locald)
 
