@@ -204,7 +204,7 @@ summary_folder = os.path.join(root_path, 'summary')
 config_template = os.path.join(real_script_folder, 'config-template', 'config-template.cfg')
 
 default_flags = '-O3 -march=native -g'
-runspec_arguments = '--size=train --no-reportable --iterations=1 --tune=peak '
+runspec_arguments = '--size=train --no-reportable --iterations=1 --tune=peak -D '
 
 def ts_print(*args):
   print('[%s]: ' % datetime.datetime.now(), end = '')
