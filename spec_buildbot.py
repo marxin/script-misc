@@ -329,6 +329,7 @@ for j, b in enumerate(benchmarks):
     save_spec_log(summary_path, profile, b.name, result)
 
     rsf = None
+    time_set = False
     for r in result.split('\n'):
       r = r.strip()
       if r.startswith('format: raw'):
@@ -337,6 +338,12 @@ for j, b in enumerate(benchmarks):
 	rsf_result = parse_rsf(rsf)
 	locald[b.name]['times'] = rsf_result[0]
 	locald[b.name]['error'] = rsf_result[1]
+	time_set = True
+
+    # REF results from some reason does not produce .rsf file
+    if not time_set:
+      results = [float(x.strip().split(' ')[-1]) for x in result.split('\n') if 'Reported:' in x]
+      locald[b.name]['times'] = results
 
     ts_print(locald)
 
