@@ -26,7 +26,7 @@ class CpuV6:
     Benchmark('602.gcc_s', True),
     Benchmark('603.bwaves_s', False),
     Benchmark('605.mcf_s', True),
-    Benchmark('607.cactuBSSN_s', False),
+    Benchmark('607.cactuBSSN_s', False, 1),
     Benchmark('608.namd_s', False),
     Benchmark('610.parest_s', False),
     Benchmark('611.povray_s', False),
@@ -38,22 +38,23 @@ class CpuV6:
     Benchmark('625.x264_s', True),
     Benchmark('626.blender_s', False),
     Benchmark('627.cam4_s', False),
-    Benchmark('628.pop2_s', True),
+    Benchmark('628.pop2_s', True, 1),
     Benchmark('631.deepsjeng_s', True),
     Benchmark('632.facesim_s', False),
     Benchmark('638.imagick_s', False),
     Benchmark('639.bodytrack_s', False),
     Benchmark('641.leela_s', True),
-    Benchmark('644.nab_s', False),
+    Benchmark('644.nab_s', False, 1),
     Benchmark('647.drops_s', False),
     Benchmark('648.exchange2_s', True),
     Benchmark('649.fotonik3d_s', False),
-    Benchmark('651.qe_s', False),
+    Benchmark('651.qe_s', False, 1),
     Benchmark('652.mdwp_s', True), 
-    Benchmark('653.johnripper_s', True),
+    Benchmark('653.johnripper_s', True, 1),
     Benchmark('654.roms_s', False),
     Benchmark('656.ferret_s', False),
-    Benchmark('657.xz_s', True)]
+    Benchmark('657.xz_s', True, 1)
+    ]
 
   def build_config(self, configuration, profile):
     config_template_path = os.path.join(real_script_folder, 'config-template', 'config-template-v6.cfg')
@@ -89,38 +90,39 @@ class CpuV6:
 class Cpu2006:
   def get_benchmarks(self):
     return [
-      Benchmark('400.perlbench', True, False),
-      Benchmark('401.bzip2', True, False),
-      Benchmark('403.gcc', True, False),
-      Benchmark('410.bwaves', False, True),
-      Benchmark('416.gamess', False, True),
-      Benchmark('429.mcf', True, False),
-      Benchmark('433.milc', False, False),
-      Benchmark('434.zeusmp', False, True),
-      Benchmark('435.gromacs', False, True),
-      Benchmark('436.cactusADM', False, True),
-      Benchmark('437.leslie3d', False, True),
-      Benchmark('444.namd', False, False),
-      Benchmark('445.gobmk', True, False),
-      Benchmark('447.dealII', False, False),
-      Benchmark('450.soplex', False, False),
-      Benchmark('453.povray', False, False),
-      Benchmark('454.calculix', False, True),
-      Benchmark('456.hmmer', True, False),
-      Benchmark('458.sjeng', True, False),
-      Benchmark('459.GemsFDTD', False, True),
-      Benchmark('462.libquantum', True, False),
-      Benchmark('464.h264ref', True, False),
-      Benchmark('465.tonto', False, True),
-      Benchmark('470.lbm', False, False),
-      Benchmark('471.omnetpp', True, False),
-      Benchmark('473.astar', True, False),
-      Benchmark('481.wrf', False, True),
-      Benchmark('482.sphinx3', False, False),
-      Benchmark('483.xalancbmk', True, False)
+      Benchmark('400.perlbench', True),
+      Benchmark('401.bzip2', True),
+      Benchmark('403.gcc', True),
+      Benchmark('410.bwaves', False),
+      Benchmark('416.gamess', False),
+      Benchmark('429.mcf', True),
+      Benchmark('433.milc', False),
+      Benchmark('434.zeusmp', False),
+      Benchmark('435.gromacs', False),
+      Benchmark('436.cactusADM', False),
+      Benchmark('437.leslie3d', False),
+      Benchmark('444.namd', False),
+      Benchmark('445.gobmk', True),
+      Benchmark('447.dealII', False),
+      Benchmark('450.soplex', False),
+      Benchmark('453.povray', False),
+      Benchmark('454.calculix', False),
+      Benchmark('456.hmmer', True),
+      Benchmark('458.sjeng', True),
+      Benchmark('459.GemsFDTD', False),
+      Benchmark('462.libquantum', True),
+      Benchmark('464.h264ref', True),
+      Benchmark('465.tonto', False),
+      Benchmark('470.lbm', False),
+      Benchmark('471.omnetpp', True),
+      Benchmark('473.astar', True),
+      Benchmark('481.wrf', False),
+      Benchmark('482.sphinx3', False),
+      Benchmark('483.xalancbmk', True)
     ]
 
-  def generate_config(profile, configuration, extra_flags = ''):
+  def build_config(self, configuration, profile):
+    config_template_path = os.path.join(real_script_folder, 'config-template', 'config-template.cfg')
     lines = open(config_template, 'r').readlines()
 
     p = 94
@@ -173,10 +175,11 @@ class ICCConfiguration:
     return { 'FC': os.path.join(prefix, 'ifort'), 'CXX': os.path.join(prefix, 'icpc'), 'CC': os.path.join(prefix, 'icc'), 'LD': '/suse/mliska/override-intel.o /suse/matz/bin/2015.1/compiler/lib/intel64/libirc.a' }
 
 class Benchmark:
-  def __init__(self, name, is_int):
+  def __init__(self, name, is_int, iterations = 3):
     self.name = name
     self.pure_name = name[name.find('.') + 1:]
     self.is_int = is_int
+    self.iterations = iterations
 
 if len(sys.argv) != 6:
   sys.exit(1)
@@ -203,8 +206,8 @@ config_folder = os.path.join(root_path, 'config')
 summary_folder = os.path.join(root_path, 'summary')
 config_template = os.path.join(real_script_folder, 'config-template', 'config-template.cfg')
 
-default_flags = '-O3 -march=native -g'
-runspec_arguments = '--size=train --no-reportable --iterations=1 --tune=peak '
+default_flags = '-Ofast -march=native -g'
+runspec_arguments = '--size=ref --no-reportable --tune=peak --iterations='
 
 def ts_print(*args):
   print('[%s]: ' % datetime.datetime.now(), end = '')
@@ -302,20 +305,21 @@ if not os.path.isdir(summary_path):
 ts_print('Starting group of tests')
 
 
-v6 = CpuV6()
-benchmarks = configuration.filter_benchmarks(v6.get_benchmarks())
-c = v6.build_config(configuration, profile)
+suite = CpuV6()
+benchmarks = configuration.filter_benchmarks(suite.get_benchmarks())
+c = suite.build_config(configuration, profile)
 
 for j, b in enumerate(benchmarks):
   locald = d['INT'] if b.is_int else d['FP']
   locald[b.name] = {}
 
-  ts_print('Running subphase: %u/%u: %s' % (j + 1, len(benchmarks), b.name))
+  ts_print('Running subphase: %u/%u: %s (iterations: %u)' % (j + 1, len(benchmarks), b.name, b.iterations))
 
   # Real benchmark run
   extra = ''
 
-  cl = runspec_command('--config=' + c + ' --output-format=raw ' + runspec_arguments + b.name)
+  cl = runspec_command('--config=' + c + ' --output-format=raw ' + runspec_arguments + str(b.iterations) + ' ' + b.name)
+  ts_print('Running spec command: ' + cl)
   proc = commands.getstatusoutput(cl)
 
   ts_print('Command result: %u' % proc[0])
@@ -341,8 +345,12 @@ for j, b in enumerate(benchmarks):
 	time_set = True
 
     # REF results from some reason does not produce .rsf file
+    ts_print('fallback')
     if not time_set:
-      results = [float(x.strip().split(' ')[-1]) for x in result.split('\n') if 'Reported:' in x]
+      log_file = [x for x in result.split('\n') if 'The log for this run is in' in x][0].split(' ')[-1]
+      ts_print(log_file)
+      results = [float(x.strip().split(' ')[-1]) for x in open(log_file).readlines() if 'Reported:' in x]
+      ts_print(str(results))
       locald[b.name]['times'] = results
 
     ts_print(locald)
