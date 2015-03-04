@@ -72,7 +72,8 @@ class BenchMarkResult:
       self.all_times = d['times']
       self.time = average(d['times'])
       self.time_quad_difference = round(quad_different(d['times']), 4)
-      self.size = d['size']['TOTAL']
+#      self.size = d['size']['TOTAL']
+      self.size = 1
     else:
       self.time = 0
       self.size = 0
@@ -88,7 +89,8 @@ class BenchMarkReport:
     self.full_name = self.compiler + '#' + self.changes + '#' + self.revision[0:6]
     if self.compiler == 'icc':
       self.full_name = '_' + self.full_name
-    all_benchmarks = list(map(lambda x: BenchMarkResult(x, d['FP'][x], 'FP'), d['FP'])) + list(map(lambda x: BenchMarkResult(x, d['INT'][x], 'INT'), d['INT']))
+    self.title = d['info']['title'] if 'title' in d['info'] else self.full_name
+    all_benchmarks = list(map(lambda x: BenchMarkResult(x, d['FP'][x], ''), d['FP'])) + list(map(lambda x: BenchMarkResult(x, d['INT'][x], ''), d['INT']))
     self.benchmarks = sorted(filter(lambda x: not x.name in args.ignore, all_benchmarks), key = lambda x: x.name)
     self.benchmarks_dictionary = {}
     for b in self.benchmarks:
@@ -143,7 +145,7 @@ def generate_comparison(html_root, reports, svg_id):
   tr.th('benchmark')
 
   for b in reports:
-    tr.th(b.full_name, colspan = '2')
+    tr.th(b.title, colspan = '2')
 
   body = table.body
 
@@ -223,10 +225,10 @@ def generate_graph(reports, id):
   for report in reports:
     values = []
     for i, v in enumerate(first_benchmarks):
-      if v.name in report.comparison and in_good_range(report.comparison[v.name]):
+      if not v.error and v.name in report.comparison and in_good_range(report.comparison[v.name]):
         values.append({'x': i, 'y': report.comparison[v.name]})
 
-    data.append({ 'key': report.full_name, 'values': values })
+    data.append({ 'key': report.title, 'values': values })
 
   return 'var data%u = %s; var legend%u = %s;' % (id, json.dumps(data, indent = 2), id, json.dumps(names, indent = 2))
 
@@ -235,8 +237,8 @@ def generate_graph(reports, id):
 h = HTML()
 head = h.head()
 head.meta(charset = 'utf-8')
-head.link('', rel = 'stylesheet', href = 'https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.15-beta/nv.d3.css')
-head.link('', rel = 'stylesheet', href = 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css')
+head.link('', rel = 'stylesheet', href = 'https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.15-beta/nv.d3.css', media = 'all')
+head.link('', rel = 'stylesheet', href = 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css', media = 'all')
 head.script('', type = 'text/javascript', src = 'https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.js')
 head.script('', type = 'text/javascript', src = 'https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.15-beta/nv.d3.js') 
 head.script('', type = 'text/javascript', src = 'https://code.jquery.com/jquery-2.1.3.js')

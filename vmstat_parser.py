@@ -157,6 +157,11 @@ def main():
     else:
       assert False, "Unhandled option"
 
+  total_memory = 8
+  # TODO: fix me
+  output_file = args[-1]
+  args = args[:-1]
+
   plt.rc('text', usetex = True)
   font = {'family' : 'serif', 'size':13}
   plt.rc('font',**font)
