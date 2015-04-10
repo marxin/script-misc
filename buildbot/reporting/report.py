@@ -17,7 +17,7 @@ args = parser.parse_args()
 def in_good_range(v):
   if v == None:
     return False
-  return 0.1 <= v and v <= 4
+  return 0.1 <= v and v <= 5
 
 if args.ignore == None:
   args.ignore = []
@@ -183,6 +183,8 @@ def generate_comparison(html_root, reports, svg_id):
       td.strong(ratio(br.categories_comparison[category]))
 
   row.svg(id = svg_id, style = 'height: 500px; width: 1150px; margin: 0 auto;')
+
+  """  
   row.h2('Size (smaller is better)')
   table = row.table(klass = 'table table-condensed table-bordered')
   tr = table.thead.tr
@@ -215,6 +217,7 @@ def generate_comparison(html_root, reports, svg_id):
     tr.td()
     td = tr.td(klass = td_class(br.avg_size_comparison) + ' text-right')
     td.strong(ratio(br.avg_size_comparison))
+  """
 
 def generate_graph(reports, id):
   first_benchmarks = reports[0].benchmarks
