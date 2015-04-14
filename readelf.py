@@ -10,6 +10,7 @@ import tempfile
 import shutil
 import time
 import subprocess
+import json
 
 from tempfile import *
 from collections import defaultdict
@@ -21,42 +22,43 @@ parser.add_argument('--strip', dest = 'strip', action = 'store_true', help = 'st
 parser.add_argument('--compare-symbols', dest = 'compare_symbols', action = 'store_true', help = 'compare number of symbols')
 parser.add_argument('--summary', dest = 'summary', action = 'store_true', help = 'summary ELF sections to: code, dynamic relocations, data, EH, rest')
 parser.add_argument('--detect-optimization', dest = 'detect_optimization', action = 'store_true', help = 'detect optimizations which produced a symbol')
-parser.add_argument('--format', dest = 'format', default = 'report', choices = ['report', 'csv'], help = 'output format')
+parser.add_argument('--format', dest = 'format', default = 'report', choices = ['report', 'csv', 'json'], help = 'output format')
+parser.add_argument('--report', dest = 'report', help = 'file where results are saved')
 
 args = parser.parse_args()
 
 def create_temporary_copy(src):
-  tf = tempfile.NamedTemporaryFile(mode='r+b', prefix='__', suffix='.tmp', delete = False)
+    tf = tempfile.NamedTemporaryFile(mode='r+b', prefix='__', suffix='.tmp', delete = False)
 
-  with open(src,'r+b') as f:
-    shutil.copyfileobj(f,tf)
-  
-  tf.seek(0) 
-  tf.close()
-  return tf.name
+    with open(src,'r+b') as f:
+        shutil.copyfileobj(f,tf)
+    
+    tf.seek(0) 
+    tf.close()
+    return tf.name
 
 def parse_section_name(line):
-  s = line.find(']') + 2
-  e = line.find(' ', s)
-  return line[s:e]
+    s = line.find(']') + 2
+    e = line.find(' ', s)
+    return line[s:e]
 
 def parse_size(line):
-  return int(line.split(' ')[0], 16)
+    return int(line.split(' ')[0], 16)
 
 def sizeof_fmt(num):
-  for x in ['B','KB','MB','GB','TB']:
-    if num < 1024.0:
-      return "%3.2f %s" % (num, x)
-    num /= 1024.0
+    for x in ['B','KB','MB','GB','TB']:
+        if num < 1024.0:
+            return "%3.2f %s" % (num, x)
+        num /= 1024.0
 
 def to_percent(a, b):
-  if b == 0:
-    if a == 0:
-      return '100.00 %'
-    else:
-      return '0.00 %'
+    if b == 0:
+        if a == 0:
+            return '100.00 %'
+        else:
+            return '0.00 %'
 
-  return str('%.2f %%' % (100.0 * a / b))
+    return str('%.2f %%' % (100.0 * a / b))
 
 symbol_categories = [('omp', re.compile('(.*)\._omp_fn\.[0-9]+')), ('isra', re.compile('(.*)\.isra\.[0-9]+')), ('constprop', re.compile('(.*)\.constprop\.[0-9]+')), ('part', re.compile('(.*)\.part\.[0-9]+')), ('global_ctor', re.compile('_GLOBAL__sub_I_(.*)')), ('GCC_except_table', re.compile('GCC_except_table(.*)'))]
 
@@ -71,250 +73,260 @@ section_summary_selectors = [lambda x: x == '.text',
 	lambda x: x == 'TOTAL']
 
 class ElfSymbol:
-  def __init__ (self, name, type, attribute):
-    self.name = name
-    self.demangled_name = None
-    self.type = type
-    self.attribute = attribute
+    def __init__ (self, name, type, attribute):
+        self.name = name
+        self.demangled_name = None
+        self.type = type
+        self.attribute = attribute
 
-  def __eq__(self, obj):
-    return self.name == obj.name and self.type == obj.type and self.attribute == obj.attribute
+    def __eq__(self, obj):
+        return self.name == obj.name and self.type == obj.type and self.attribute == obj.attribute
 
-  def __hash__(self):
-     return hash(self.name + self.type + self.attribute)
+    def __hash__(self):
+         return hash(self.name + self.type + self.attribute)
 
-  def __str__(self):
-    return 'name: %s, type: %s, attr: %s' % (self.name, self.type, self.attribute)
+    def __str__(self):
+        return 'name: %s, type: %s, attr: %s' % (self.name, self.type, self.attribute)
 
-  def detect_optimization(self):
-    self.optimization = '(none)'
-    self.canonical_name = self.name
+    def detect_optimization(self):
+        self.optimization = '(none)'
+        self.canonical_name = self.name
 
-    for r in symbol_categories:
-      m = r[1].search(self.name)
-      if m != None:
-        self.optimization = r[0]
-        self.canonical_name = m.group(1)
-        return
+        for r in symbol_categories:
+            m = r[1].search(self.name)
+            if m != None:
+                self.optimization = r[0]
+                self.canonical_name = m.group(1)
+                return
 
-    for r in symbol_categories_demangled:
-      if self.demangled_name.startswith(r[1]):
-        self.optimization = r[0]
-        return
+        for r in symbol_categories_demangled:
+            if self.demangled_name.startswith(r[1]):
+                self.optimization = r[0]
+                return
 
-  def group(self):
-    return self.type + '_' + self.attribute
+    def group(self):
+        return self.type + '_' + self.attribute
 
 class ElfSection:
-  def __init__ (self, section, offset, size):
-    self.section = section
-    self.offset = offset
-    self.size = size
+    def __init__ (self, section, offset, size):
+        self.section = section
+        self.offset = offset
+        self.size = size
 
 class ElfContainer:
-  def __init__ (self, full_path):
-    self.parse_sections(full_path)
+    def __init__ (self, full_path):
+        self.parse_sections(full_path)
 
-    if args.compare_symbols:
-      self.parse_symbols(full_path)
-      self.parse_demangled_names()
+        if args.compare_symbols:
+            self.parse_symbols(full_path)
+            self.parse_demangled_names()
 
-      if args.detect_optimization:
+            if args.detect_optimization:
+                for i, s in enumerate(self.symbols):
+                    s.detect_optimization()
+
+            sorted_input = sorted(self.symbols, key = lambda x: x.group())
+            self.symbols_dictionary = {}
+
+            for k, g in groupby(sorted_input, key = lambda x: x.group()):
+                self.symbols_dictionary[k] = list(g)
+
+    def parse_demangled_names(self):
+        names = '\n'.join(map(lambda x: x.name, self.symbols))
+        f = NamedTemporaryFile(delete=False)
+
+        for n in self.symbols:
+            s = n.name + '\n'
+            f.write(bytes(s, 'UTF-8'))
+
+        f.close()
+
+        result = list([x.strip() for x in os.popen('cat %s | c++filt' % f.name).readlines()])
+        os.unlink(f.name)
+
         for i, s in enumerate(self.symbols):
-          s.detect_optimization()
+            s.demangled_name = result[i]
 
-      sorted_input = sorted(self.symbols, key = lambda x: x.group())
-      self.symbols_dictionary = {}
+    def parse_sections (self, full_path):
+        if args.strip:
+            full_path = create_temporary_copy(full_path)            
+            proc = subprocess.Popen(['strip', '-s', full_path], shell = False, stdout=subprocess.PIPE)
+            proc.communicate()
 
-      for k, g in groupby(sorted_input, key = lambda x: x.group()):
-        self.symbols_dictionary[k] = list(g)
+        self.sections = []
+        f = os.popen('readelf -S ' + full_path)
 
-  def parse_demangled_names(self):
-    names = '\n'.join(map(lambda x: x.name, self.symbols))
-    f = NamedTemporaryFile(delete=False)
+        lines = f.readlines()[5:-4]
 
-    for n in self.symbols:
-      s = n.name + '\n'
-      f.write(bytes(s, 'UTF-8'))
+        i = 0
 
-    f.close()
+        while i < len(lines):
+            line = lines[i].strip()
+            name = parse_section_name(line)
+            offset = int(line.split(' ')[-1], 16)
 
-    result = list([x.strip() for x in os.popen('cat %s | c++filt' % f.name).readlines()])
-    os.unlink(f.name)
+            i += 1
 
-    for i, s in enumerate(self.symbols):
-      s.demangled_name = result[i]
+            line = lines[i].strip()
+            size = parse_size(line)
+            self.sections.append(ElfSection(name, offset, size))
 
-  def parse_sections (self, full_path):
-    if args.strip:
-      full_path = create_temporary_copy(full_path)      
-      proc = subprocess.Popen(['strip', '-s', full_path], shell = False, stdout=subprocess.PIPE)
-      proc.communicate()
+            i += 1
 
-    self.sections = []
-    f = os.popen('readelf -S ' + full_path)
+        self.total_size = os.stat(full_path).st_size
+        self.sections.append(ElfSection('TOTAL', 0, self.total_size))
 
-    lines = f.readlines()[5:-4]
+        if args.summary:
+            old_sections = self.sections
 
-    i = 0
+            d = {}
+            for s in section_summary:
+                d[s] = 0
 
-    while i < len(lines):
-      line = lines[i].strip()
-      name = parse_section_name(line)
-      offset = int(line.split(' ')[-1], 16)
+            for section in self.sections:
+                index = next(i for i,v in enumerate(section_summary_selectors) if v(section.section))
+                d[section_summary[index]] += section.size
 
-      i += 1
+            self.sections = []
 
-      line = lines[i].strip()
-      size = parse_size(line)
-      self.sections.append(ElfSection(name, offset, size))
+            for k in d:
+                self.sections.append(ElfSection(k, 0, d[k]))
 
-      i += 1
+    def parse_symbols (self, full_path):
+        f = os.popen('readelf --wide -s ' + full_path)
+        self.symbols = []
 
-    self.total_size = os.stat(full_path).st_size
-    self.sections.append(ElfSection('TOTAL', 0, self.total_size))
+        for line in f.readlines():
+            items = [x for x in line.strip().split(' ') if x]
+            if len(items) == 8 and items[1][-1].isdigit():
+                name = items[7]
+                type = items[3]
+                attribute = items[4]
+                self.symbols.append(ElfSymbol(name, type, attribute))
 
-    if args.summary:
-      old_sections = self.sections
+    @staticmethod
+    def add_to_dictionary(d, index, key, value):
+        if not key in d:
+            d[key] = [0, 0, 0]
 
-      d = {}
-      for s in section_summary:
-        d[s] = 0
+        d[key][index] = value
 
-      for section in self.sections:
-        index = next(i for i,v in enumerate(section_summary_selectors) if v(section.section))
-        d[section_summary[index]] += section.size
+    @staticmethod
+    def get_categories(s):
+        l = list(s)
+        sorted_list = sorted(l, key = lambda x: x.optimization)
+        return [(k, list(g)) for (k, g) in groupby(sorted_list, key = lambda x: x.optimization)]
 
-      self.sections = []
+    @staticmethod
+    def compare_symbol_categories(list1, list2):
+        source = set(list1)
+        target = set(list2)
 
-      for k in d:
-        self.sections.append(ElfSection(k, 0, d[k]))
+        same = source & target
+        just_source = source - target
+        just_target = target - source
 
-  def parse_symbols (self, full_path):
-    f = os.popen('readelf --wide -s ' + full_path)
-    self.symbols = []
+        same_c = ElfContainer.get_categories(same)
+        just_source_c = ElfContainer.get_categories(just_source)
+        just_target_c = ElfContainer.get_categories(just_target)
 
-    for line in f.readlines():
-      items = [x for x in line.strip().split(' ') if x]
-      if len(items) == 8 and items[1][-1].isdigit():
-        name = items[7]
-        type = items[3]
-        attribute = items[4]
-        self.symbols.append(ElfSymbol(name, type, attribute))
+        d = {}
 
-  @staticmethod
-  def add_to_dictionary(d, index, key, value):
-    if not key in d:
-      d[key] = [0, 0, 0]
+        for i in same_c:
+            ElfContainer.add_to_dictionary(d, 0, i[0], len(i[1]))
 
-    d[key][index] = value
+        for i in just_source_c:
+            ElfContainer.add_to_dictionary(d, 1, i[0], len(i[1]))
 
-  @staticmethod
-  def get_categories(s):
-    l = list(s)
-    sorted_list = sorted(l, key = lambda x: x.optimization)
-    return [(k, list(g)) for (k, g) in groupby(sorted_list, key = lambda x: x.optimization)]
+        for i in just_target_c:
+            ElfContainer.add_to_dictionary(d, 2, i[0], len(i[1]))
 
-  @staticmethod
-  def compare_symbol_categories(list1, list2):
-    source = set(list1)
-    target = set(list2)
+        for k in d.keys():
+            v = d[k]
+            print('%17s %12s%12s%12s%14s' % (k, v[0], v[1], v[2], to_percent(v[1], v[2])))
 
-    same = source & target
-    just_source = source - target
-    just_target = target - source
+    def compare_symbols (self, compared):
+        print('Symbol count comparison')
+        print('                 category            inters.            source            target            source and target comparison')
+        all_keys = set(self.symbols_dictionary.keys ()).union(set(compared.symbols_dictionary.keys()))
+        fmt = '%-30s%12s%12s%14s'
 
-    same_c = ElfContainer.get_categories(same)
-    just_source_c = ElfContainer.get_categories(just_source)
-    just_target_c = ElfContainer.get_categories(just_target)
+        sums = [0, 0]
 
-    d = {}
+        for k in all_keys:
+            v = []
+            v2 = []
 
-    for i in same_c:
-      ElfContainer.add_to_dictionary(d, 0, i[0], len(i[1]))
+            if k in self.symbols_dictionary:
+                v = self.symbols_dictionary[k]
+                sums[0] = sums[0] + len(v)
+            if k in compared.symbols_dictionary:
+                v2 = compared.symbols_dictionary[k]
+                sums[1] = sums[1] + len(v)
 
-    for i in just_source_c:
-      ElfContainer.add_to_dictionary(d, 1, i[0], len(i[1]))
+            print(fmt % ('=== ' + k, len(v), len(v2), to_percent(len(v2), len(v))))
+            ElfContainer.compare_symbol_categories(v, v2)
 
-    for i in just_target_c:
-      ElfContainer.add_to_dictionary(d, 2, i[0], len(i[1]))
+        print(fmt % ('TOTAL', str(sums[0]), str(sums[1]), to_percent(sums[1], sums[0])))
+        print()
 
-    for k in d.keys():
-      v = d[k]
-      print('%17s %12s%12s%12s%14s' % (k, v[0], v[1], v[2], to_percent(v[1], v[2])))
+        for s in self.symbols:
+            print('%s:%s:%s:%s:SOURCE' % (s.type, s.attribute, s.name, s.demangled_name), file = sys.stderr)
 
-  def compare_symbols (self, compared):
-    print('Symbol count comparison')
-    print('         category      inters.      source      target      source and target comparison')
-    all_keys = set(self.symbols_dictionary.keys ()).union(set(compared.symbols_dictionary.keys()))
-    fmt = '%-30s%12s%12s%14s'
+        for s in compared.symbols:
+            print('%s:%s:%s:%s:TARGET' % (s.type, s.attribute, s.name, s.demangled_name), file = sys.stderr)
 
-    sums = [0, 0]
+    """
+        lf = set(map(lambda x: x.canonical_name, self.symbols_dictionary['FUNC_LOCAL']))
+        compared_lf = set(map(lambda x: x.canonical_name, compared.symbols_dictionary['FUNC_LOCAL']))
 
-    for k in all_keys:
-      v = []
-      v2 = []
+        for i in lf - compared_lf:
+            print('Just in GCC: %s' % i)
 
-      if k in self.symbols_dictionary:
-        v = self.symbols_dictionary[k]
-        sums[0] = sums[0] + len(v)
-      if k in compared.symbols_dictionary:
-        v2 = compared.symbols_dictionary[k]
-        sums[1] = sums[1] + len(v)
+        for i in compared_lf - lf:
+            print('Just in CLANG: %s' % i)
+    """
 
-      print(fmt % ('=== ' + k, len(v), len(v2), to_percent(len(v2), len(v))))
-      ElfContainer.compare_symbol_categories(v, v2)
+    def print_csv(self):
+        for s in self.sections:
+            print('%s:%u' % (s.section, s.size))
 
-    print(fmt % ('TOTAL', str(sums[0]), str(sums[1]), to_percent(sums[1], sums[0])))
-    print()
+    def print_json(self, report_file):
+        d = {}
+        for s in self.sections:
+            d[s.section] = s.size
 
-    for s in self.symbols:
-      print('%s:%s:%s:%s:SOURCE' % (s.type, s.attribute, s.name, s.demangled_name), file = sys.stderr)
+        with open(report_file, 'w') as f:
+            f.write(json.dumps([{ 'name': 'binary_size', 'type': 'size', 'values': d}], indent = 4))
 
-    for s in compared.symbols:
-      print('%s:%s:%s:%s:TARGET' % (s.type, s.attribute, s.name, s.demangled_name), file = sys.stderr)
+    @staticmethod
+    def print_containers (containers):
+        first = containers[0]
 
-  """
-    lf = set(map(lambda x: x.canonical_name, self.symbols_dictionary['FUNC_LOCAL']))
-    compared_lf = set(map(lambda x: x.canonical_name, compared.symbols_dictionary['FUNC_LOCAL']))
+        print('%-20s%12s%12s%12s%12s%12s' % ('section', 'portion', 'size', 'size', 'compared', 'comparison'))
+        for s in sorted(first.sections, key = lambda x: x.size):
+            print ('%-20s%12s%12s%12s' % (s.section, to_percent(s.size, first.total_size), sizeof_fmt(s.size), str(s.size)), end = '')
 
-    for i in lf - compared_lf:
-      print('Just in GCC: %s' % i)
+            for rest in containers[1:]:
+                ss = [x for x in rest.sections if x.section == s.section]
+                ss_size = 0
+                if len(ss) > 0:
+                    ss_size = ss[0].size
 
-    for i in compared_lf - lf:
-      print('Just in CLANG: %s' % i)
-  """
+                print('%12s' % str(ss_size), end = '')
+                portion = to_percent (ss_size, s.size)
+                print('%12s' % portion, end = '')
 
-  def print_csv (self):
-    for s in self.sections:
-      print('%s:%u' % (s.section, s.size))
-
-  @staticmethod
-  def print_containers (containers):
-    first = containers[0]
-
-    print('%-20s%12s%12s%12s%12s%12s' % ('section', 'portion', 'size', 'size', 'compared', 'comparison'))
-    for s in sorted(first.sections, key = lambda x: x.size):
-      print ('%-20s%12s%12s%12s' % (s.section, to_percent(s.size, first.total_size), sizeof_fmt(s.size), str(s.size)), end = '')
-
-      for rest in containers[1:]:
-        ss = [x for x in rest.sections if x.section == s.section]
-        ss_size = 0
-        if len(ss) > 0:
-          ss_size = ss[0].size
-
-        print('%12s' % str(ss_size), end = '')
-        portion = to_percent (ss_size, s.size)
-        print('%12s' % portion, end = '')
-
-      print()
+            print()
 
 containers = list(map(lambda x: ElfContainer(x), args.files))
 
 if len(args.files) > 1:
-  containers[0].compare_symbols(containers[1])
+    containers[0].compare_symbols(containers[1])
 
 if args.format == 'report':
-  ElfContainer.print_containers(containers)
+    ElfContainer.print_containers(containers)
 elif args.format == 'csv':
-  containers[0].print_csv()
+    containers[0].print_csv()
+elif args.format == 'json':
+    containers[0].print_json(args.report)
