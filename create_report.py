@@ -23,6 +23,7 @@ parser.add_argument('test', help = 'test property')
 parser.add_argument('compiler', help = 'compiler property')
 parser.add_argument('buildbot', help = 'buildbot property')
 parser.add_argument('options', help = 'compiler options property')
+parser.add_argument('revision', help = 'git revision property')
 parser.add_argument('report', help = 'output file')
 parser.add_argument('files', metavar = 'FILES', nargs = '+', help = 'JSON files with data')
 
@@ -35,6 +36,7 @@ def main():
             'compiler': args.compiler,
             'buildbot': args.buildbot,
             'options': args.options,
+            'revision': args.revision
     }
 
     all_data = []
