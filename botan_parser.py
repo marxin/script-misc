@@ -40,7 +40,8 @@ def main():
         for j in range(0, len(tokens), 2):
             d['%s%s' % (i[:index], tokens[j])] = float(tokens[j + 1])
 
-    print(json.dumps({'name': 'throughput', 'type': 'benchmark result', 'values': d}, indent = 4))
+    with open(args.output, 'w') as o:
+        o.write(json.dumps({'name': 'throughput', 'type': 'benchmark result', 'values': d}, indent = 4))
 
 if __name__ == "__main__":
     main()
