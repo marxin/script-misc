@@ -55,6 +55,7 @@ parser.add_argument('report', help = 'file where results are saved')
 parser.add_argument('--args', dest = 'args', help = 'benchmark arguments')
 parser.add_argument('--iterations', dest = 'iterations', type = int, help = 'number of iterations of the benchmark', default = 3)
 parser.add_argument('--parser', dest = 'parser',  help = 'result parser', choices = ['tramp3d', 'time'])
+parser.add_argument('--output', dest = 'output',  help = 'command output')
 
 def geomean(values):
     return reduce(lambda x, y: x * y, values, 1) ** (1.0 / len(values))
@@ -86,8 +87,13 @@ def main():
         timer.stop()
         times.append(timer.elapsed)
         
-        lines = [x.rstrip() for x in result[0].decode('utf-8').split('\n')]
+        output = result[0].decode('utf-8')
+        lines = [x.rstrip() for x in output.split('\n')]
         all_lines += lines
+
+        if args.output != None:
+            with open(args.output, 'w') as o:
+                o.write(output)
 
     value = None
     if args.parser == 'tramp3d':
