@@ -6,6 +6,7 @@ import subprocess
 
 if len(sys.argv) != 3:
     print('./replace_brig.py ELF BRIG')
+    exit(1)
 
 elf_filename = sys.argv[1]
 brig_filename = sys.argv[2]
