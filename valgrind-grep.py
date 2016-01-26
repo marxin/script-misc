@@ -60,15 +60,25 @@ for line in lines:
     else:
         bt.append(line)
 
+group_count = 0
+error_count = 0
+
 groups = list(map(lambda g: [g[0], len(list(g[1]))], groupby(sorted(errors))))
 for g in sorted(groups, key = lambda x: x[1], reverse = True):
     e = g[0]
+    # TODO: remove
+    #if any(map(lambda x: 'gfc_' in x or 'cp_parser_' in x or 'c_parser_' in x or 'cp_fold_' in x, e.bt)):
+    #    continue
+
+    group_count += 1
+    error_count += g[1]
+
     print('%s: %d occurences' % (e.name, g[1]), file = sys.stderr, end = '')
     print(e.bt_str(), file = sys.stderr)
     print('', file = sys.stderr)
 
 print('== Statistics ==')
-print('Total number of errors: %d' % len(errors))
-print('Number of different errors: %d' % len(groups))
+print('Total number of errors: %d' % error_count)
+print('Number of different errors: %d' % group_count)
 
 # print(error.name + ':' + str(len(list(g))))
