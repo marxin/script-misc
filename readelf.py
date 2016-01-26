@@ -37,14 +37,6 @@ def create_temporary_copy(src):
     tf.close()
     return tf.name
 
-def parse_section_name(line):
-    s = line.find(']') + 2
-    e = line.find(' ', s)
-    return line[s:e]
-
-def parse_size(line):
-    return int(line.split(' ')[0], 16)
-
 def sizeof_fmt(num):
     for x in ['B','KB','MB','GB','TB']:
         if num < 1024.0:
@@ -154,24 +146,16 @@ class ElfContainer:
             proc.communicate()
 
         self.sections = []
-        f = os.popen('readelf -S ' + full_path)
+        f = os.popen('readelf -S --wide ' + full_path)
 
         lines = f.readlines()[5:-4]
 
-        i = 0
-
-        while i < len(lines):
-            line = lines[i].strip()
-            name = parse_section_name(line)
-            offset = int(line.split(' ')[-1], 16)
-
-            i += 1
-
-            line = lines[i].strip()
-            size = parse_size(line)
-            self.sections.append(ElfSection(name, offset, size))
-
-            i += 1
+        for line in lines:
+            o = line.strip()
+            line = o
+            line = line[line.find(']') + 1:]
+            tokens = [x for x in line.split(' ') if x]
+            self.sections.append(ElfSection(tokens[0], int(tokens[3], 16), int(tokens[4], 16)))
 
         self.total_size = os.stat(full_path).st_size
         self.sections.append(ElfSection('TOTAL', 0, self.total_size))
@@ -303,9 +287,9 @@ class ElfContainer:
     def print_containers (containers):
         first = containers[0]
 
-        print('%-20s%12s%12s%12s%12s%12s' % ('section', 'portion', 'size', 'size', 'compared', 'comparison'))
+        print('%-80s%12s%12s%12s%12s%12s' % ('section', 'portion', 'size', 'size', 'compared', 'comparison'))
         for s in sorted(first.sections, key = lambda x: x.size):
-            print ('%-20s%12s%12s%12s' % (s.section, to_percent(s.size, first.total_size), sizeof_fmt(s.size), str(s.size)), end = '')
+            print ('%-80s%12s%12s%12s' % (s.section, to_percent(s.size, first.total_size), sizeof_fmt(s.size), str(s.size)), end = '')
 
             for rest in containers[1:]:
                 ss = [x for x in rest.sections if x.section == s.section]
