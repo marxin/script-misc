@@ -38,7 +38,7 @@ def print_super_line(line):
   print(sep)
 
 parser = OptionParser()
-parser.add_option("-d", "--delimiter", dest="delimiter", help="column delimiter")
+parser.add_option("-d", "--delimiter", dest="delimiter", help="column delimiter", default = ';')
 parser.add_option("-f", "--file", dest="file", help="input file")
 parser.add_option("-a", "--default-padding", dest="default_padding", help="default padding in format {l|r}", default = 'l')
 parser.add_option("-p", "--padding", dest="padding", help="padding in format [column]|[column_range]{l|r}")
