@@ -132,7 +132,7 @@ summary_folder = os.path.join(root_path, 'summary')
 config_template = os.path.join(real_script_folder, 'config-template', 'config-template.cfg')
 
 default_flags = '-O2 -flto=10 -march=native -g'
-runspec_arguments = '--size=test --no-reportable --iterations=1 --tune=peak --no-reportable -D all'
+runspec_arguments = '--size=test --no-reportable --iterations=1 --tune=peak --no-reportable -I -D all'
 
 def ts_print(*args):
   print('[%s]: ' % datetime.datetime.now(), end = '')
