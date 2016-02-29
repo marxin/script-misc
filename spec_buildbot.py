@@ -131,7 +131,7 @@ config_folder = os.path.join(root_path, 'config')
 summary_folder = os.path.join(root_path, 'summary')
 config_template = os.path.join(real_script_folder, 'config-template', 'config-template.cfg')
 
-runspec_arguments = '--size=test --no-reportable --iterations=1 --tune=peak --no-reportable -I -D all'
+runspec_arguments = '--size=ref --no-reportable --iterations=1 --tune=peak --no-reportable -I -D all'
 
 def ts_print(*args):
   print('[%s]: ' % datetime.datetime.now(), end = '')
