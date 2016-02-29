@@ -20,10 +20,9 @@ import tarfile
 
 ### SPECv6 class ###
 class CpuV6:
-  def build_config(self, configuration, profile):
+  def build_config(self, configuration, profile, flags):
     config_template_path = os.path.join(real_script_folder, 'config-template', 'config-template-v6.cfg')
     compilers = configuration.compilers()
-    flags = default_flags
     lines = [x.strip() for x in open(config_template_path, 'r').readlines()]
 
     new_lines = []
@@ -116,7 +115,8 @@ real_script_folder = os.path.dirname(os.path.realpath(__file__))
 root_path = os.path.abspath(sys.argv[1])
 dump_file = sys.argv[2]
 compiler = sys.argv[3]
-changes = sys.argv[4]
+default_flags = '-march=native -g'
+flags = default_flags + ' ' + b64decode(sys.argv[4])
 profile = 'cpuv6'
 
 configuration = None
@@ -131,7 +131,6 @@ config_folder = os.path.join(root_path, 'config')
 summary_folder = os.path.join(root_path, 'summary')
 config_template = os.path.join(real_script_folder, 'config-template', 'config-template.cfg')
 
-default_flags = '-O2 -flto=10 -march=native -g'
 runspec_arguments = '--size=test --no-reportable --iterations=1 --tune=peak --no-reportable -I -D all'
 
 def ts_print(*args):
@@ -213,7 +212,7 @@ ts_print('Starting group of tests')
 
 v6 = CpuV6()
 # benchmarks = configuration.filter_benchmarks(v6.get_benchmarks())
-c = v6.build_config(configuration, profile)
+c = v6.build_config(configuration, profile, flags)
 
 cl = runspec_command('--config=' + c + ' --output-format=raw ' + runspec_arguments)
 print(cl)
