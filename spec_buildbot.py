@@ -6,6 +6,7 @@ from base64 import *
 from distutils.version import LooseVersion
 from subprocess import *
 from multiprocessing import *
+from subprocess import Popen, PIPE
 
 import sys
 import os
@@ -17,11 +18,20 @@ import commands
 import platform
 import subprocess
 import tarfile
+import sys
 
 runspec_arguments = '--size=ref --no-reportable --iterations=1 --tune=peak --no-reportable -I -D '
 
 def runspec_command(cmd):
   return 'source ' + root_path + '/shrc && runspec ' + cmd
+
+def run_command(cmd):
+    proc = Popen(cmd, stdout=PIPE, bufsize=1, shell = True)
+    for line in iter(proc.stdout.readline, ''):
+        print(line.decode('utf-8'), end = '')
+        sys.stdout.flush()
+    proc.communicate()
+    return proc.returncode
 
 ### SPECv6 class ###
 class CpuV6:
@@ -226,12 +236,9 @@ c = v6.build_config(configuration, profile, flags)
 
 cl = v6.build_command_line(c)
 ts_print(cl)
-proc = commands.getstatusoutput(cl)
+proc = run_command(cl)
 
-print(proc[0])
-if proc[0] != 0:
-    print(proc[1])
-
+ts_print('Return code: ' + str(proc[0]))
 
 """
   ts_print('Command result: %u' % proc[0])
