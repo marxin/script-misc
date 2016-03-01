@@ -236,9 +236,9 @@ c = v6.build_config(configuration, profile, flags)
 
 cl = v6.build_command_line(c)
 ts_print(cl)
-proc = run_command(cl)
+r = run_command(cl)
 
-ts_print('Return code: ' + str(proc[0]))
+ts_print('Return code: ' + str(r))
 
 """
   ts_print('Command result: %u' % proc[0])
