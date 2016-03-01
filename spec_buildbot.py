@@ -18,6 +18,11 @@ import platform
 import subprocess
 import tarfile
 
+runspec_arguments = '--size=ref --no-reportable --iterations=1 --tune=peak --no-reportable -I -D '
+
+def runspec_command(cmd):
+  return 'source ' + root_path + '/shrc && runspec ' + cmd
+
 ### SPECv6 class ###
 class CpuV6:
   def build_config(self, configuration, profile, flags):
@@ -45,6 +50,15 @@ class CpuV6:
 
     ts_print('generating config to: ' + config_name)
     return config_name
+
+  def build_command_line(self, c):
+    all_tests = sorted('557.xz_r 500.perlbench_r 525.x264_r 544.nab_r 553.johnripper_r 505.mcf_r 547.drops_r 502.gcc_r 523.xalancbmk_r 508.namd_r 549.fotonik3d_r 503.bwaves_r 510.parest_r 548.exchange2_r 531.deepsjeng_r 513.hmmer_r 526.blender_r 552.mdwp_r 532.facesim_r 511.povray_r 556.ferret_r 519.lbm_r 539.bodytrack_r 520.omnetpp_r 507.cactuBSSN_r 527.cam4_r 521.wrf_r 538.imagick_r 541.leela_r 554.roms_r'.split(' '))
+
+    slow_tests = set(['bwaves', 'wrf', 'roms'])
+    tests = list(filter(lambda x: not any(map(lambda y: y in x, slow_tests)), all_tests))
+    ts_print('Running tests: %d' % len(tests))
+
+    return runspec_command('--config=' + c + ' --output-format=raw ' + runspec_arguments + ' '.join(tests))
 
 ### SPEC2006 class ###
 class Cpu2006:
@@ -131,7 +145,6 @@ config_folder = os.path.join(root_path, 'config')
 summary_folder = os.path.join(root_path, 'summary')
 config_template = os.path.join(real_script_folder, 'config-template', 'config-template.cfg')
 
-runspec_arguments = '--size=ref --no-reportable --iterations=1 --tune=peak --no-reportable -I -D all ^bwaves_r ^wrf_r ^bwaves_s ^wrf_s ^obwaves ^owrf'
 
 def ts_print(*args):
   print('[%s]: ' % datetime.datetime.now(), end = '')
@@ -193,9 +206,6 @@ def parse_binary_size(binary_file):
 
   return d
 
-def runspec_command(cmd):
-  return 'source ' + root_path + '/shrc && runspec ' + cmd
-
 def get_binary_for_spec(spec):
   p = os.path.join(root_path, 'benchspec', 'CPUv6', spec, 'exe')
   newest = max(glob.iglob(p +'/*'), key=os.path.getctime)
@@ -214,8 +224,8 @@ v6 = CpuV6()
 # benchmarks = configuration.filter_benchmarks(v6.get_benchmarks())
 c = v6.build_config(configuration, profile, flags)
 
-cl = runspec_command('--config=' + c + ' --output-format=raw ' + runspec_arguments)
-print(cl)
+cl = v6.build_command_line(c)
+ts_print(cl)
 proc = commands.getstatusoutput(cl)
 
 print(proc[0])
