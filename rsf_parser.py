@@ -7,6 +7,8 @@ import argparse
 import datetime
 import json
 
+from base64 import *
+
 def average(values):
     if len(values) == 0:
         return None
@@ -82,37 +84,49 @@ class BenchmarkGroup(RsfBase):
         return { 'group_name': self.unitbase, 'benchmarks': [x.to_dict() for x in self.benchmarks] }
 
 class BenchmarkSuite(RsfBase):
-    def __init__(self, filenames, buildername, got_revision):
+    def __init__(self, filenames, compiler, flags):
         lines = [x.strip() for x in open(filenames[0]).readlines()]
         super(BenchmarkSuite, self).__init__('spec.cpuv6', [x for x in lines if not x.startswith('#')])
         self.time = self.get_value('time')
         self.time = datetime.datetime.fromtimestamp(int(self.time))
         self.toolset = self.get_value('toolset')
         self.suitever = self.get_value('suitever')
-        self.buildername_tokens = buildername.split('-')
-        self.got_revision = got_revision
+        self.compiler = compiler
+        self.flags = flags
         self.suitename = 'SPECv6'
 
         self.groups = [BenchmarkGroup(x) for x in filenames]
 
     def to_dict(self):
-        return { 'compiler': self.buildername_tokens[1], 'target': self.buildername_tokens[2], 'options': self.buildername_tokens[-1].replace('_', ' '), 'got_revision': self.got_revision, 'time': self.time.strftime('%Y-%m-%dT%H:%M:%S'), 'toolset': self.toolset, 'suitename': self.suitename, 'groups': [x.to_dict() for x in self.groups] } 
+        return { 'compiler': self.compiler, 'flags': self.flags, 'time': self.time.strftime('%Y-%m-%dT%H:%M:%S'), 'toolset': self.toolset, 'suitename': self.suitename, 'groups': [x.to_dict() for x in self.groups] } 
 
 parser = argparse.ArgumentParser(description='Parse SPEC RSF file and transform selected values to JSON')
-parser.add_argument('log_file', metavar = 'log_file', help = 'SPEC log file that contains RSF references')
-parser.add_argument('buildername', metavar = 'buildername', help = 'Builder name')
-parser.add_argument('got_revision', metavar = 'got_revision', help = 'Builder name')
+parser.add_argument('log_file', metavar = 'log_file', help = 'SPEC log output file')
+parser.add_argument('compiler', metavar = 'compiler', help = 'Compiler: [gcc,llvm,icc]')
+parser.add_argument('flags', metavar = 'flags', help = 'Encoded flags in base64')
 parser.add_argument("-o", "--output", dest="output", help = "JSON output file")
 
 args = parser.parse_args()
+args.flags = b64decode(args.flags).decode('utf-8')
 
 lines = [x.strip() for x in open(args.log_file).readlines()]
+
+log_file = None
+key = 'The log for this run is in '
+for l in lines:
+    print(l)
+    if l.startswith(key):
+        log_file = l.split(key)[-1]
+        break
+
+assert log_file != None
+lines = [x.strip() for x in open(log_file).readlines()]
 
 p = 'format: raw -> '
 rsf_files = [x.split(p)[-1].strip() for x in lines if p in x]
 assert len(rsf_files) > 0
 
-suite = BenchmarkSuite(rsf_files, args.buildername, args.got_revision)
+suite = BenchmarkSuite(rsf_files, args.compiler, args.flags)
 
 if args.output == None:
     print(json.dumps(suite.to_dict(), indent = 2))

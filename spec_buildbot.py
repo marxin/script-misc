@@ -1,6 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 
-from __future__ import print_function
 from tempfile import *
 from base64 import *
 from distutils.version import LooseVersion
@@ -14,23 +13,43 @@ import glob
 import datetime
 import shutil
 import json
-import commands
 import platform
 import subprocess
 import tarfile
 import sys
+import argparse
 
 runspec_arguments = '--size=ref --no-reportable --iterations=1 --tune=peak --no-reportable -I -D '
 
+# ARGUMENT parsing
+parser = argparse.ArgumentParser(description='Run SPEC benchmarks and save the result to a log file')
+parser.add_argument('log_file', metavar = 'log_file', help = 'Output log file')
+parser.add_argument('root_path', metavar = 'root_path', help = 'Root folder of SPEC benchmarks')
+parser.add_argument('compiler', metavar = 'compiler', help = 'Compiler: [gcc,llvm,icc]')
+parser.add_argument('flags', metavar = 'flags', help = 'Encoded flags in base64')
+
+args = parser.parse_args()
+
+default_flags = '-march=native -g'
+flags = default_flags + ' ' + b64decode(args.flags).decode('utf-8')
+profile = 'cpuv6'
+
 def runspec_command(cmd):
-  return 'source ' + root_path + '/shrc && runspec ' + cmd
+  return 'source ' + args.root_path + '/shrc && runspec ' + cmd
 
 def run_command(cmd):
     proc = Popen(cmd, stdout=PIPE, bufsize=1, shell = True)
+    output = ''
     for line in iter(proc.stdout.readline, ''):
-        print(line.decode('utf-8'), end = '')
+        c = line.decode('utf-8')
+        output += c
+        print(c, end = '')
         sys.stdout.flush()
     proc.communicate()
+
+    # save the output to a log file
+    with open(args.log_file, 'w') as fp:
+        fp.write(output)
     return proc.returncode
 
 ### SPECv6 class ###
@@ -130,29 +149,18 @@ class Benchmark:
     self.pure_name = name[name.find('.') + 1:]
     self.is_int = is_int
 
-if len(sys.argv) != 5:
-  sys.exit(1)
-
 real_script_folder = os.path.dirname(os.path.realpath(__file__))
 
-# ARGUMENT parsing
-root_path = os.path.abspath(sys.argv[1])
-dump_file = sys.argv[2]
-compiler = sys.argv[3]
-default_flags = '-march=native -g'
-flags = default_flags + ' ' + b64decode(sys.argv[4])
-profile = 'cpuv6'
-
 configuration = None
-if compiler == 'gcc':
+if args.compiler == 'gcc':
   configuration = GCCConfiguration()
-elif compiler == 'llvm':
+elif args.compiler == 'llvm':
   configuration = LLVMConfiguration()
-elif compiler == 'icc':
+elif args.compiler == 'icc':
   configuration = ICCConfiguration()
 
-config_folder = os.path.join(root_path, 'config')
-summary_folder = os.path.join(root_path, 'summary')
+config_folder = os.path.join(args.root_path, 'config')
+summary_folder = os.path.join(args.root_path, 'summary')
 config_template = os.path.join(real_script_folder, 'config-template', 'config-template.cfg')
 
 
@@ -164,20 +172,7 @@ def ts_print(*args):
 
   sys.stdout.flush()
 
-d = {
-    'INT': {},
-    'FP': {},
-    'info':
-      {
-	'flags': default_flags,
-	'runspec_flags': runspec_arguments,
-	'uname': ' '.join(platform.uname()),
-	'node': platform.uname()[1],
-	'compiler': compiler
-      }
-    }
-
-os.chdir(root_path)
+os.chdir(args.root_path)
 
 def save_spec_log(folder, profile, benchmark, data):
   f = open(os.path.join(folder, profile + '_' + benchmark + '.log'), 'w+')
@@ -203,21 +198,21 @@ def parse_binary_size(binary_file):
   script_location = os.path.join(real_script_folder, 'readelf.py')
   if binary_file != None:
     command = 'python ' + script_location + ' --strip --format=csv ' + binary_file
-    r = commands.getstatusoutput(command)
+    r = subprocess.check_output(command)
     if r[0] != 0:
       print(r[1])
       exit(2)
     else:
       lines = r[1].split('\n')
       for l in lines:
-	tokens = l.split(':')
-	if len(tokens) == 2:
-	  d[tokens[0]] = int(tokens[1])
+          tokens = l.split(':')
+          if len(tokens) == 2:
+              d[tokens[0]] = int(tokens[1])
 
   return d
 
 def get_binary_for_spec(spec):
-  p = os.path.join(root_path, 'benchspec', 'CPUv6', spec, 'exe')
+  p = os.path.join(args.root_path, 'benchspec', 'CPUv6', spec, 'exe')
   newest = max(glob.iglob(p +'/*'), key=os.path.getctime)
   binary = os.path.join(p, newest)
   ts_print(binary)
