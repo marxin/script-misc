@@ -114,12 +114,12 @@ lines = [x.strip() for x in open(args.log_file).readlines()]
 log_file = None
 key = 'The log for this run is in '
 for l in lines:
-    print(l)
     if l.startswith(key):
         log_file = l.split(key)[-1]
         break
 
 assert log_file != None
+print('Parsing SPEC log file: ' + log_file)
 lines = [x.strip() for x in open(log_file).readlines()]
 
 p = 'format: raw -> '
