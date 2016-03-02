@@ -59,182 +59,136 @@ def td_class(comparison):
   else:
     return 'warning'
 
+def first(items, f):
+    for item in items:
+        if f(item):
+            return item
+
+    return None
+
 class BenchMarkResult:
-  def __init__ (self, name, d, category):
-    self.name = name
-    self.error = False
-    if 'error' in d:
-      self.error = d['error']
-    self.d = d
-    self.category = category
+    def __init__ (self, d):
+        self.name = d['name']
+        self.errors = d['errors']
+        self.iterations = d['iterations']
+        self.average_time = d['average_time']
+        self.comparison = None
 
-    if d['times'] != None and len(d['times']) > 0:
-      self.all_times = d['times']
-      self.time = average(d['times'])
-      self.time_quad_difference = round(quad_different(d['times']), 4)
-#      self.size = d['size']['TOTAL']
-      self.size = 1
-    else:
-      self.time = 0
-      self.size = 0
+        assert self.average_time != None or self.errors != ''
 
-class BenchMarkReport:
-  def __init__ (self, filename, d):
-    self.d = d
-    self.filename = filename
-    self.revision = filename[filename.rfind('-') + 1:].rstrip('.json')
-    self.node = self.d['info']['node']
-    self.changes = self.d['info']['changes'].replace('buildbot: poke', '')
-    self.compiler = self.d['info']['compiler']
-    self.full_name = self.compiler + '#' + self.changes + '#' + self.revision[0:6]
-    if self.compiler == 'icc':
-      self.full_name = '_' + self.full_name
-    self.title = d['info']['title'] if 'title' in d['info'] else self.full_name
-    all_benchmarks = list(map(lambda x: BenchMarkResult(x, d['FP'][x], ''), d['FP'])) + list(map(lambda x: BenchMarkResult(x, d['INT'][x], ''), d['INT']))
-    self.benchmarks = sorted(filter(lambda x: not x.name in args.ignore, all_benchmarks), key = lambda x: x.name)
-    self.benchmarks_dictionary = {}
-    for b in self.benchmarks:
-      self.benchmarks_dictionary[b.name] = b
+    def number(self):
+        return self.name.split('_')[0]
 
-  def category_comparison(self, category_selector, value_selector):
-    values = list(filter(in_good_range, map(value_selector, filter(category_selector, self.benchmarks))))
-    return geomean(values)
+    def compare(self, other):
+        if other == None:
+            return
+        elif self.errors != '' or other.errors != '':
+            return
 
-  def get_categories(self):
-    return set(map(lambda x: x.category, self.benchmarks)).union(set(['ALL']))
+        self.comparison = 1.0
+        assert other.comparison == None
+        other.comparison = other.average_time / self.average_time
 
-  def get_category(self, category):
-    return list(filter(lambda x: x.category == category, self.benchmarks))
+class BenchmarkGroup:
+    def __init__ (self, d):
+        self.name = d['group_name']
+        self.benchmarks = [BenchMarkResult(x) for x in d['benchmarks']]
+        self.comparison = None
+        assert self.name != None
 
-  def compare(self, comparer):
-    self.comparison = {}
-    self.size_comparison = {}
-    
-    for i, v in enumerate(self.benchmarks):
-      if v.name in comparer.benchmarks_dictionary:
-        time2 = comparer.benchmarks_dictionary[v.name].time 
-        value = None
-        if v.time != 0 and time2 != 0:
-          value = round(v.time / time2, 2)
-          self.size_comparison[v.name] = round(v.size / comparer.benchmarks_dictionary[v.name].size, 2)
-        else:
-          self.size_comparison[v.name] = None
-        self.comparison[v.name] = value
-   
-    self.categories_comparison = {}
-    for c in self.get_categories():
-      self.categories_comparison[c] = self.category_comparison(lambda x: not x.error and x.name in self.comparison and (x.category == c or c == 'ALL'), lambda x: self.comparison[x.name])
+    def get(self, name):
+        return first(self.benchmarks, lambda x: x.name == name)
 
-    self.avg_size_comparison = round(geomean(self.size_comparison.values()), 2)
+    def compare(self, other):
+        if other == None:
+            return None
 
-benchreports = []
+        for benchmark in self.benchmarks:
+            b = other.get(benchmark.name)
+            if b != None:
+                benchmark.compare(b)
 
+        self.comparison = 1.0
+        assert other.comparison == None
+        other.comparison = geomean([x.comparison for x in other.benchmarks])
+
+class BenchmarkSuite:
+    def __init__ (self, filename, d):
+        self.filename = filename
+        self.name = d['suitename']
+        self.compiler = d['compiler']
+        self.toolset = d['toolset']
+        self.flags = d['flags']
+        self.time = d['time']
+        self.groups = [BenchmarkGroup(x) for x in d['groups']]
+        self.comparison = None
+
+    def get(self, name):
+        return first(self.groups, lambda x: x.name == name)
+
+    def compare(self, other):
+        if other == None:
+            return None
+
+        all_benchmarks = []
+        for group in self.groups:
+            g = other.get(group.name)
+            if g != None:
+                group.compare(g)
+                all_benchmarks += g.benchmarks
+
+        self.comparison = 1.0
+        assert other.comparison == None
+        other.comparison = geomean([x.comparison for x in all_benchmarks])
+
+def generate_comparison(html_root, suites, benchmark_name_fn):
+    row = html_root.div()
+
+    row.h2('Time (smaller is better)')
+
+    table = row.table(klass = 'table table-condensed table-bordered')
+
+    # table header
+    tr = table.thead.tr
+    tr.th('Configuration')
+
+    suite = suites[0]
+    tr.th('geomean')
+    for g in suite.groups:
+        tr.th(g.name, colspan = str(len(g.benchmarks) + 1))
+
+    tr = table.thead.tr
+    tr.th('')
+    tr.th('')
+
+    for g in suite.groups:
+        tr.th('geomean')
+        for b in g.benchmarks:
+            tr.th(benchmark_name_fn(b))
+
+    # table body
+    for suite in suites:
+        tr = table.tbody.tr
+        tr.td(suite.compiler + ' ' + suite.flags)
+        tr.td(ratio(suite.comparison), klass = td_class(suite.comparison))
+        for g in suite.groups:
+            tr.td(ratio(g.comparison), klass = td_class(g.comparison))
+            for b in g.benchmarks:
+                tr.td(ratio(b.comparison), klass = td_class(b.comparison))
+
+    return
+
+# MAIN
+suites = []
 for f in os.listdir(args.folder):
   if f.endswith('.json'):
     abspath = os.path.join(args.folder, f)
-    benchreports.append(BenchMarkReport(f, json.loads(open(abspath).read())))
+    suites.append(BenchmarkSuite(f, json.loads(open(abspath).read())))
 
-def generate_comparison(html_root, reports, svg_id): 
-  row = html_root.div()
+suites = sorted(suites, key = lambda x: x.flags)
 
-  row.h2('Time (smaller is better)')
-
-  table = row.table(klass = 'table table-condensed table-bordered')
-  tr = table.thead.tr
-  tr.th('category')
-  tr.th('benchmark')
-
-  for b in reports:
-    tr.th(b.title, colspan = '2')
-
-  body = table.body
-
-  for category in sorted(reports[0].get_categories()):
-    first_benchmarks = reports[0].get_category(category)
-
-    for index, i in enumerate(first_benchmarks):
-      tr = body.tr()
-      if index == 0:
-        tr.td(category, rowspan = str(len(first_benchmarks)))
-      tr.td(i.name)
-
-      for br in reports:
-
-        if i.name in br.benchmarks_dictionary:
-          b = br.benchmarks_dictionary[i.name]
-#      tr.td(str(b.time) + '(QD:' + str(b.time_quad_difference) + ')')
-          tr.td(flt_str(b.time), klass = "text-right")
-          if i.error:
-            tr.td('non-zero retcode', klass = 'danger')
-          elif i.name in br.comparison:
-            tr.td(ratio(br.comparison[i.name]), klass = td_class(br.comparison[i.name]) + ' text-right')
-          else:
-            tr.td()
-        else:
-          tr.td('N/A', klass = 'text-right')
-          tr.td('N/A', klass = 'text-right')
-
-    tr = body.tr()
-    tr.td.strong(category + ' geom')
-    tr.td()
-    for br in reports:
-      tr.td()
-      td = tr.td(klass = td_class(br.categories_comparison[category]) + ' text-right')
-      td.strong(ratio(br.categories_comparison[category]))
-
-  row.svg(id = svg_id, style = 'height: 500px; width: 1150px; margin: 0 auto;')
-
-  """  
-  row.h2('Size (smaller is better)')
-  table = row.table(klass = 'table table-condensed table-bordered')
-  tr = table.thead.tr
-  tr.th('')
-
-  for b in reports:
-    tr.th(b.full_name, colspan = '2')
-
-  body = table.body
-
-  first_benchmarks = reports[0].benchmarks
-
-  for i in first_benchmarks:
-    tr = body.tr()
-    tr.td(i.name)
-
-    for br in reports:
-      if i.name in br.benchmarks_dictionary:
-        b = br.benchmarks_dictionary[i.name]
-        tr.td(str(b.size), klass = 'text-right')
-        tr.td(ratio(br.size_comparison[i.name]), klass = td_class(br.size_comparison[i.name]) + ' text-right')
-      else:
-        tr.td('N/A', klass = 'text-right')
-        tr.td('N/A', klass = 'text-right')
-
-  tr = body.tr()
-  tr.td.strong('geom')
-
-  for br in reports:
-    tr.td()
-    td = tr.td(klass = td_class(br.avg_size_comparison) + ' text-right')
-    td.strong(ratio(br.avg_size_comparison))
-  """
-
-def generate_graph(reports, id):
-  first_benchmarks = reports[0].benchmarks
-  names = list(map(lambda x: x.name, first_benchmarks))
-
-  data = []
-
-  for report in reports:
-    values = []
-    for i, v in enumerate(first_benchmarks):
-      if not v.error and v.name in report.comparison and in_good_range(report.comparison[v.name]):
-        values.append({'x': i, 'y': report.comparison[v.name]})
-
-    data.append({ 'key': report.title, 'values': values })
-
-  return 'var data%u = %s; var legend%u = %s;' % (id, json.dumps(data, indent = 2), id, json.dumps(names, indent = 2))
-
+for suite in suites[1:]:
+    suites[0].compare(suite)
 
 # HTML REPORT
 h = HTML()
@@ -242,77 +196,11 @@ head = h.head()
 head.meta(charset = 'utf-8')
 head.link('', rel = 'stylesheet', href = 'https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.15-beta/nv.d3.css', media = 'all')
 head.link('', rel = 'stylesheet', href = 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.1/css/bootstrap.min.css', media = 'all')
-head.script('', type = 'text/javascript', src = 'https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.3/d3.js')
-head.script('', type = 'text/javascript', src = 'https://cdnjs.cloudflare.com/ajax/libs/nvd3/1.1.15-beta/nv.d3.js') 
-head.script('', type = 'text/javascript', src = 'https://code.jquery.com/jquery-2.1.3.js')
-head.script('', type = 'text/javascript', src = 'https://maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js')
 
-keyfunc = lambda x: x.node
-benchreports = sorted(benchreports, key = keyfunc, reverse = True)
 body = h.body(style = 'margin: 30px;')
 container = body.div()
 
-counter = 0
-script_content = ''
-
-tabpanel = container.div(klass = 'tabpanel')
-nav = tabpanel.ul(klass = 'nav nav-tabs', role = 'tablist')
-tab_content = container.div(klass = 'tab-content')
-
-first = 'active'
-for k, v in groupby(benchreports, keyfunc):
-  l = sorted(list(v), key = lambda x: x.full_name)
-  for i in l:
-    i.compare(l[0])
-
-  id = str(counter)
-  tabid = 'tab' + id
-  li = nav.li(role = 'presentation', klass = first)
-  li.a(k, href = '#' + tabid, role = 'tab', data_toggle = 'tab')
-
-  tab = tab_content.div(role = 'tabpanel', klass = 'tab-pane ' + first, id = tabid)
-  first = ''
-
-  tab.h2(k)
-  generate_comparison(tab, l, 'data' + id)
-  script_content += generate_graph(l, counter)
-  first = ''
-
-  script_content += '''var chart;
-nv.addGraph(function() {
-    chart = nv.models.multiBarChart()
-      .margin({bottom: 100})
-      .transitionDuration(300)
-      .delay(0)
-      .rotateLabels(45)
-      .groupSpacing(0.1)
-      ;
-
-    chart.multibar
-      .hideable(true);
-
-    chart.reduceXTicks(false).staggerLabels(true);
-
-    chart.xAxis
-        .tickFormat(function(v) { return legend''' + id + '''[v]; });
-
-    chart.yAxis
-        .tickFormat(d3.format(',.1f'));
-
-    d3.select("svg#data''' + id + '''")
-        .datum(data''' + id + ''')
-       .call(chart);
-
-    nv.utils.windowResize(chart.update);
-
-    chart.dispatch.on("stateChange", function(e) { nv.log("New State:", JSON.stringify(e)); });
-
-    return chart;
-});
-'''
-
-  counter += 1
-
-container.script(script_content)
+generate_comparison(container, suites, lambda x: x.number())
+generate_comparison(container, suites, lambda x: x.name)
 
 print(h)

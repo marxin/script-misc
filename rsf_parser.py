@@ -58,11 +58,8 @@ class Benchmark(RsfBase):
         for run in runs:
             lines = RsfBase.strip_lines(run, [x for x in self.lines if x.startswith(run)])
             t = self.get_value('reported_time', lines)
-            if t != '--':
-                self.times.append(float(t))
-            else:
-                self.times.append(None)
-                self.errors += self.get_values('error', lines)
+            self.times.append(float(t) if t != '--' else None)
+            self.errors += self.get_values('error', lines)
 
         self.average_time = average(self.times)
 
