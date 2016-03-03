@@ -144,6 +144,12 @@ class BenchmarkSuite:
         assert other.comparison == None
         other.comparison = geomean([x.comparison for x in all_benchmarks])
 
+    def __lt__(self, other):
+        if self.compiler == other.compiler:
+            return self.flags < other.flags
+        else:
+            return self.compiler > other.compiler
+
 def generate_comparison(html_root, suites, benchmark_name_fn):
     row = html_root.div()
 
@@ -188,7 +194,7 @@ for f in os.listdir(args.folder):
     abspath = os.path.join(args.folder, f)
     suites.append(BenchmarkSuite(f, json.loads(open(abspath).read())))
 
-suites = sorted(suites, key = lambda x: x.flags)
+suites = sorted(suites)
 
 for suite in suites[1:]:
     suites[0].compare(suite)

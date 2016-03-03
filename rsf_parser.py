@@ -69,7 +69,7 @@ class Benchmark(RsfBase):
 class BenchmarkGroup(RsfBase):
     def __init__(self, filename):
         self.filename = filename
-        lines = [x.strip() for x in open(filename).readlines()]
+        lines = [x.strip() for x in open(self.filename).readlines()]
         super(BenchmarkGroup, self).__init__('spec.cpuv6', [x for x in lines if not x.startswith('#')])
 
         benchmark_lines = RsfBase.strip_lines('results', self.get_lines('results'))
