@@ -35,7 +35,7 @@ flags = default_flags + ' ' + b64decode(args.flags).decode('utf-8')
 profile = 'cpuv6'
 
 def runspec_command(cmd):
-  return 'source ' + args.root_path + '/shrc && runspec ' + cmd
+  return 'source ./shrc && runspec ' + cmd
 
 def run_command(cmd):
     proc = Popen(cmd, stdout=PIPE, bufsize=1, shell = True)
@@ -75,12 +75,13 @@ class CpuV6:
         else:
             new_lines.append(line)
 
-    config_name = os.path.join(config_folder, profile + '.cfg')
-    f = open(config_name, 'w+')
+    config_filename = profile + '.cfg'
+    config_path = os.path.join(config_folder, config_filename)
+    f = open(config_path, 'w+')
     f.write('\n'.join(new_lines))
 
-    ts_print('generating config to: ' + config_name)
-    return config_name
+    ts_print('generating config to: ' + config_path)
+    return config_filename
 
   def build_command_line(self, c):
     all_tests = sorted('557.xz_r 500.perlbench_r 525.x264_r 544.nab_r 553.johnripper_r 505.mcf_r 547.drops_r 502.gcc_r 523.xalancbmk_r 508.namd_r 549.fotonik3d_r 503.bwaves_r 510.parest_r 548.exchange2_r 531.deepsjeng_r 513.hmmer_r 526.blender_r 552.mdwp_r 532.facesim_r 511.povray_r 556.ferret_r 519.lbm_r 539.bodytrack_r 520.omnetpp_r 507.cactuBSSN_r 527.cam4_r 521.wrf_r 538.imagick_r 541.leela_r 554.roms_r'.split(' '))
@@ -163,8 +164,8 @@ elif args.compiler == 'llvm':
 elif args.compiler == 'icc':
   configuration = ICCConfiguration()
 
-config_folder = os.path.join(args.root_path, 'config')
-summary_folder = os.path.join(args.root_path, 'summary')
+config_folder = 'config'
+summary_folder = 'summary'
 config_template = os.path.join(real_script_folder, 'config-template', 'config-template.cfg')
 
 
@@ -176,6 +177,7 @@ def ts_print(*args):
 
   sys.stdout.flush()
 
+ts_print('chdir: %s' % args.root_path)
 os.chdir(args.root_path)
 
 def save_spec_log(folder, profile, benchmark, data):
@@ -216,7 +218,7 @@ def parse_binary_size(binary_file):
   return d
 
 def get_binary_for_spec(spec):
-  p = os.path.join(args.root_path, 'benchspec', 'CPUv6', spec, 'exe')
+  p = os.path.join('benchspec', 'CPUv6', spec, 'exe')
   newest = max(glob.iglob(p +'/*'), key=os.path.getctime)
   binary = os.path.join(p, newest)
   ts_print(binary)
