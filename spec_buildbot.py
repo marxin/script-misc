@@ -23,8 +23,8 @@ runspec_arguments = '--size=ref --no-reportable --iterations=1 --tune=peak --no-
 
 # ARGUMENT parsing
 parser = argparse.ArgumentParser(description='Run SPEC benchmarks and save the result to a log file')
-parser.add_argument('log_file', metavar = 'log_file', help = 'Output log file')
 parser.add_argument('root_path', metavar = 'root_path', help = 'Root folder of SPEC benchmarks')
+parser.add_argument('log_file', metavar = 'log_file', help = 'Output log file')
 parser.add_argument('compiler', metavar = 'compiler', help = 'Compiler: [gcc,llvm,icc]')
 parser.add_argument('flags', metavar = 'flags', help = 'Encoded flags in base64')
 
