@@ -67,6 +67,8 @@ class CpuV6:
             new_lines.append('makeflags = -j' + str(cpu_count()))
         elif line == 'OPTIMIZE_PLACEHOLDER':
             new_lines.append('OPTIMIZE = ' + flags)
+            if args.compiler == 'icc':
+                new_lines.append('COPTIMIZE = ' + flags + ' -std=gnu11')
         elif line == 'COMPILERS_PLACEHOLDER':
             new_lines.append('FC = ' + compilers['FC'])
             new_lines.append('CXX = ' + compilers['CXX'])
