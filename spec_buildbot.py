@@ -42,6 +42,8 @@ def run_command(cmd):
     output = ''
     for line in iter(proc.stdout.readline, ''):
         c = line.decode('utf-8')
+        if c == '':
+            break
         output += c
         print(c, end = '')
         sys.stdout.flush()
