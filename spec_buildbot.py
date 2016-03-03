@@ -19,7 +19,7 @@ import tarfile
 import sys
 import argparse
 
-runspec_arguments = '--size=test --no-reportable --iterations=1 --tune=peak --no-reportable -I -D '
+runspec_arguments = '--size=ref --no-reportable --iterations=1 --tune=peak --no-reportable -I -D '
 
 # ARGUMENT parsing
 parser = argparse.ArgumentParser(description='Run SPEC benchmarks and save the result to a log file')
