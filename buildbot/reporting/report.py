@@ -150,10 +150,26 @@ class BenchmarkSuite:
         else:
             return self.compiler > other.compiler
 
-def generate_comparison(html_root, suites, benchmark_name_fn):
-    row = html_root.div()
+def add_cell(tr, value, colspan = 1, color_value = None):
+    content = None
+    klass = None
+    if color_value == None:
+        color_value = value
 
-    row.h2('Time (smaller is better)')
+    if type(value) is float:
+        content = ratio(value)
+        klass = td_class(color_value)
+    elif value == None or value == '':
+        content = 'N/A'
+        klass = td_class(color_value)
+    else:
+        content = str(value)
+
+    tr.td(content, klass = klass, colspan = str(colspan))
+
+def generate_comparison(html_root, header, suites, benchmark_name_fn, cell_value_fn = lambda x: x.comparison):
+    row = html_root.div()
+    row.h2(header)
 
     table = row.table(klass = 'table table-condensed table-bordered')
 
@@ -161,16 +177,16 @@ def generate_comparison(html_root, suites, benchmark_name_fn):
     tr = table.thead.tr
     tr.th('Configuration')
 
-    suite = suites[0]
+    first_suite = suites[0]
     tr.th('geomean')
-    for g in suite.groups:
+    for g in first_suite.groups:
         tr.th(g.name, colspan = str(len(g.benchmarks) + 1))
 
     tr = table.thead.tr
     tr.th('')
     tr.th('')
 
-    for g in suite.groups:
+    for g in first_suite.groups:
         tr.th('geomean')
         for b in g.benchmarks:
             tr.th(benchmark_name_fn(b))
@@ -179,11 +195,19 @@ def generate_comparison(html_root, suites, benchmark_name_fn):
     for suite in suites:
         tr = table.tbody.tr
         tr.td(suite.compiler + ' ' + suite.flags)
-        tr.td(ratio(suite.comparison), klass = td_class(suite.comparison))
-        for g in suite.groups:
-            tr.td(ratio(g.comparison), klass = td_class(g.comparison))
-            for b in g.benchmarks:
-                tr.td(ratio(b.comparison), klass = td_class(b.comparison))
+        add_cell(tr, suite.comparison)
+        for g in first_suite.groups:
+            g2 = suite.get(g.name)
+            if g2 == None:
+                add_cell(tr, None, len(g.benchmarks) + 1)
+            else:
+                add_cell(tr, g2.comparison)
+                for b in g.benchmarks:
+                    b2 = g2.get(b.name)
+                    if b2 == None:
+                        add_cell(tr, None)
+                    else:
+                        add_cell(tr, cell_value_fn(b2), color_value = b2.comparison)
 
     return
 
@@ -209,7 +233,8 @@ head.link('', rel = 'stylesheet', href = 'https://maxcdn.bootstrapcdn.com/bootst
 body = h.body(style = 'margin: 30px;')
 container = body.div()
 
-generate_comparison(container, suites, lambda x: x.number())
-generate_comparison(container, suites, lambda x: x.name)
+generate_comparison(container, 'Speed comparison (smaller is better)', suites, lambda x: x.number())
+generate_comparison(container, 'Speed comparison (smaller is better)', suites, lambda x: x.name)
+generate_comparison(container, 'Time (smaller is better)', suites, lambda x: x.name, lambda x: x.average_time)
 
 print(h)
