@@ -145,7 +145,7 @@ class ICCConfiguration:
   def filter_benchmarks(self, benchmarks):
     return benchmarks
   def compilers(self):
-    return { 'FC': 'ifort', 'CXX': 'icpc', 'CC': 'icc'} #, 'LD': '/suse/mliska/override-intel.o /suse/matz/bin/2015.1/compiler/lib/intel64/libirc.a' }
+    return { 'FC': 'ifort', 'CXX': 'icpc', 'CC': 'icc', 'LD': '' } #, 'LD': '/suse/mliska/override-intel.o /suse/matz/bin/2015.1/compiler/lib/intel64/libirc.a' }
 
 class Benchmark:
   def __init__(self, name, is_int):
