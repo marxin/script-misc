@@ -120,6 +120,9 @@ class BenchmarkSuite:
         self.filename = filename
         self.name = d['suitename']
         self.compiler = d['compiler']
+        # TODO: remove
+        if self.compiler.startswith('llvm'):
+            self.compiler = '_' + self.compiler
         self.toolset = d['toolset']
         self.flags = d['flags']
         self.time = d['time']
