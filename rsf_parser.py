@@ -62,7 +62,7 @@ class Benchmark(RsfBase):
         self.errors = []
         self.times = []
         self.iterations = len(runs)
-        self.spec_folder
+        self.spec_folder = spec_folder
 
         for run in runs:
             lines = RsfBase.strip_lines(run, [x for x in self.lines if x.startswith(run)])
