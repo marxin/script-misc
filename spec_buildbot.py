@@ -100,8 +100,6 @@ class CpuV6(SpecConfiguration):
         tests = list(filter(lambda x: not any(map(lambda y: y in x, slow_tests)), all_tests))
         ts_print('Running tests: %d' % len(tests))
 
-        # TODO
-        tests = tests[-1:]
         return runspec_command('--config=' + c + ' --output-format=raw ' + runspec_arguments + ' '.join(tests))
 
 class Cpu2006(SpecConfiguration):
@@ -210,7 +208,6 @@ if not os.path.isdir(summary_path):
 
 ts_print('Starting group of tests')
 
-# TODO
 suite = None
 config = None
 
