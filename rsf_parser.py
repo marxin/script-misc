@@ -57,7 +57,7 @@ class RsfBase:
 class Benchmark(RsfBase):
     def __init__(self, name, lines, spec_folder):
         self.name = name
-        self.exe_filename = self.name[self.name.find('_'):]
+        self.exe_filename = self.name[self.name.find('_') + 1:]
         super(Benchmark, self).__init__('.'.join([name, 'peak']), lines)
         runs = sorted(set([x.split('.')[0] for x in self.lines]))
         self.errors = []
