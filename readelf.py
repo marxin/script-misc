@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 
-from __future__ import print_function
-
 import os
 import sys
 import re
@@ -285,7 +283,7 @@ class ElfContainer:
             with open(report_file, 'w') as f:
                 f.write(json.dump(data, f, indent = 4))
         else:
-            print(json.loads(json.dumps(data, indent = 4)))
+            print(json.dumps(data, indent = 4))
 
     @staticmethod
     def print_containers (containers):
