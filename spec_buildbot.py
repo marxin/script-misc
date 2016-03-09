@@ -179,9 +179,9 @@ def parse_rsf(path):
 
 def parse_binary_size(binary_file):
   d = {}
-  script_location = os.path.join(real_script_folder, 'readelf.py')
+  script_location = os.path.join(real_script_folder, 'readelf_sections.py')
   if binary_file != None:
-    command = 'python ' + script_location + ' --strip --format=csv ' + binary_file
+    command = script_location + ' ' + binary_file
     r = subprocess.check_output(command)
     if r[0] != 0:
       print(r[1])
