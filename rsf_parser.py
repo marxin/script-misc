@@ -88,10 +88,10 @@ class Benchmark(RsfBase):
         return { 'name': self.name, 'average_time': self.average_time, 'iterations': self.iterations, 'errors': ''.join(self.errors), 'absolute_path': self.absolute_path, 'binary_size': self.binary_size }
 
 class BenchmarkGroup(RsfBase):
-    def __init__(self, filename, spec_folder):
+    def __init__(self, filename, spec_folder, spec_name):
         self.filename = filename
         lines = [x.strip() for x in open(self.filename).readlines()]
-        super(BenchmarkGroup, self).__init__('spec.cpuv6', [x for x in lines if not x.startswith('#')])
+        super(BenchmarkGroup, self).__init__('spec.' + spec_name, [x for x in lines if not x.startswith('#')])
 
         benchmark_lines = RsfBase.strip_lines('results', self.get_lines('results'))
         benchmark_names = sorted(set([x.split('.')[0] for x in benchmark_lines]))
@@ -102,18 +102,18 @@ class BenchmarkGroup(RsfBase):
         return { 'group_name': self.unitbase, 'benchmarks': [x.to_dict() for x in self.benchmarks] }
 
 class BenchmarkSuite(RsfBase):
-    def __init__(self, filenames, compiler, flags, spec_folder):
+    def __init__(self, filenames, compiler, flags, spec_folder, spec_name):
         lines = [x.strip() for x in open(filenames[0]).readlines()]
-        super(BenchmarkSuite, self).__init__('spec.cpuv6', [x for x in lines if not x.startswith('#')])
+        super(BenchmarkSuite, self).__init__('spec.' + spec_name, [x for x in lines if not x.startswith('#')])
         self.time = self.get_value('time')
         self.time = datetime.datetime.fromtimestamp(int(self.time))
         self.toolset = self.get_value('toolset')
         self.suitever = self.get_value('suitever')
         self.compiler = compiler
         self.flags = flags
-        self.suitename = 'SPECv6'
+        self.suitename = spec_name 
 
-        self.groups = [BenchmarkGroup(x, spec_folder) for x in filenames]
+        self.groups = [BenchmarkGroup(x, spec_folder, spec_name) for x in filenames]
 
     def to_dict(self):
         return { 'compiler': self.compiler, 'flags': self.flags, 'time': self.time.strftime('%Y-%m-%dT%H:%M:%S'), 'toolset': self.toolset, 'suitename': self.suitename, 'groups': [x.to_dict() for x in self.groups] }
@@ -123,6 +123,7 @@ parser.add_argument('log_file', metavar = 'log_file', help = 'SPEC log output fi
 parser.add_argument('compiler', metavar = 'compiler', help = 'Compiler: [gcc,llvm,icc]')
 parser.add_argument('flags', metavar = 'flags', help = 'Encoded flags in base64')
 parser.add_argument('spec_folder', metavar = 'spec_folder', help = 'SPEC root folder')
+parser.add_argument('spec_name', metavar = 'spec_name', help = 'SPEC name')
 parser.add_argument("-o", "--output", dest="output", help = "JSON output file")
 
 args = parser.parse_args()
@@ -145,7 +146,7 @@ p = 'format: raw -> '
 rsf_files = [x.split(p)[-1].strip() for x in lines if p in x]
 assert len(rsf_files) > 0
 
-suite = BenchmarkSuite(rsf_files, args.compiler, args.flags, args.spec_folder)
+suite = BenchmarkSuite(rsf_files, args.compiler, args.flags, args.spec_folder, args.spec_name)
 
 if args.output == None:
     print(json.dumps(suite.to_dict(), indent = 2))
