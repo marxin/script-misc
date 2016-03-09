@@ -56,6 +56,10 @@ class RsfBase:
         assert len(values) == 1
         return values[0]
 
+    def get_value_or_default(self, key):
+        values = self.get_values(key, lines)
+        return len(values) > 0 : values[0] : None
+
 class Benchmark(RsfBase):
     def __init__(self, name, lines, spec_folder):
         self.name = name
@@ -96,7 +100,7 @@ class BenchmarkGroup(RsfBase):
         benchmark_lines = RsfBase.strip_lines('results', self.get_lines('results'))
         benchmark_names = sorted(set([x.split('.')[0] for x in benchmark_lines]))
         self.benchmarks = [Benchmark(x, [y for y in benchmark_lines if y.startswith(x)], spec_folder) for x in benchmark_names]
-        self.unitbase = self.get_value('unitbase')
+        self.unitbase = self.get_value_or_default('unitbase')
 
     def to_dict(self):
         return { 'group_name': self.unitbase, 'benchmarks': [x.to_dict() for x in self.benchmarks] }
