@@ -113,7 +113,7 @@ parser = argparse.ArgumentParser(description='Parse SPEC RSF file and transform 
 parser.add_argument('log_file', metavar = 'log_file', help = 'SPEC log output file')
 parser.add_argument('compiler', metavar = 'compiler', help = 'Compiler: [gcc,llvm,icc]')
 parser.add_argument('flags', metavar = 'flags', help = 'Encoded flags in base64')
-parser.add_argument('spec-folder', metavar = 'spec_folder', help = 'SPEC root folder')
+parser.add_argument('spec', metavar = 'spec_folder', help = 'SPEC root folder')
 parser.add_argument("-o", "--output", dest="output", help = "JSON output file")
 
 args = parser.parse_args()
