@@ -136,7 +136,7 @@ p = 'format: raw -> '
 rsf_files = [x.split(p)[-1].strip() for x in lines if p in x]
 assert len(rsf_files) > 0
 
-suite = BenchmarkSuite(rsf_files, args.compiler, args.flags)
+suite = BenchmarkSuite(rsf_files, args.compiler, args.flags, args.spec_folder)
 
 if args.output == None:
     print(json.dumps(suite.to_dict(), indent = 2))
