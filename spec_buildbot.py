@@ -219,7 +219,7 @@ else:
     suite = Cpu2006()
     config = suite.build_config(configuration, profile, flags, 'config-template.cfg')
 
-run_command(runspec_command(' --action trash --config=' + c + ' all'))
+run_command(runspec_command(' --action trash --config=' + config + ' all'))
 cl = suite.build_command_line(config)
 ts_print(cl)
 r = run_command(cl)
