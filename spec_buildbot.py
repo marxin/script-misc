@@ -177,24 +177,6 @@ def parse_rsf(path):
 
   return (results, has_error)
 
-def parse_binary_size(binary_file):
-  d = {}
-  script_location = os.path.join(real_script_folder, 'readelf_sections.py')
-  if binary_file != None:
-    command = script_location + ' ' + binary_file
-    r = subprocess.check_output(command)
-    if r[0] != 0:
-      print(r[1])
-      exit(2)
-    else:
-      lines = r[1].split('\n')
-      for l in lines:
-          tokens = l.split(':')
-          if len(tokens) == 2:
-              d[tokens[0]] = int(tokens[1])
-
-  return d
-
 def get_binary_for_spec(spec):
   p = os.path.join('benchspec', 'CPUv6', spec, 'exe')
   newest = max(glob.iglob(p +'/*'), key=os.path.getctime)

@@ -88,8 +88,9 @@ class BenchMarkResult:
         self.comparison = 1.0
         assert other.comparison == None
         # run time smaller than a second is suspicious
-        assert self.average_time > 1
-        assert other.average_time > 1
+        # TODO
+        # assert self.average_time > 1
+        # assert other.average_time > 1
         other.comparison = other.average_time / self.average_time
 
 class BenchmarkGroup:
