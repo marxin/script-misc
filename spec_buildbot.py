@@ -33,7 +33,8 @@ args = parser.parse_args()
 
 default_flags = '-march=native -g'
 flags = default_flags + ' ' + b64decode(args.flags).decode('utf-8')
-profile = 'cpuv6'
+
+profile = your_path.split(os.sep)[-1]
 
 def runspec_command(cmd):
   return 'source ./shrc && runspec ' + cmd
@@ -211,7 +212,7 @@ ts_print('Starting group of tests')
 suite = None
 config = None
 
-if args.root_path.endswith('cpuv6'):
+if profile == 'cpuv6':
     suite = CpuV6()
     config = suite.build_config(configuration, profile, flags, 'config-template-v6.cfg')
 else:
