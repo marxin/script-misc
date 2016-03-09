@@ -81,6 +81,7 @@ class Benchmark(RsfBase):
         if self.absolute_path != None:
             output = subprocess.check_output([os.path.join(script_folder, 'readelf.py'), '--format=json', self.absolute_path])
             s = output.decode('utf8')
+            print(s)
             self.binary_size = json.loads(s)
 
     def to_dict(self):
