@@ -234,6 +234,9 @@ v6 = CpuV6()
 # benchmarks = configuration.filter_benchmarks(v6.get_benchmarks())
 c = v6.build_config(configuration, profile, flags)
 
+# clean up the SPEC folder
+run_command(runspec_command(' --action trash --config=' + c + ' all'))
+
 cl = v6.build_command_line(c)
 ts_print(cl)
 r = run_command(cl)
