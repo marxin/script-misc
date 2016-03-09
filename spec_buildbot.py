@@ -34,7 +34,7 @@ args = parser.parse_args()
 default_flags = '-march=native -g'
 flags = default_flags + ' ' + b64decode(args.flags).decode('utf-8')
 
-profile = your_path.split(os.sep)[-1]
+profile = args.root_path.split(os.sep)[-1]
 
 def runspec_command(cmd):
   return 'source ./shrc && runspec ' + cmd
