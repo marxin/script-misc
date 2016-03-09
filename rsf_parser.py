@@ -18,6 +18,7 @@ def average(values):
         return sum(values) / len(values)
 
 def find(name, path):
+    print('Finding: %s in %s' % (name, path))
     for root, dirs, files in os.walk(path):
         if name in files:
             return os.path.join(root, name)
