@@ -20,7 +20,7 @@ import sys
 import argparse
 
 # TODO
-runspec_arguments = '--size=size --no-reportable --iterations=1 --tune=peak --no-reportable -I -D '
+runspec_arguments = '--size=test --no-reportable --iterations=1 --tune=peak --no-reportable -I -D '
 
 # ARGUMENT parsing
 parser = argparse.ArgumentParser(description='Run SPEC benchmarks and save the result to a log file')
