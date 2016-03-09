@@ -56,80 +56,53 @@ def run_command(cmd):
     return proc.returncode
 
 ### SPECv6 class ###
-class CpuV6:
-  def build_config(self, configuration, profile, flags):
-    config_template_path = os.path.join(real_script_folder, 'config-template', 'config-template-v6.cfg')
-    compilers = configuration.compilers()
-    lines = [x.strip() for x in open(config_template_path, 'r').readlines()]
+class SpecConfiguration:
+    def build_config(self, configuration, profile, flags, template_name):
+        config_template_path = os.path.join(real_script_folder, 'config-template', template_name)
+        compilers = configuration.compilers()
+        lines = [x.strip() for x in open(config_template_path, 'r').readlines()]
 
-    new_lines = []
-    for line in lines:
-        if line == 'JOBS_PLACEHOLDER':
-            new_lines.append('makeflags = -j' + str(cpu_count()))
-        elif line == 'OPTIMIZE_PLACEHOLDER':
-            new_lines.append('OPTIMIZE = ' + flags)
-            if args.compiler == 'icc':
-                new_lines.append('COPTIMIZE = ' + flags + ' -std=gnu11')
-        elif line == 'COMPILERS_PLACEHOLDER':
-            new_lines.append('FC = ' + compilers['FC'])
-            new_lines.append('CXX = ' + compilers['CXX'])
-            new_lines.append('CC = ' + compilers['CC'])
-            new_lines.append('EXTRA_LDFLAGS = ' + compilers['LD'])
-        else:
-            new_lines.append(line)
+        new_lines = []
+        for line in lines:
+            if line == 'JOBS_PLACEHOLDER':
+                new_lines.append('makeflags = -j' + str(cpu_count()))
+            elif line == 'OPTIMIZE_PLACEHOLDER':
+                new_lines.append('OPTIMIZE = ' + flags)
+                if args.compiler == 'icc':
+                    new_lines.append('COPTIMIZE = ' + flags + ' -std=gnu11')
+            elif line == 'COMPILERS_PLACEHOLDER':
+                new_lines.append('FC = ' + compilers['FC'])
+                new_lines.append('CXX = ' + compilers['CXX'])
+                new_lines.append('CC = ' + compilers['CC'])
+                new_lines.append('EXTRA_LDFLAGS = ' + compilers['LD'])
+            else:
+                new_lines.append(line)
 
-    config_filename = profile + '.cfg'
-    config_path = os.path.join(config_folder, config_filename)
-    if not os.path.exists(config_folder):
-        os.makedirs(config_folder)
+        config_filename = profile + '.cfg'
+        config_path = os.path.join(config_folder, config_filename)
+        if not os.path.exists(config_folder):
+            os.makedirs(config_folder)
 
-    f = open(config_path, 'w')
-    f.write('\n'.join(new_lines))
+        f = open(config_path, 'w')
+        f.write('\n'.join(new_lines))
 
-    ts_print('generating config to: ' + config_path)
-    return config_filename
+        ts_print('generating config to: ' + config_path)
+        return config_filename
 
-  def build_command_line(self, c):
-    all_tests = sorted('557.xz_r 500.perlbench_r 525.x264_r 544.nab_r 553.johnripper_r 505.mcf_r 547.drops_r 502.gcc_r 523.xalancbmk_r 508.namd_r 549.fotonik3d_r 503.bwaves_r 510.parest_r 548.exchange2_r 531.deepsjeng_r 513.hmmer_r 526.blender_r 552.mdwp_r 532.facesim_r 511.povray_r 556.ferret_r 519.lbm_r 539.bodytrack_r 520.omnetpp_r 507.cactuBSSN_r 527.cam4_r 521.wrf_r 538.imagick_r 541.leela_r 554.roms_r'.split(' '))
-    slow_tests = set(['bwaves', 'wrf', 'roms'])
-    tests = list(filter(lambda x: not any(map(lambda y: y in x, slow_tests)), all_tests))
-    ts_print('Running tests: %d' % len(tests))
 
-    return runspec_command('--config=' + c + ' --output-format=raw ' + runspec_arguments + ' '.join(tests))
+class CpuV6(SpecConfiguration):
+    def build_command_line(self, c):
+        all_tests = sorted('557.xz_r 500.perlbench_r 525.x264_r 544.nab_r 553.johnripper_r 505.mcf_r 547.drops_r 502.gcc_r 523.xalancbmk_r 508.namd_r 549.fotonik3d_r 503.bwaves_r 510.parest_r 548.exchange2_r 531.deepsjeng_r 513.hmmer_r 526.blender_r 552.mdwp_r 532.facesim_r 511.povray_r 556.ferret_r 519.lbm_r 539.bodytrack_r 520.omnetpp_r 507.cactuBSSN_r 527.cam4_r 521.wrf_r 538.imagick_r 541.leela_r 554.roms_r'.split(' '))
+        slow_tests = set(['bwaves', 'wrf', 'roms'])
+        tests = list(filter(lambda x: not any(map(lambda y: y in x, slow_tests)), all_tests))
+        ts_print('Running tests: %d' % len(tests))
 
-### SPEC2006 class ###
-class Cpu2006:
-  def generate_config(profile, configuration, extra_flags = ''):
-    lines = open(config_template, 'r').readlines()
+        return runspec_command('--config=' + c + ' --output-format=raw ' + runspec_arguments + ' '.join(tests))
 
-    p = 94
-
-    flags = default_flags
-
-    lines.insert(p, 'FOPTIMIZE = ' + flags)
-    lines.insert(p, 'CXXOPTIMIZE= ' + flags)
-    lines.insert(p, 'COPTIMIZE= ' + flags)
-
-    p = 54
-
-    compilers = configuration.compilers()
-    lines.insert(p, 'FC = ' + compilers['FC'])
-    lines.insert(p, 'CXX = ' + compilers['CXX'])
-    lines.insert(p, 'CC = ' + compilers['CC'])
-    lines.insert(p, 'EXTRA_LDFLAGS = ' + compilers['LD'])
-
-    p = 36
-
-    lines.insert(p, 'ext = ' + profile)
-
-    config_name = os.path.join(config_folder, profile)
-    f = open(config_name, 'w+')
-
-    for l in lines:
-      f.write(l.strip() + '\n')
-
-    ts_print('generating config to: ' + config_name)
-    return config_name
+class Cpu2006(SpecConfiguration):
+    def build_command_line(self, c):
+        tests = ['400.perlbench 401.bzip2 403.gcc 429.mcf 445.gobmk 456.hmmer 458.sjeng 462.libquantum 464.h264ref 471.omnetpp 473.astar 483.xalancbmk 999.specrand 410.bwaves 416.gamess 433.milc 434.zeusmp 435.gromacs 436.cactusADM 437.leslie3d 444.namd 447.dealII 450.soplex 453.povray 454.calculix 459.GemsFDTD 465.tonto 470.lbm 481.wrf 482.sphinx3'.split(' ')]
+        return runspec_command('--config=' + c + ' --output-format=raw ' + runspec_arguments + ' '.join(tests))
 
 ### compiler configurations ###
 class GCCConfiguration:
@@ -232,97 +205,20 @@ if not os.path.isdir(summary_path):
 
 ts_print('Starting group of tests')
 
+# TODO
+suite = None
+config = None
 
-v6 = CpuV6()
-# benchmarks = configuration.filter_benchmarks(v6.get_benchmarks())
-c = v6.build_config(configuration, profile, flags)
+if args.root_path.endswith('cpuv6'):
+    suite = CpuV6()
+    config = suite.build_config(configuration, profile, flags, 'config-template-v6.cfg')
+else:
+    suite = Cpu2006()
+    config = suite.build_config(configuration, profile, flags, 'config-template.cfg')
 
-# clean up the SPEC folder
 run_command(runspec_command(' --action trash --config=' + c + ' all'))
-
-cl = v6.build_command_line(c)
+cl = suite.build_command_line(config)
 ts_print(cl)
 r = run_command(cl)
 
 ts_print('Return code: ' + str(r))
-
-"""
-  ts_print('Command result: %u' % proc[0])
-  if proc[0] != 0:
-    locald[b.name]['times'] = None
-    locald[b.name]['size'] = None
-    print('runspec command has failed')
-    print(proc[1])
-  else:
-    result = proc[1] 
-    save_spec_log(summary_path, profile, b.name, result)
-
-    rsf = None
-    time_set = False
-    for r in result.split('\n'):
-      r = r.strip()
-      if r.startswith('format: raw'):
-	rsf = r[r.find('/'):].strip()
-	ts_print(rsf)
-	rsf_result = parse_rsf(rsf)
-	locald[b.name]['times'] = rsf_result[0]
-	locald[b.name]['error'] = rsf_result[1]
-	time_set = True
-
-    # REF results from some reason does not produce .rsf file
-    if not time_set:
-      results = [float(x.strip().split(' ')[-1]) for x in result.split('\n') if 'Reported:' in x]
-      locald[b.name]['times'] = results
-
-    ts_print(locald)
-
-    # prepare folder
-    perf_folder_subdir = os.path.join(perf_folder, b.name)
-    os.makedirs(perf_folder_subdir)
-
-    # process PERF record
-    if rsf != None:
-      log_path = os.path.dirname(rsf)
-      t = os.path.basename(rsf).split('.')
-      log_path = os.path.join(log_path, '.'.join(t[0:2] + ['log']))
-      log_path = os.path.join(log_path, log_path)
-
-      # reading log file
-      invoke = [x for x in open(log_path).readlines() if x.startswith('Specinvoke')][0].strip()
-      invoke = invoke[invoke.find(' ') + 1:]
-
-      perf_abspath = os.path.join(perf_folder_subdir, 'perf.data')
-      if os.path.isfile('perf.data'):
-        os.remove('perf.data')
-
-      perf_cmd = ['perf', 'record'] + perf_arguments + ['--'] + invoke.split(' ')
-      ts_print('Running perf command: "' + str(perf_cmd) + '"')
-      FNULL = open(os.devnull, 'w')
-      proc = Popen(perf_cmd, stdout = FNULL, stderr = PIPE)
-      stdout, stderr = proc.communicate()
-      if proc.returncode != 0:
-	ts_print('Perf command failed: ' + stderr.decode('utf-8'))
-      else:
-	shutil.copyfile('perf.data', perf_abspath)
-
-	binary_folder = invoke.split(' ')[2]
-	binary = os.path.join(binary_folder, [x for x in os.listdir(binary_folder) if x.endswith('compsys')][0])
-        binary_target = os.path.join(perf_folder_subdir, os.path.basename(binary))
-	ts_print('Copy binary file: %s -> %s' % (binary, binary_target))
-	shutil.copyfile(binary, binary_target)
-	log_target = os.path.join(perf_folder_subdir, 'spec.log')
-	ts_print('Copy SPEC log file: %s -> %s' % (log_path, log_target))
-	shutil.copyfile(log_path, log_target)
-        ts_print('Writing original path to: ' + binary)
-        with open(os.path.join(perf_folder_subdir, 'location.txt'), 'w') as f:
-          f.write(binary)	
-
-        locald[b.name]['size'] = parse_binary_size(binary)
-"""
-
-"""
-with open(dump_file, 'w') as fp:
-  json.dump(d, fp, indent = 1)
-
-ts_print(json.dumps(d, indent = 1))
-"""
