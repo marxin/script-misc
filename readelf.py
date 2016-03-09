@@ -280,8 +280,12 @@ class ElfContainer:
         for s in self.sections:
             d[s.section] = s.size
 
-        with open(report_file, 'w') as f:
-            f.write(json.dumps([{ 'name': 'binary_size', 'type': 'size', 'values': d}], indent = 4))
+        data = { 'name': 'binary_size', 'type': 'size', 'values': d}
+        if report_file != None:
+            with open(report_file, 'w') as f:
+                f.write(json.dump(data, f, indent = 4))
+        else:
+            print(json.loads(json.dumps(data, indent = 4)))
 
     @staticmethod
     def print_containers (containers):
