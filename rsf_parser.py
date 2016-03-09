@@ -88,7 +88,7 @@ class Benchmark(RsfBase):
         self.binary_size = None
 
         # parse ELF sections
-        self.absolute_path = find(self.exe_filename, spec_folder)
+        self.absolute_path = find(self.exe_filename, os.path.join(spec_folder, 'benchspec'))
         if self.absolute_path != None:
             output = subprocess.check_output([os.path.join(script_folder, 'readelf.py'), '--format=json', self.absolute_path])
             s = output.decode('utf8')
