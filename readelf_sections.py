@@ -4,6 +4,7 @@ import sys
 import hashlib
 import argparse
 import json
+import os
 
 from elftools.elf.elffile import ELFFile
 from elftools.elf.sections import SymbolTableSection
@@ -51,6 +52,6 @@ with open(args.file, 'rb') as f:
 
         sections.append(MySection(name, size, digest))
 
-content = { 'file_size': file_size, 'sections_size': sections_sum, 'md5sum': file_md5sum, 'sections': [x.__dict__ for x in sections], 'relocations': num_relocations, 'symbols': num_symbols, 'debug_sections_size': debug_sections_size, 'stripped_sections_size': sections_sum - debug_sections_size }
+content = { 'file_size': file_size, 'sections_size': sections_sum, 'md5sum': file_md5sum, 'sections': [x.__dict__ for x in sections], 'relocations': num_relocations, 'symbols': num_symbols, 'debug_sections_size': debug_sections_size, 'stripped_sections_size': sections_sum - debug_sections_size, 'filename': os.path.abspath(args.file) }
 
 print(json.dumps(content, indent = 2, sort_keys = True))
