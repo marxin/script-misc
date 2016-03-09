@@ -63,12 +63,14 @@ class SpecConfiguration:
         compilers = configuration.compilers()
         lines = [x.strip() for x in open(config_template_path, 'r').readlines()]
 
+        optimization_keys = ['OPTIMIZE', 'COPTIMIZE', 'CXXOPTIMIZE', 'FOPTIMIZE']
         new_lines = []
         for line in lines:
             if line == 'JOBS_PLACEHOLDER':
                 new_lines.append('makeflags = -j' + str(cpu_count()))
             elif line == 'OPTIMIZE_PLACEHOLDER':
-                new_lines.append('OPTIMIZE = ' + flags)
+                for key in optimization_keys:
+                    new_lines.append(key + ' = ' + flags)
                 if args.compiler == 'icc':
                     new_lines.append('COPTIMIZE = ' + flags + ' -std=gnu11')
             elif line == 'COMPILERS_PLACEHOLDER':
