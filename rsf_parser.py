@@ -65,7 +65,7 @@ class Benchmark(RsfBase):
         self.name = name
         self.exe_filename = self.name[self.name.find('_') + 1:]
         # exceptions that are in CPU2006
-        is self.name == '482_sphinx3':
+        if self.name == '482_sphinx3':
             self.exe_filename = 'sphinx_livepretend'
         elif self.name == '483_xalancbmk':
             self.exe_filename = 'Xalan'
