@@ -91,8 +91,6 @@ class CpuV6:
 
   def build_command_line(self, c):
     all_tests = sorted('557.xz_r 500.perlbench_r 525.x264_r 544.nab_r 553.johnripper_r 505.mcf_r 547.drops_r 502.gcc_r 523.xalancbmk_r 508.namd_r 549.fotonik3d_r 503.bwaves_r 510.parest_r 548.exchange2_r 531.deepsjeng_r 513.hmmer_r 526.blender_r 552.mdwp_r 532.facesim_r 511.povray_r 556.ferret_r 519.lbm_r 539.bodytrack_r 520.omnetpp_r 507.cactuBSSN_r 527.cam4_r 521.wrf_r 538.imagick_r 541.leela_r 554.roms_r'.split(' '))
-
-    all_tests = sorted('557.xz_r'.split(' '))
     slow_tests = set(['bwaves', 'wrf', 'roms'])
     tests = list(filter(lambda x: not any(map(lambda y: y in x, slow_tests)), all_tests))
     ts_print('Running tests: %d' % len(tests))
