@@ -58,7 +58,7 @@ class RsfBase:
 
     def get_value_or_default(self, key):
         values = self.get_values(key, lines)
-        return len(values) > 0 : values[0] : None
+        return values[0] if len(values) > 0 else None
 
 class Benchmark(RsfBase):
     def __init__(self, name, lines, spec_folder):
