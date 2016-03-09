@@ -9,6 +9,8 @@ import json
 
 from base64 import *
 
+script_folder = os.path.dirname(os.path.realpath(__file__))
+
 def average(values):
     if len(values) == 0:
         return None
@@ -18,7 +20,6 @@ def average(values):
         return sum(values) / len(values)
 
 def find(name, path):
-    print('Finding: %s in %s' % (name, path))
     for root, dirs, files in os.walk(path):
         if name in files:
             return os.path.join(root, name)
@@ -63,7 +64,7 @@ class Benchmark(RsfBase):
         self.errors = []
         self.times = []
         self.iterations = len(runs)
-        self.spec_folder = spec_folder
+        self.spec_folder = os.path.abspath(spec_folder)
 
         for run in runs:
             lines = RsfBase.strip_lines(run, [x for x in self.lines if x.startswith(run)])
@@ -72,12 +73,17 @@ class Benchmark(RsfBase):
             self.errors += self.get_values('error', lines)
 
         self.average_time = average(self.times)
+        self.binary_size = None
 
         # parse ELF sections
         self.absolute_path = find(self.exe_filename, spec_folder)
+        if self.absolute_path != None:
+            output = subprocess.check_output([os.path.join(script_folder, 'readelf.py'), '--format=json', self.absolute_path])
+            s = output.decode('utf8')
+            self.binary_size = self.json.loads(s)
 
     def to_dict(self):
-        return { 'name': self.name, 'average_time': self.average_time, 'iterations': self.iterations, 'errors': ''.join(self.errors), 'absolute_path': self.absolute_path }
+        return { 'name': self.name, 'average_time': self.average_time, 'iterations': self.iterations, 'errors': ''.join(self.errors), 'absolute_path': self.absolute_path, 'binary_size': self.binary_size }
 
 class BenchmarkGroup(RsfBase):
     def __init__(self, filename, spec_folder):
