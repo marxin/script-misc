@@ -108,6 +108,8 @@ class BenchmarkGroup(RsfBase):
         benchmark_names = sorted(set([x.split('.')[0] for x in benchmark_lines]))
         self.benchmarks = [Benchmark(x, [y for y in benchmark_lines if y.startswith(x)], spec_folder) for x in benchmark_names]
         self.unitbase = self.get_value_or_default('unitbase')
+        if self.unitbase == None:
+            self.unitbase = self.get_value('name')
 
     def to_dict(self):
         return { 'group_name': self.unitbase, 'benchmarks': [x.to_dict() for x in self.benchmarks] }
