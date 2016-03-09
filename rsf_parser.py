@@ -64,6 +64,13 @@ class Benchmark(RsfBase):
     def __init__(self, name, lines, spec_folder):
         self.name = name
         self.exe_filename = self.name[self.name.find('_') + 1:]
+        # exceptions that are in CPU2006
+        is self.name == '482_sphinx3':
+            self.exe_filename = 'sphinx_livepretend'
+        elif self.name == '483_xalancbmk':
+            self.exe_filename = 'Xalan'
+
+
         super(Benchmark, self).__init__('.'.join([name, 'peak']), lines)
         runs = sorted(set([x.split('.')[0] for x in self.lines]))
         self.errors = []
