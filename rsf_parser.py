@@ -136,7 +136,7 @@ class BenchmarkSuite(RsfBase):
             'compiler': self.compiler,
             'compiler_version': self.compiler_version,
             'compiler_revision': self.compiler_revision,
-            'flags': self.flags,
+            'flags': self.options,
             'timestamp': self.time.strftime('%Y-%m-%dT%H:%M:%S'),
             'toolset': self.toolset,
             'type': self.suitename,
@@ -152,8 +152,8 @@ parser.add_argument('compiler_version', metavar = 'compiler_version', help = 'Co
 parser.add_argument('flags', metavar = 'flags', help = 'Encoded flags in base64')
 parser.add_argument('spec_folder', metavar = 'spec_folder', help = 'SPEC root folder')
 parser.add_argument('spec_name', metavar = 'spec_name', help = 'SPEC name')
-parser.add_argument("-r", "--revision", dest="revision", help = "GIT revision")
 parser.add_argument("-o", "--output", dest="output", help = "JSON output file")
+parser.add_argument("-r", "--revision", dest="revision", help = "GIT revision")
 
 args = parser.parse_args()
 args.flags = b64decode(args.flags).decode('utf-8')
