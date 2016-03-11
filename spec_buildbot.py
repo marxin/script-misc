@@ -32,6 +32,9 @@ parser.add_argument('flags', metavar = 'flags', help = 'Encoded flags in base64'
 args = parser.parse_args()
 
 default_flags = '-march=native -g'
+if platform.machine() == 'aarch64':
+    default_flags = '-g'
+
 flags = default_flags + ' ' + b64decode(args.flags).decode('utf-8')
 
 profile = args.root_path.split(os.sep)[-1]
