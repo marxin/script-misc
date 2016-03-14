@@ -47,6 +47,7 @@ parser.add_option("-p", "--padding", dest="padding", help="padding in format [co
 parser.add_option("-e", "--header", dest="header", action="store_true", help="first line is header")
 parser.add_option("-o", "--footer", dest="footer", action="store_true", help="last line is footer")
 parser.add_option("-t", "--transpose", dest="transpose", action="store_true", help="changes rows and columns")
+parser.add_option("-n", "--number", dest="number", action="store_true", help="number lines")
 
 (options, args) = parser.parse_args()
 
@@ -64,6 +65,10 @@ if options.transpose:
     new_lines[x][y] = lines[y][x]
 
   lines = new_lines
+
+if options.number:
+    for (i, v) in enumerate(lines):
+        v.insert(0, str(i + 1))
 
 columns = len(lines[0])
 column_width_array = [0] * columns
