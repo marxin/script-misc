@@ -27,15 +27,17 @@ def padd(value, width, direction):
 def format_line(line, separator = '|'):
   return separator + string.join(my_map(lambda i, x: padd(x, column_width_array[i], column_padding_array[i]), line), separator) + separator
 
+def print_sep():
+  sep = format_line(map(lambda x: '-' * x, column_width_array), '+')
+  print(sep)
+
 def print_super_line(line):
   if not line:
     return
 
-  sep = format_line(map(lambda x: '-' * x, column_width_array), '+')
-
-  print(sep)
+  print_sep()
   print(format_line(line))
-  print(sep)
+  print_sep()
 
 parser = OptionParser()
 parser.add_option("-d", "--delimiter", dest="delimiter", help="column delimiter", default = ';')
@@ -48,7 +50,7 @@ parser.add_option("-t", "--transpose", dest="transpose", action="store_true", he
 
 (options, args) = parser.parse_args()
 
-lines = [map(lambda y: ' ' + y + ' ', x.strip().split(options.delimiter)) for x in open(options.file).readlines()]
+lines = [map(lambda y: ' ' + y + ' ', [z for z in x.strip().split(options.delimiter) if z != '']) for x in open(options.file).readlines()]
 
 if options.transpose:
   h = len(lines)
@@ -63,8 +65,9 @@ if options.transpose:
 
   lines = new_lines
 
-column_width_array = [0] * len(lines[0])
-column_padding_array = [options.default_padding] * len(lines[0])
+columns = len(lines[0])
+column_width_array = [0] * columns
+column_padding_array = [options.default_padding] * columns
 
 if options.padding:
   for token in options.padding.split(','):
@@ -94,12 +97,19 @@ if options.header:
   first_line = lines[0]
   lines = lines[1:]
   print_super_line(first_line)
+else:
+  print_sep()
+
+print_bottom_line = False
 
 if options.footer:
   last_line = lines[-1]
   lines = lines[:-1]
+else:
+  print_bottom_line = True
 
 for line in lines:
   print(format_line(line))
 
-print_super_line(last_line)
+if print_bottom_line:
+  print_sep()
