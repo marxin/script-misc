@@ -67,7 +67,9 @@ if options.transpose:
   lines = new_lines
 
 if options.number:
-    for (i, v) in enumerate(lines):
+    if options.header:
+        lines[0].insert(0, '')
+    for (i, v) in enumerate(lines if not options.header else lines[1:]):
         v.insert(0, str(i + 1))
 
 columns = len(lines[0])
