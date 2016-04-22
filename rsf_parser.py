@@ -116,7 +116,7 @@ class BenchmarkGroup(RsfBase):
         return { 'group_name': self.unitbase, 'benchmarks': [x.to_dict() for x in self.benchmarks] }
 
 class BenchmarkSuite(RsfBase):
-    def __init__(self, filenames, compiler, compiler_version, flags, spec_folder, spec_name, revision):
+    def __init__(self, filenames, compiler, compiler_version, flags, spec_folder, spec_name, revision, branch):
         lines = [x.strip() for x in open(filenames[0]).readlines()]
         super(BenchmarkSuite, self).__init__('spec.' + spec_name, [x for x in lines if not x.startswith('#')])
         self.time = self.get_value('time')
@@ -126,6 +126,7 @@ class BenchmarkSuite(RsfBase):
         self.compiler = compiler 
         self.compiler_version = compiler_version
         self.compiler_revision = revision
+        self.compiler_branch = branch
         self.options = flags
         self.suitename = spec_name 
 
@@ -136,6 +137,7 @@ class BenchmarkSuite(RsfBase):
             'compiler': self.compiler,
             'compiler_version': self.compiler_version,
             'compiler_revision': self.compiler_revision,
+            'compiler_branch': self.compiler_branch,
             'flags': self.options,
             'timestamp': self.time.strftime('%Y-%m-%dT%H:%M:%S'),
             'toolset': self.toolset,
@@ -154,6 +156,7 @@ parser.add_argument('spec_folder', metavar = 'spec_folder', help = 'SPEC root fo
 parser.add_argument('spec_name', metavar = 'spec_name', help = 'SPEC name')
 parser.add_argument("-o", "--output", dest="output", help = "JSON output file")
 parser.add_argument("-r", "--revision", dest="revision", help = "GIT revision")
+parser.add_argument("-b", "--branch", dest="branch", help = "GIT branch")
 
 args = parser.parse_args()
 args.flags = b64decode(args.flags).decode('utf-8')
@@ -175,7 +178,7 @@ p = 'format: raw -> '
 rsf_files = [x.split(p)[-1].strip() for x in lines if p in x]
 assert len(rsf_files) > 0
 
-suite = BenchmarkSuite(rsf_files, args.compiler, args.compiler_version, args.flags, args.spec_folder, args.spec_name, args.revision)
+suite = BenchmarkSuite(rsf_files, args.compiler, args.compiler_version, args.flags, args.spec_folder, args.spec_name, args.revision, args.branch)
 
 if args.output == None:
     print(json.dumps(suite.to_dict(), indent = 2))
