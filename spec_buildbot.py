@@ -61,23 +61,42 @@ def run_command(cmd):
 def filter_tests(tests, excluded):
     return list(filter(lambda x: not any(map(lambda y: y in x, excluded)), tests))
 
+
 ### SPECv6 class ###
 class SpecConfiguration:
+    def build_optimize_flags(self, flags):
+        new_lines = []
+        optimization_keys = ['OPTIMIZE', 'COPTIMIZE', 'CXXOPTIMIZE', 'FOPTIMIZE']
+        profiling_keys = ['PASS%d_CFLAGS', 'PASS%d_CXXFLAGS', 'PASS%d_FFLAGS', 'PASS%d_LDFLAGS']
+
+        t = '-fprofile-generate'
+        if flags.endswith(t):
+            flags = flags[:flags.find(t)].strip()
+
+        for key in optimization_keys:
+            new_lines.append(key + ' = ' + flags)
+        if args.compiler == 'icc':
+            new_lines.append('COPTIMIZE = ' + flags + ' -std=gnu11')
+
+        if flags.endswith(t):
+            for key in profiling_keys
+                new_lines.append((key % 1) + ' = -fprofile-generate')
+            for key in profiling_keys
+                new_lines.append((key % 2) + ' = -fprofile-use')
+
+        return new_lines
+
     def build_config(self, configuration, profile, flags, template_name):
         config_template_path = os.path.join(real_script_folder, 'config-template', template_name)
         compilers = configuration.compilers()
         lines = [x.strip() for x in open(config_template_path, 'r').readlines()]
 
-        optimization_keys = ['OPTIMIZE', 'COPTIMIZE', 'CXXOPTIMIZE', 'FOPTIMIZE']
         new_lines = []
         for line in lines:
             if line == 'JOBS_PLACEHOLDER':
                 new_lines.append('makeflags = -j' + str(cpu_count()))
             elif line == 'OPTIMIZE_PLACEHOLDER':
-                for key in optimization_keys:
-                    new_lines.append(key + ' = ' + flags)
-                if args.compiler == 'icc':
-                    new_lines.append('COPTIMIZE = ' + flags + ' -std=gnu11')
+                new_lines += self.build_optimize_flags(flags)
             elif line == 'COMPILERS_PLACEHOLDER':
                 new_lines.append('FC = ' + compilers['FC'])
                 new_lines.append('CXX = ' + compilers['CXX'])
