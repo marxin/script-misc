@@ -79,9 +79,9 @@ class SpecConfiguration:
             new_lines.append('COPTIMIZE = ' + flags + ' -std=gnu11')
 
         if flags.endswith(t):
-            for key in profiling_keys
+            for key in profiling_keys:
                 new_lines.append((key % 1) + ' = -fprofile-generate')
-            for key in profiling_keys
+            for key in profiling_keys:
                 new_lines.append((key % 2) + ' = -fprofile-use')
 
         return new_lines
