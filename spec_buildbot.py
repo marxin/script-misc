@@ -65,6 +65,7 @@ def filter_tests(tests, excluded):
 ### SPECv6 class ###
 class SpecConfiguration:
     def build_optimize_flags(self, flags):
+        print('Building optimization flags: %s' % flags)
         new_lines = []
         optimization_keys = ['OPTIMIZE', 'COPTIMIZE', 'CXXOPTIMIZE', 'FOPTIMIZE']
         profiling_keys = ['PASS%d_CFLAGS', 'PASS%d_CXXFLAGS', 'PASS%d_FFLAGS', 'PASS%d_LDFLAGS']
