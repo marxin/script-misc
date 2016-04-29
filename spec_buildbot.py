@@ -71,7 +71,8 @@ class SpecConfiguration:
         profiling_keys = ['PASS%d_CFLAGS', 'PASS%d_CXXFLAGS', 'PASS%d_FFLAGS', 'PASS%d_LDFLAGS']
 
         t = '-fprofile-generate'
-        if flags.endswith(t):
+        is_profiling = flags.endswith(t)
+        if is_profiling:
             flags = flags[:flags.find(t)].strip()
 
         for key in optimization_keys:
@@ -79,7 +80,7 @@ class SpecConfiguration:
         if args.compiler == 'icc':
             new_lines.append('COPTIMIZE = ' + flags + ' -std=gnu11')
 
-        if flags.endswith(t):
+        if is_profiling:
             for key in profiling_keys:
                 new_lines.append((key % 1) + ' = -fprofile-generate')
             for key in profiling_keys:
