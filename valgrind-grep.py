@@ -60,25 +60,52 @@ for line in lines:
     else:
         bt.append(line)
 
-group_count = 0
-error_count = 0
+class Section:
+    def __init__(self, name, f):
+        self.name = name
+        self.f = f
+        self.count = 0
+        self.errors = []
+    def matches(self, bt):
+        return any(map(self.f, e.bt))
+    def add(self, e, count):
+        self.errors.append([e, count])
+        self.count += count
+
+sections = [
+    Section('gfortran', lambda x: 'gfc_' in x in x),
+    Section('c++', lambda x: 'cp_parser_' in x or 'cp_fold_' in x),
+    Section('c', lambda x: 'c_parser_' in x),
+    Section('c-common', lambda x: 'c_common_init_options' in x),
+    Section('Other', lambda x: True)
+]
+
+total_errors = 0
+total_types = 0
 
 groups = list(map(lambda g: [g[0], len(list(g[1]))], groupby(sorted(errors))))
-for g in sorted(groups, key = lambda x: x[1], reverse = True):
+for g in groups:
     e = g[0]
-    # TODO: remove
-    #if any(map(lambda x: 'gfc_' in x or 'cp_parser_' in x or 'c_parser_' in x or 'cp_fold_' in x, e.bt)):
-    #    continue
+    total_types += 1
+    total_errors += g[1]
 
-    group_count += 1
-    error_count += g[1]
+    for s in sections:
+        if s.matches(e.bt):
+            s.add(e, g[1])
+            break
 
-    print('%s: %d occurences' % (e.name, g[1]), file = sys.stderr, end = '')
-    print(e.bt_str(), file = sys.stderr)
-    print('', file = sys.stderr)
+for s in sections:
+    print('== SECTION: %s ==' % s.name)
+    print('==   error types: %d, total errors: %d' % (len(s.errors), s.count))
+    print('==   error types: %2.2f%%, total errors: %2.2f%%' % (100.0 * len(s.errors) / total_types, 100.0 * s.count / total_errors))
+    print('')
+
+    for e in sorted(s.errors, key = lambda x: x[1], reverse = True):
+        print('%s: %d occurences' % (e[0].name, e[1]), end = '')
+        print(e[0].bt_str())
+        print()
 
 print('== Statistics ==')
-print('Total number of errors: %d' % error_count)
-print('Number of different errors: %d' % group_count)
+# TODO
 
 # print(error.name + ':' + str(len(list(g))))
