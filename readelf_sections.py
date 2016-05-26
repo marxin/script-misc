@@ -66,10 +66,36 @@ class ElfInfo:
 
         print(json.dumps(content, indent = 2, sort_keys = True))
 
-parser = argparse.ArgumentParser(description='Display statistics about binaries.')
-parser.add_argument('file', metavar = 'file', help = 'ELF file')
+    def compare(self, other):
+        print('Comparing: %s vs. %s' % (self.path, other.path))
+        if self.num_symbols != other.num_symbols:
+            print('  number of symbols does not match: %d/%d' % (self.num_symbols, other.num_symbols))
 
-args = parser.parse_args()
+        if len(self.sections) != len(other.sections):
+            print('  number of sections does not match: %d/%d' % (len(self.sections), len(other.sections)))
+        else:
+            for i, s in enumerate(self.sections):
+                s2 = other.sections[i]
+                if s.name != s2.name:
+                    print('  section names does not match: %s/%s' % (s.name, s2.name))
+                else:
+                    if s.size != s2.size:
+                        print('  section %s: sizes does not match: %d/%d' % (s.name, s.size, s2.size))
+                    elif s.md5sum != s2.md5sum:
+                        print('  section %s: md5sum does not match' % (s.name))
 
-elfinfo = ElfInfo(args.file)
-elfinfo.dump()
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description='Display statistics about binaries.')
+    parser.add_argument('file', metavar = 'file', help = 'ELF file')
+    parser.add_argument('--compared', metavar = 'compared', help = 'Compared ELF file', default = None)
+
+    args = parser.parse_args()
+
+    if args.compared == None:
+        elfinfo = ElfInfo(args.file)
+        elfinfo.dump()
+    else:
+        elfinfo1 = ElfInfo(args.file)
+        elfinfo2 = ElfInfo(args.compared)
+
+        elfinfo1.compare(elfinfo2)
