@@ -14,6 +14,11 @@ parser.add_argument('target', metavar = 'target', help = 'Target ELF file or fol
 
 args = parser.parse_args()
 
+def compare_files(f1, f2):
+    e1 = ElfInfo(f1)
+    e2 = ElfInfo(f2)
+    e1.compare(e2)
+
 if os.path.isdir(args.source) and os.path.isdir(args.target):
     source_files = os.listdir(args.source)
     target_files = os.listdir(args.target)
@@ -25,6 +30,9 @@ if os.path.isdir(args.source) and os.path.isdir(args.target):
         elif not f in target_files:
             print('Missing is target: %s' % f)
         else:
-            e1 = ElfInfo(os.path.join(args.source, f))
-            e2 = ElfInfo(os.path.join(args.target, f))
-            e1.compare(e2)
+            compare_files(os.path.join(args.source, f), os.path.join(args.target, f))
+
+elif os.path.isfile(args.source) and os.path.isfile(args.target):
+    compare_files(args.source, args.target)
+else:
+    print('Invalid paths have been provided')
