@@ -16,42 +16,60 @@ class MySection:
         self.size = size
         self.md5sum = digest
 
+class ElfInfo:
+    def __init__(self, path):
+        self.path = path
+        self.content = open(path, 'rb').read()
+
+        self.file_size = len(self.content)
+        self.file_md5sum = hashlib.md5(self.content).hexdigest()
+        self.sections_sum = 0
+        self.sections = []
+
+        self.num_relocations = 0
+        self.num_symbols = 0
+        self.debug_sections_size = 0
+
+        self.parse()
+
+    def parse(self):
+        with open(self.path, 'rb') as f:
+            elffile = ELFFile(f)
+
+            for section in elffile.iter_sections():
+                name = section.name.decode('utf-8')
+                size = section['sh_size']
+                digest = hashlib.md5(section.data()).hexdigest()
+                self.sections_sum += size
+
+                if isinstance(section, SymbolTableSection):
+                    self.num_symbols += section.num_symbols()
+
+                if isinstance(section, RelocationSection):
+                    self.num_relocations += section.num_relocations()
+
+                if name.startswith('.debug'):
+                    self.debug_sections_size += size
+
+                self.sections.append(MySection(name, size, digest))
+
+    def dump(self):
+        content = { 'file_size': self.file_size,
+            'sections_size': self.sections_sum,
+            'md5sum': self.file_md5sum,
+            'sections': [x.__dict__ for x in self.sections],
+            'relocations': self.num_relocations,
+            'symbols': self.num_symbols,
+            'debug_sections_size': self.debug_sections_size,
+            'stripped_sections_size': self.sections_sum - self.debug_sections_size,
+            'filename': os.path.abspath(self.path) }
+
+        print(json.dumps(content, indent = 2, sort_keys = True))
+
 parser = argparse.ArgumentParser(description='Display statistics about binaries.')
 parser.add_argument('file', metavar = 'file', help = 'ELF file')
 
 args = parser.parse_args()
 
-content = open(args.file, 'rb').read()
-
-file_size = len(content)
-file_md5sum = hashlib.md5(content).hexdigest()
-sections_sum = 0
-sections = [] 
-
-num_relocations = 0
-num_symbols = 0
-debug_sections_size = 0
-
-with open(args.file, 'rb') as f:
-    elffile = ELFFile(f)
-
-    for section in elffile.iter_sections():
-        name = section.name.decode('utf-8')
-        size = section['sh_size']
-        digest = hashlib.md5(section.data()).hexdigest()
-        sections_sum += size
-
-        if isinstance(section, SymbolTableSection):
-            num_symbols += section.num_symbols()
-
-        if isinstance(section, RelocationSection):
-            num_relocations += section.num_relocations()
-
-        if name.startswith('.debug'):
-            debug_sections_size += size
-
-        sections.append(MySection(name, size, digest))
-
-content = { 'file_size': file_size, 'sections_size': sections_sum, 'md5sum': file_md5sum, 'sections': [x.__dict__ for x in sections], 'relocations': num_relocations, 'symbols': num_symbols, 'debug_sections_size': debug_sections_size, 'stripped_sections_size': sections_sum - debug_sections_size, 'filename': os.path.abspath(args.file) }
-
-print(json.dumps(content, indent = 2, sort_keys = True))
+elfinfo = ElfInfo(args.file)
+elfinfo.dump()
