@@ -7,10 +7,21 @@ import json
 import os
 import subprocess
 import tempfile
+import shutil
 
 from termcolor import colored
 
 script_dirname = os.path.abspath(os.path.dirname(__file__))
+
+def strip_prefix(text, prefix):
+    if text.startswith(prefix):
+        return text[len(prefix):]
+    return text
+
+def strip_suffix(text, suffix):
+    if text.endswith(suffix):
+        return text[:-len(suffix)]
+    return text
 
 class Release:
     def __init__(self, name, hash):
@@ -20,7 +31,7 @@ class Release:
 
     def test(self, install, command, verbose):
         if not self.have_binary:
-            print('  %s: missing binary' % self.name)
+            print('  %s: missing binary' % (self.name))
         else:
             self.run(install, command, verbose)
 
@@ -83,7 +94,7 @@ class GitRepository:
             name = tokens[1].split('/')[-1].replace('_', '-')
             if not name.startswith('gcc-') or not name.endswith('-release'):
                 continue
-            version = name.lstrip('gcc-').rstrip('-release').replace('-', '.')
+            version = strip_suffix(strip_prefix(name, 'gcc-'), '-release').replace('-', '.')
 
             if not any(map(lambda x: x.name == version, self.releases)):
                 self.releases.append(Release(version, hash))
@@ -121,11 +132,15 @@ class GitRepository:
             os.chdir(temp)
             print('Bulding in %s' % temp)
             cmd = [os.path.join(self.location, 'configure'), '--prefix', l, '--disable-bootstrap']
-            self.run_cmd(cmd)
+            self.run_cmd(cmd, True)
             self.run_cmd('echo "MAKEINFO = :" >> Makefile')
-            r = self.run_cmd('nice make -j10')
+            cmd = 'nice make -j10'
+            if release.name.startswith('5.'):
+                cmd = 'nice make'
+            r = self.run_cmd(cmd)
             if r:
                 self.run_cmd('make install')
+            shutil.rmtree(temp)
         
     def build(self, install):
         for r in self.releases:
@@ -135,8 +150,9 @@ class GitRepository:
         folders = os.listdir(install)
         existing = set()
         for f in folders:
-            if os.path.exists(os.path.join(install, f, 'bin/gcc')):
-                h = os.path.basename(f).lstrip('gcc-')
+            full = os.path.join(install, f, 'bin/gcc')
+            if os.path.exists(full):
+                h = strip_prefix(os.path.basename(f), 'gcc-')
                 existing.add(h)
 
         for r in self.releases:
@@ -153,17 +169,19 @@ class GitRepository:
         for r in self.releases:
             r.test(install, command, verbose)
 
-    def run_cmd(self, command):
+    def run_cmd(self, command, strict = False):
         if isinstance(command, list):
             command = ' '.join(command)
         print('Running: %s' % command)
         try:
-            with open('/tmp/gcc-build.stderr', 'w') as err:
+            with open('/tmp/gcc-build.stderr', 'a') as err:
                 subprocess.check_output(command, shell = True, stderr = err)
             return True
         except subprocess.CalledProcessError as e:
+            print(str(e))
             lines = e.output.decode('utf-8').split('\n')
-            print('\n'.join(lines[-10:]))
+            print('\n'.join(lines))
+            assert not strict
             return False
 
 if __name__ == "__main__":
