@@ -34,11 +34,14 @@ class GitRevision:
         self.message = tokens[3]
         self.has_binary = False
 
+    def timestamp_str(self):
+        return self.timestamp.strftime('%d %b %Y %H:%M')
+
     def __str__(self):
-        return self.hash + ':' + self.timestamp
+        return self.hash + ':' + self.timestamp_str()
 
     def description(self):
-        return self.hash[0:16] + '(' + self.timestamp.strftime('%d %b %Y %H:%M') + ')'
+        return self.hash[0:16] + '(' + self.timestamp_str() + ')'
 
     def run(self, install, command, verbose):
         log = '/tmp/output'
