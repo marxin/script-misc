@@ -108,6 +108,9 @@ class GitRepository:
             if not any(map(lambda x: x.name == version, self.releases)):
                 self.releases.append(Release(version, hash))
 
+        # missing tag
+        if not any(map(lambda x: x.name == '5.4.0', self.releases)):
+            self.releases.append(Release('5.4.0', '32c3b88e8ced4b6d022484a73c40f3d663e20fd4'))
         self.releases = sorted(filter(lambda x: x.name >= '4.5.0', self.releases), key = lambda x: x.name)    
 
     def parse_latest_revisions(self, n = 1000):
@@ -146,7 +149,8 @@ class GitRepository:
             self.run_cmd(cmd, True)
             self.run_cmd('echo "MAKEINFO = :" >> Makefile')
             cmd = 'nice make -j10'
-            if release.name.startswith('5.'):
+            # TODO: hack because of -j problem seen on 5.x releases
+            if release.name.startswith('5.') and not release.name.startswith('5.4'):
                 cmd = 'nice make'
             r = self.run_cmd(cmd)
             if r:
