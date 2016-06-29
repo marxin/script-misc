@@ -43,16 +43,21 @@ class GitRevision:
     def description(self):
         return self.hash[0:16] + '(' + self.timestamp_str() + ')'
 
-    def run(self, install, command, verbose):
+    def run(self, install, command, verbose, negate):
         log = '/tmp/output'
         binary = os.path.join(install, 'gcc-' + self.hash, 'bin')
         cmd = binary + '/' + command
         with open(log, 'w') as out:
             r = subprocess.call(cmd, shell = True, stdout = out, stderr = out)
-        text = colored('OK', 'green') if r == 0 else colored('FAILED', 'red')
+
+        success = r == 0
+        if negate:
+            success = not success
+
+        text = colored('OK', 'green') if success else colored('FAILED', 'red')
         print('  %s: running command with result: %s' % (self.description(), text))
         if verbose:
-            print(open(log).read())
+            print(open(log).read(), end = '')
 
     @staticmethod
     def get_git_lines(start, end):
@@ -66,11 +71,11 @@ class Release(GitRevision):
         self.name = name
         self.hash = hash
 
-    def test(self, install, command, verbose):
+    def test(self, install, command, verbose, negate):
         if not self.has_binary:
             print('  %s: missing binary' % (self.name))
         else:
-            self.run(install, command, verbose)
+            self.run(install, command, verbose, negate)
 
     def __str__(self):
         return self.hash + ':' + self.name
@@ -178,15 +183,15 @@ class GitRepository:
             if r.hash in existing:
                 r.has_binary = True
 
-    def test(self, command, verbose):
+    def test(self, command, verbose, negate):
         print('Releases')
         for r in self.releases:
-            r.test(self.install, command, verbose)
+            r.test(self.install, command, verbose, negate)
 
         print('\nLatest revisions')
         for r in self.latest:
             if r.has_binary:
-                r.run(self.install, command, verbose)
+                r.run(self.install, command, verbose, negate)
 
     def run_cmd(self, command, strict = False):
         if isinstance(command, list):
@@ -210,6 +215,7 @@ if __name__ == "__main__":
     parser.add_argument('action', nargs = '?', metavar = 'action', help = 'Action', default = 'print', choices = ['print', 'build', 'test'])
     parser.add_argument('command', nargs = '?', metavar = 'command', help = 'GCC command')
     parser.add_argument('--verbose', action = 'store_true')
+    parser.add_argument('--negate', action = 'store_true', help = 'FAIL if result code is equal to zero')
 
     args = parser.parse_args()
     g = GitRepository(args.git, args.install)
@@ -219,4 +225,4 @@ if __name__ == "__main__":
     elif args.action == 'build':
         g.build(args.install)
     elif args.action == 'test':
-        g.test(args.command, args.verbose)
+        g.test(args.command, args.verbose, args.negate)
