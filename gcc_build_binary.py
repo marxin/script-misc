@@ -8,6 +8,8 @@ import os
 import subprocess
 import tempfile
 import shutil
+import datetime
+import time
 
 from termcolor import colored
 
@@ -23,17 +25,20 @@ def strip_suffix(text, suffix):
         return text[:-len(suffix)]
     return text
 
-class Release:
-    def __init__(self, name, hash):
-        self.name = name
-        self.hash = hash
-        self.have_binary = False
+class GitRevision:
+    def __init__(self, git_line):
+        tokens = git_line.split(';')
+        self.hash = tokens[0]
+        self.author = tokens[1]
+        self.timestamp = datetime.datetime.fromtimestamp(int(tokens[2]))
+        self.message = tokens[3]
+        self.has_binary = False
 
-    def test(self, install, command, verbose):
-        if not self.have_binary:
-            print('  %s: missing binary' % (self.name))
-        else:
-            self.run(install, command, verbose)
+    def __str__(self):
+        return self.hash + ':' + self.timestamp
+
+    def description(self):
+        return self.hash[0:16] + '(' + self.timestamp.strftime('%d %b %Y %H:%M') + ')'
 
     def run(self, install, command, verbose):
         log = '/tmp/output'
@@ -42,44 +47,45 @@ class Release:
         with open(log, 'w') as out:
             r = subprocess.call(cmd, shell = True, stdout = out, stderr = out)
         text = colored('OK', 'green') if r == 0 else colored('FAILED', 'red')
-        print('  %s: running command with result: %s' % (self.name, text))
+        print('  %s: running command with result: %s' % (self.description(), text))
         if verbose:
             print(open(log).read())
 
-    def __str__(self):
-        return self.name + ':' + self.hash
+    @staticmethod
+    def get_git_lines(start, end):
+        cmd = 'git log --pretty=format:"%H;%an;%at;%s" ' + start + '..' + end
+        lines = subprocess.check_output(cmd, shell = True).decode('utf-8').split('\n')
+        return lines
 
-class Revision:
-    def __init__(self, hash, author, timestamp, message):
+class Release(GitRevision):
+    def __init__(self, name, hash):
+        GitRevision.__init__(self, GitRevision.get_git_lines(hash + '~', hash)[0])
+        self.name = name
         self.hash = hash
-        self.message = message
-        self.author = author
-        self.timestamp = timestamp    
-        self.have_binary = False
+
+    def test(self, install, command, verbose):
+        if not self.has_binary:
+            print('  %s: missing binary' % (self.name))
+        else:
+            self.run(install, command, verbose)
 
     def __str__(self):
-        return self.hash + ':' + self.message
+        return self.hash + ':' + self.name
+
+    def description(self):
+        return self.name
 
 class GitRepository:
-    def __init__(self, location):
+    def __init__(self, location, install):
         self.location = location
+        self.install = install
+
         self.releases = []
         self.latest = []
         os.chdir(location)
         self.parse_releases()
         self.parse_latest_revisions()
-
-    def parse_releases(self):
-        r = subprocess.check_output('git show-ref --tags', shell = True)
-
-class GitRepository:
-    def __init__(self, location):
-        self.location = location
-        self.releases = []
-        self.latest = []
-        os.chdir(location)
-        self.parse_releases()
-        self.parse_latest_revisions()
+        self.initialize_binaries()
 
     def parse_releases(self):
         r = subprocess.check_output('git show-ref --tags', shell = True)
@@ -102,16 +108,18 @@ class GitRepository:
         self.releases = sorted(filter(lambda x: x.name >= '4.5.0', self.releases), key = lambda x: x.name)    
 
     def parse_latest_revisions(self, n = 1000):
-        cmd = 'git log --pretty=format:"%H;%an;%aI;%s" parent/master~' + str(n) + '..parent/master'
-        lines = subprocess.check_output(cmd, shell = True).decode('utf-8').split('\n')
-
-        for l in lines:
-            tokens = l.split(';')
-            self.latest.append(Revision(tokens[0], tokens[1], tokens[2], tokens[3]))
+        for l in GitRevision.get_git_lines('parent/master~' + str(n), 'parent/master'):
+            self.latest.append(GitRevision(l.strip()))
 
     def print(self):
+        print('Releases')
         for r in self.releases:
             print(str(r))
+
+        print('\nLatest revisions')
+        for r in self.latest:
+            if r.has_binary:
+                print(str(r))
 
     def apply_patch(self, revision):
         p = os.path.join(script_dirname, 'gcc-release-patches', revision.name + '.patch')
@@ -146,28 +154,32 @@ class GitRepository:
         for r in self.releases:
             self.build_release(r, install)
 
-    def initialize_binaries(self, install):
-        folders = os.listdir(install)
+    def initialize_binaries(self):
+        folders = os.listdir(self.install)
         existing = set()
         for f in folders:
-            full = os.path.join(install, f, 'bin/gcc')
+            full = os.path.join(self.install, f, 'bin/gcc')
             if os.path.exists(full):
                 h = strip_prefix(os.path.basename(f), 'gcc-')
                 existing.add(h)
 
         for r in self.releases:
             if r.hash in existing:
-                r.have_binary = True
+                r.has_binary = True
 
         for r in self.latest:
             if r.hash in existing:
-                r.have_binary = True
+                r.has_binary = True
 
-    def test(self, install, command, verbose):
-        self.initialize_binaries(install)
-
+    def test(self, command, verbose):
+        print('Releases')
         for r in self.releases:
-            r.test(install, command, verbose)
+            r.test(self.install, command, verbose)
+
+        print('\nLatest revisions')
+        for r in self.latest:
+            if r.has_binary:
+                r.run(self.install, command, verbose)
 
     def run_cmd(self, command, strict = False):
         if isinstance(command, list):
@@ -193,11 +205,11 @@ if __name__ == "__main__":
     parser.add_argument('--verbose', action = 'store_true')
 
     args = parser.parse_args()
-    g = GitRepository(args.git)
+    g = GitRepository(args.git, args.install)
 
     if args.action == 'print':
         g.print()
     elif args.action == 'build':
         g.build(args.install)
     elif args.action == 'test':
-        g.test(args.install, args.command, args.verbose)
+        g.test(args.command, args.verbose)
