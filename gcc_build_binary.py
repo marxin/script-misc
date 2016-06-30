@@ -14,7 +14,7 @@ import time
 from termcolor import colored
 
 script_dirname = os.path.abspath(os.path.dirname(__file__))
-compress_older_than = 0
+compress_older_than = 1
 last_revision_count = 20
 
 parser = argparse.ArgumentParser(description='Build GCC binaries.')
@@ -141,13 +141,16 @@ class GitRevision:
             r = run_cmd(cmd)
             if r:
                 run_cmd('make install')
+            if not is_release:
+                run_cmd('find %s -exec strip --strip-debug {} \;' % l)
+
             shutil.rmtree(temp)
 
     def compress(self):
         r = False
         archive = self.get_archive_path()
         if not os.path.exists(archive):
-            subprocess.check_output('7z a %s %s' % (archive, f), shell = True)
+            subprocess.check_output('7z a %s %s' % (archive, self.get_folder_path()), shell = True)
             r = True
 
         self.remove_extracted()
