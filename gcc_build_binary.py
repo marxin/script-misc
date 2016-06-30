@@ -59,6 +59,12 @@ class GitRevision:
         if verbose:
             print(open(log).read(), end = '')
 
+    def test(self, install, command, verbose, negate):
+        if not self.has_binary:
+            print('  %s: missing binary' % (self.description()))
+        else:
+            self.run(install, command, verbose, negate)
+
     @staticmethod
     def get_git_lines(start, end):
         cmd = 'git log --pretty=format:"%H;%an;%at;%s" ' + start + '..' + end
@@ -70,12 +76,6 @@ class Release(GitRevision):
         GitRevision.__init__(self, GitRevision.get_git_lines(hash + '~', hash)[0])
         self.name = name
         self.hash = hash
-
-    def test(self, install, command, verbose, negate):
-        if not self.has_binary:
-            print('  %s: missing binary' % (self.name))
-        else:
-            self.run(install, command, verbose, negate)
 
     def __str__(self):
         return self.hash + ':' + self.name
@@ -118,7 +118,7 @@ class GitRepository:
             self.releases.append(Release('5.4.0', '32c3b88e8ced4b6d022484a73c40f3d663e20fd4'))
         self.releases = sorted(filter(lambda x: x.name >= '4.5.0', self.releases), key = lambda x: x.name)    
 
-    def parse_latest_revisions(self, n = 1000):
+    def parse_latest_revisions(self, n = 200):
         for l in GitRevision.get_git_lines('parent/master~' + str(n), 'parent/master'):
             self.latest.append(GitRevision(l.strip()))
 
@@ -190,8 +190,7 @@ class GitRepository:
 
         print('\nLatest revisions')
         for r in self.latest:
-            if r.has_binary:
-                r.run(self.install, command, verbose, negate)
+            r.test(self.install, command, verbose, negate)
 
     def run_cmd(self, command, strict = False):
         if isinstance(command, list):
