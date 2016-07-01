@@ -8,13 +8,13 @@ import os
 import subprocess
 import tempfile
 import shutil
-import datetime
 import time
 
+from datetime import datetime
 from termcolor import colored
 
 script_dirname = os.path.abspath(os.path.dirname(__file__))
-compress_older_than = 1
+compress_older_than = 5
 last_revision_count = 30
 
 parser = argparse.ArgumentParser(description='Build GCC binaries.')
@@ -57,7 +57,7 @@ class GitRevision:
         tokens = git_line.split(';')
         self.hash = tokens[0]
         self.author = tokens[1]
-        self.timestamp = datetime.datetime.fromtimestamp(int(tokens[2]))
+        self.timestamp = datetime.fromtimestamp(int(tokens[2]))
         self.message = tokens[3]
         self.has_binary = False
 
@@ -74,6 +74,7 @@ class GitRevision:
         return self.hash + '.patch'
 
     def run(self):
+        start = datetime.now()
         log = '/tmp/output'
         clean = False
         if not os.path.exists(self.get_binary_path()):
@@ -89,7 +90,7 @@ class GitRevision:
             success = not success
 
         text = colored('OK', 'green') if success else colored('FAILED', 'red')
-        print('  %s: running command with result: %s' % (self.description(), text))
+        print('  %s: [took: %3.3fs] running command with result: %s' % (self.description(), (datetime.now() - start).total_seconds(), text))
         if args.verbose:
             print(open(log).read(), end = '')
 
@@ -122,7 +123,7 @@ class GitRevision:
         if os.path.exists(l):
             print('Revision %s already exists' % (str(self)))
         else:
-            start = datetime.datetime.now()
+            start = datetime.now()
             temp = tempfile.mkdtemp()
             os.chdir(args.git_location)
             run_cmd('git checkout --force ' + self.hash)
@@ -142,16 +143,18 @@ class GitRevision:
             r = run_cmd(cmd)
             if r:
                 run_cmd('make install')
-            if not is_release:
-                run_cmd('find %s -exec strip --strip-debug {} \;' % l)
-
             shutil.rmtree(temp)
-            print('Build has taken: %s' % str(datetime.datetime.now() - start))
+            print('Build has taken: %s' % str(datetime.now() - start))
+
+    def strip(self):
+        if os.path.exists(self.get_binary_path()):
+            run_cmd('find %s -exec strip --strip-debug {} \;' % self.get_folder_path())
 
     def compress(self):
         r = False
         archive = self.get_archive_path()
         if not os.path.exists(archive):
+            self.strip()
             subprocess.check_output('7z a %s %s' % (archive, self.get_folder_path()), shell = True)
             r = True
 
@@ -171,6 +174,10 @@ class GitRevision:
             return False
         subprocess.check_output('7z x %s -o%s' % (archive, args.install), shell = True)
         return True
+
+    def print_status(self):
+        status = colored('OK', 'green') if self.has_binary else colored('missing binary', 'yellow')
+        print('%s: %s' % (str(self), status))
 
     @staticmethod
     def get_git_lines(start, end):
@@ -232,12 +239,11 @@ class GitRepository:
     def print(self):
         print('Releases')
         for r in self.releases:
-            print(str(r))
+            r.print_status()
 
         print('\nLatest revisions')
         for r in self.latest:
-            status = colored('OK', 'green') if r.has_binary else colored('missing binary', 'yellow')
-            print('%s: %s' % (str(r), status))
+            r.print_status()
 
     def compress_old(self):
         for r in self.latest[compress_older_than:]:
