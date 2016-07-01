@@ -309,16 +309,18 @@ class GitRepository:
     def bisect_recursive(candidates, r1, r2):
         print('  bisecting: %d revisions' % len(candidates))
         if len(candidates) == 2:
-            print('First change is: ' + str(candidates[1]))
+            print('\nFirst change is:\n')
+            candidates[0].test()
             candidates[1].test()
         else:
+            assert r1 != r2
             index = int(len(candidates) / 2)
             middle = candidates[index].test()
             if r1 == middle:
                 GitRepository.bisect_recursive(candidates[index:], middle, r2)
             else:
                 assert middle == r2
-                GitRepository.bisect_recursive(candidates[0:index], r1, middle)
+                GitRepository.bisect_recursive(candidates[:index+1], r1, middle)
 
 # MAIN
 g = GitRepository()
