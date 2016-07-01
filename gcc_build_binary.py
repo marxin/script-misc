@@ -20,10 +20,11 @@ last_revision_count = 30
 parser = argparse.ArgumentParser(description='Build GCC binaries.')
 parser.add_argument('git_location', metavar = 'git', help = 'Location of git repository')
 parser.add_argument('install', metavar = 'install', help = 'Installation location')
-parser.add_argument('action', nargs = '?', metavar = 'action', help = 'Action', default = 'print', choices = ['print', 'build', 'test', 'gc'])
+parser.add_argument('action', nargs = '?', metavar = 'action', help = 'Action', default = 'print', choices = ['print', 'build', 'test', 'gc', 'bisect'])
 parser.add_argument('command', nargs = '?', metavar = 'command', help = 'GCC command')
-parser.add_argument('--verbose', action = 'store_true')
+parser.add_argument('--verbose', action = 'store_true', help = 'Verbose logging')
 parser.add_argument('--negate', action = 'store_true', help = 'FAIL if result code is equal to zero')
+parser.add_argument('--bisect', action = 'store_true', help = 'Bisect releases')
 
 args = parser.parse_args()
 
@@ -97,11 +98,14 @@ class GitRevision:
         if clean:
             self.remove_extracted()
 
+        return success
+
     def test(self):
         if not self.has_binary:
             print('  %s: missing binary' % (self.description()))
+            return False
         else:
-            self.run()
+            return self.run()
 
     def get_binary_path(self):
         return os.path.join(self.get_folder_path(), 'bin/gcc')
@@ -284,6 +288,38 @@ class GitRepository:
         for r in self.latest:
             r.test()
 
+    def bisect(self):
+        print('Releases')
+        for r in self.releases:
+            r.test()
+
+        print('\nBisecting latest revisions')
+        candidates = list(filter(lambda x: x.has_binary, self.latest))
+
+        # test whether there's a change in return code
+        first = candidates[0].test()
+        last = candidates[-1].test()
+
+        if first != last:
+            GitRepository.bisect_recursive(candidates, first, last)
+        else:
+            print('  bisect finished: ' +  colored('there is no change!', 'red'))
+
+    @staticmethod
+    def bisect_recursive(candidates, r1, r2):
+        print('  bisecting: %d revisions' % len(candidates))
+        if len(candidates) == 2:
+            print('First change is: ' + str(candidates[1]))
+            candidates[1].test()
+        else:
+            index = int(len(candidates) / 2)
+            middle = candidates[index].test()
+            if r1 == middle:
+                GitRepository.bisect_recursive(candidates[index:], middle, r2)
+            else:
+                assert middle == r2
+                GitRepository.bisect_recursive(candidates[0:index], r1, middle)
+
 # MAIN
 g = GitRepository()
 if args.action == 'print':
@@ -292,5 +328,7 @@ elif args.action == 'build':
     g.build()
 elif args.action == 'test':
     g.test()
+elif args.action == 'bisect':
+    g.bisect()
 elif args.action == 'gc':
     g.compress_old()
