@@ -15,7 +15,7 @@ from termcolor import colored
 
 script_dirname = os.path.abspath(os.path.dirname(__file__))
 compress_older_than = 1
-last_revision_count = 20
+last_revision_count = 30
 
 parser = argparse.ArgumentParser(description='Build GCC binaries.')
 parser.add_argument('git_location', metavar = 'git', help = 'Location of git repository')
@@ -122,6 +122,7 @@ class GitRevision:
         if os.path.exists(l):
             print('Revision %s already exists' % (str(self)))
         else:
+            start = datetime.datetime.now()
             temp = tempfile.mkdtemp()
             os.chdir(args.git_location)
             run_cmd('git checkout --force ' + self.hash)
@@ -145,6 +146,7 @@ class GitRevision:
                 run_cmd('find %s -exec strip --strip-debug {} \;' % l)
 
             shutil.rmtree(temp)
+            print('Build has taken: %s' % str(datetime.datetime.now() - start))
 
     def compress(self):
         r = False
