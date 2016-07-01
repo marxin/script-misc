@@ -79,7 +79,7 @@ class GitRevision:
         start = datetime.now()
         log = '/tmp/output'
         clean = False
-        if not os.path.exists(self.get_binary_path()):
+        if os.path.exists(self.get_archive_path()):
             clean = self.decompress()
 
         binary = strip_suffix(self.get_binary_path(), '/gcc')
@@ -247,7 +247,7 @@ class GitRepository:
         for r in self.releases:
             r.print_status()
 
-        print('\nLatest revisions')
+        print('\nLatest %d revisions' % last_revision_count)
         for r in self.latest:
             r.print_status()
 
