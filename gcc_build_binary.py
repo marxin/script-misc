@@ -9,6 +9,7 @@ import subprocess
 import tempfile
 import shutil
 import time
+import math
 
 from datetime import datetime
 from termcolor import colored
@@ -176,7 +177,8 @@ class GitRevision:
         archive = self.get_archive_path()
         if not os.path.exists(archive):
             return False
-        subprocess.check_output('7z x %s -o%s' % (archive, args.install), shell = True)
+        cmd = '7z x %s -o%s -aoa' % (archive, args.install)
+        subprocess.check_output(cmd, shell = True)
         return True
 
     def print_status(self):
@@ -307,12 +309,13 @@ class GitRepository:
 
     @staticmethod
     def bisect_recursive(candidates, r1, r2):
-        print('  bisecting: %d revisions' % len(candidates))
         if len(candidates) == 2:
             print('\nFirst change is:\n')
             candidates[0].test()
             candidates[1].test()
         else:
+            steps = math.ceil(math.log2(len(candidates))) - 1
+            print('  bisecting: %d revisions (~%d steps)' % (len(candidates), steps))
             assert r1 != r2
             index = int(len(candidates) / 2)
             middle = candidates[index].test()
