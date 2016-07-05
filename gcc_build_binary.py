@@ -16,7 +16,7 @@ from termcolor import colored
 
 script_dirname = os.path.abspath(os.path.dirname(__file__))
 compress_older_than = 5
-last_revision_count = 30
+last_revision_count = 1500
 
 parser = argparse.ArgumentParser(description='Build GCC binaries.')
 parser.add_argument('git_location', metavar = 'git', help = 'Location of git repository')
@@ -150,6 +150,7 @@ class GitRevision:
                 run_cmd('make install')
             shutil.rmtree(temp)
             print('Build has taken: %s' % str(datetime.now() - start))
+            self.compress()
 
     def strip(self):
         if os.path.exists(self.get_binary_path()):
