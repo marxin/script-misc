@@ -272,14 +272,14 @@ class GitRepository:
             r.print_status()
 
     def build(self):
-        for r in self.latest:
-            r.build(False)
+        for r in self.releases:
+            r.build(True)
 
         for r in self.branches:
             r.build(False)
 
-        for r in self.releases:
-            r.build(True)
+        for r in self.latest:
+            r.build(False)
 
     def initialize_binaries(self):
         folders = os.listdir(args.install)
