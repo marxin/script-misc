@@ -13,10 +13,11 @@ import math
 
 from datetime import datetime
 from termcolor import colored
+from git import Repo
 
 script_dirname = os.path.abspath(os.path.dirname(__file__))
 compress_older_than = 5
-last_revision_count = 1500
+last_revision_count = 10
 
 parser = argparse.ArgumentParser(description='Build GCC binaries.')
 parser.add_argument('git_location', metavar = 'git', help = 'Location of git repository')
@@ -55,19 +56,15 @@ def run_cmd(command, strict = False):
         return False
 
 class GitRevision:
-    def __init__(self, git_line):
-        tokens = git_line.split(';')
-        self.hash = tokens[0]
-        self.author = tokens[1]
-        self.timestamp = datetime.fromtimestamp(int(tokens[2]))
-        self.message = tokens[3]
+    def __init__(self, commit):
+        self.commit = commit
         self.has_binary = False
 
     def timestamp_str(self):
-        return self.timestamp.strftime('%d %b %Y %H:%M')
+        return self.commit.committed_datetime.strftime('%d %b %Y %H:%M')
 
     def __str__(self):
-        return self.hash + ':' + self.timestamp_str()
+        return self.commit.hexsha + ':' + self.timestamp_str()
 
     def description(self):
         return self.hash[0:16] + '(' + self.timestamp_str() + ')'
@@ -186,20 +183,13 @@ class GitRevision:
         status = colored('OK', 'green') if self.has_binary else colored('missing binary', 'yellow')
         print('%s: %s' % (str(self), status))
 
-    @staticmethod
-    def get_git_lines(start, end):
-        cmd = 'git log --pretty=format:"%H;%an;%at;%s" ' + start + '..' + end
-        lines = subprocess.check_output(cmd, shell = True).decode('utf-8').split('\n')
-        return lines
-
 class Release(GitRevision):
-    def __init__(self, name, hash):
-        GitRevision.__init__(self, GitRevision.get_git_lines(hash + '~', hash)[0])
+    def __init__(self, name, commit):
+        GitRevision.__init__(self, commit)
         self.name = name
-        self.hash = hash
 
     def __str__(self):
-        return self.hash + ':' + self.name
+        return self.commit.hexsha + ':' + self.name
 
     def description(self):
         return self.name
@@ -211,37 +201,27 @@ class GitRepository:
     def __init__(self):
         self.releases = []
         self.latest = []
+        self.repo = Repo(args.git_location)
+
         os.chdir(args.git_location)
         self.parse_releases()
         self.parse_latest_revisions()
         self.initialize_binaries()
 
     def parse_releases(self):
-        r = subprocess.check_output('git show-ref --tags', shell = True)
-        lines = r.decode('utf-8')
-        for l in lines.split('\n'):
-            l = l.strip()
-            if l == '':
-                continue
-
-            tokens = l.split(' ')
-            hash = tokens[0]
-            name = tokens[1].split('/')[-1].replace('_', '-')
-            if not name.startswith('gcc-') or not name.endswith('-release'):
-                continue
-            version = strip_suffix(strip_prefix(name, 'gcc-'), '-release').replace('-', '.')
-
-            if not any(map(lambda x: x.name == version, self.releases)):
-                self.releases.append(Release(version, hash))
+        releases = list(filter(lambda x: x.name.endswith('-release'), self.repo.tags))
+        for r in releases:
+            version = strip_suffix(strip_prefix(r.name, 'gcc-'), '-release').replace('_', '-').replace('-', '.')
+            self.releases.append(Release(version, self.repo.commit(r.name)))
 
         # missing tag
         if not any(map(lambda x: x.name == '5.4.0', self.releases)):
-            self.releases.append(Release('5.4.0', '32c3b88e8ced4b6d022484a73c40f3d663e20fd4'))
+            self.releases.append(Release('5.4.0', self.repo.commit('32c3b88e8ced4b6d022484a73c40f3d663e20fd4')))
         self.releases = sorted(filter(lambda x: x.name >= '4.5.0', self.releases), key = lambda x: x.name)    
 
     def parse_latest_revisions(self):
-        for l in GitRevision.get_git_lines('parent/master~' + str(last_revision_count), 'parent/master'):
-            self.latest.append(GitRevision(l.strip()))
+        for c in self.repo.iter_commits('parent/master~' + str(last_revision_count) + '..parent/master'):
+            self.latest.append(GitRevision(c))
 
     def print(self):
         print('Releases')
@@ -275,11 +255,11 @@ class GitRepository:
                 existing.add(h)
 
         for r in self.releases:
-            if r.hash in existing:
+            if r.commit.hexsha in existing:
                 r.has_binary = True
 
         for r in self.latest:
-            if r.hash in existing:
+            if r.commit.hexsha in existing:
                 r.has_binary = True
 
     def test(self):
