@@ -10,13 +10,15 @@ import tempfile
 import shutil
 import time
 import math
+import filelock
 
 from datetime import datetime
 from termcolor import colored
 from git import Repo
 
 script_dirname = os.path.abspath(os.path.dirname(__file__))
-last_revision_count = 3
+last_revision_count = 3000
+lock = filelock.FileLock('/tmp/gcc_build_binary.lock')
 
 parser = argparse.ArgumentParser(description='Build GCC binaries.')
 parser.add_argument('git_location', metavar = 'git', help = 'Location of git repository')
@@ -78,25 +80,26 @@ class GitRevision:
         start = datetime.now()
         log = '/tmp/output'
         clean = False
-        if os.path.exists(self.get_archive_path()):
-            clean = self.decompress()
+        with lock:
+            if os.path.exists(self.get_archive_path()):
+                clean = self.decompress()
 
-        binary = strip_suffix(self.get_binary_path(), '/gcc')
-        cmd = binary + '/' + args.command
-        with open(log, 'w') as out:
-            r = subprocess.call(cmd, shell = True, stdout = out, stderr = out)
+            binary = strip_suffix(self.get_binary_path(), '/gcc')
+            cmd = binary + '/' + args.command
+            with open(log, 'w') as out:
+                r = subprocess.call(cmd, shell = True, stdout = out, stderr = out)
 
-        success = r == 0
-        if args.negate:
-            success = not success
+            success = r == 0
+            if args.negate:
+                success = not success
 
-        text = colored('OK', 'green') if success else colored('FAILED', 'red')
-        print('  %s: [took: %3.3fs] running command with result: %s' % (self.description(), (datetime.now() - start).total_seconds(), text))
-        if args.verbose:
-            print(open(log).read(), end = '')
+            text = colored('OK', 'green') if success else colored('FAILED', 'red')
+            print('  %s: [took: %3.3fs] running command with result: %s' % (self.description(), (datetime.now() - start).total_seconds(), text))
+            if args.verbose:
+                print(open(log).read(), end = '')
 
-        if clean:
-            self.remove_extracted()
+            if clean:
+                self.remove_extracted()
 
         return success
 
@@ -130,7 +133,7 @@ class GitRevision:
             start = datetime.now()
             temp = tempfile.mkdtemp()
             os.chdir(args.git_location)
-            run_cmd('git checkout --force ' + self.commit.hexsha)
+            repo.git.checkout(self.commit, force = True)
             self.apply_patch(self)
             print('Bulding %s' % (str(self)))
             os.chdir(temp)
@@ -159,13 +162,14 @@ class GitRevision:
 
     def compress(self):
         r = False
-        archive = self.get_archive_path()
-        if not os.path.exists(archive):
-            self.strip()
-            subprocess.check_output('7z a %s %s' % (archive, self.get_folder_path()), shell = True)
-            r = True
+        with lock:
+            archive = self.get_archive_path()
+            if not os.path.exists(archive):
+                self.strip()
+                subprocess.check_output('7z a %s %s' % (archive, self.get_folder_path()), shell = True)
+                r = True
 
-        self.remove_extracted()
+            self.remove_extracted()
         return r
 
     def remove_extracted(self):
