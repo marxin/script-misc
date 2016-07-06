@@ -30,6 +30,9 @@ parser.add_argument('--bisect', action = 'store_true', help = 'Bisect releases')
 
 args = parser.parse_args()
 
+repo = Repo(args.git_location)
+head = repo.commit('parent/master')
+
 def strip_prefix(text, prefix):
     if text.startswith(prefix):
         return text[len(prefix):]
@@ -197,35 +200,65 @@ class Release(GitRevision):
     def patch_name(self):
         return self.name + '.patch'
 
+class Branch(GitRevision):
+    def __init__(self, name, commit):
+        GitRevision.__init__(self, commit)
+        self.name = name
+
+    def __str__(self):
+        return self.commit.hexsha + ':' + self.name
+
+    def print_info(self):
+        base = repo.merge_base(head, self.commit)[0]
+        r = '%s..%s' % (base.hexsha, self.commit.hexsha)
+        branch_commits = list(repo.iter_commits(r))
+        r = '%s..%s' % (base.hexsha, head.hexsha)
+        head_commits = list(repo.iter_commits(r))
+        print('%3s-branch: branch commits: %8d, head distance: %8d' % (self.name, len(branch_commits), len(head_commits)))
+
 class GitRepository:
     def __init__(self):
         self.releases = []
+        self.branches = []
         self.latest = []
-        self.repo = Repo(args.git_location)
 
         os.chdir(args.git_location)
         self.parse_releases()
+        self.parse_branches()
         self.parse_latest_revisions()
         self.initialize_binaries()
 
     def parse_releases(self):
-        releases = list(filter(lambda x: x.name.endswith('-release'), self.repo.tags))
+        releases = list(filter(lambda x: x.name.endswith('-release'), repo.tags))
         for r in releases:
             version = strip_suffix(strip_prefix(r.name, 'gcc-'), '-release').replace('_', '-').replace('-', '.')
-            self.releases.append(Release(version, self.repo.commit(r.name)))
+            self.releases.append(Release(version, repo.commit(r.name)))
 
         # missing tag
         if not any(map(lambda x: x.name == '5.4.0', self.releases)):
-            self.releases.append(Release('5.4.0', self.repo.commit('32c3b88e8ced4b6d022484a73c40f3d663e20fd4')))
+            self.releases.append(Release('5.4.0', repo.commit('32c3b88e8ced4b6d022484a73c40f3d663e20fd4')))
         self.releases = sorted(filter(lambda x: x.name >= '4.5.0', self.releases), key = lambda x: x.name)    
 
+    def parse_branches(self):
+        remote = repo.remotes['parent']
+        branches = list(filter(lambda x: 'parent/gcc-' in x.name, remote.refs))
+        for b in branches:
+            name = strip_suffix(strip_prefix(b.name, 'parent/gcc-'), '-branch').replace('_', '.')
+            if name >= '4.9':
+                self.branches.append(Branch(name, repo.commit(b.name)))
+
     def parse_latest_revisions(self):
-        for c in self.repo.iter_commits('parent/master~' + str(last_revision_count) + '..parent/master'):
+        for c in repo.iter_commits('parent/master~' + str(last_revision_count) + '..parent/master'):
             self.latest.append(GitRevision(c))
 
     def print(self):
         print('Releases')
         for r in self.releases:
+            r.print_status()
+
+        print('\nActive branches')
+        for r in self.branches:
+            r.print_info()
             r.print_status()
 
         print('\nLatest %d revisions' % last_revision_count)
