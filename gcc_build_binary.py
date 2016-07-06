@@ -16,13 +16,12 @@ from termcolor import colored
 from git import Repo
 
 script_dirname = os.path.abspath(os.path.dirname(__file__))
-compress_older_than = 5
-last_revision_count = 10
+last_revision_count = 3
 
 parser = argparse.ArgumentParser(description='Build GCC binaries.')
 parser.add_argument('git_location', metavar = 'git', help = 'Location of git repository')
 parser.add_argument('install', metavar = 'install', help = 'Installation location')
-parser.add_argument('action', nargs = '?', metavar = 'action', help = 'Action', default = 'print', choices = ['print', 'build', 'test', 'gc', 'bisect'])
+parser.add_argument('action', nargs = '?', metavar = 'action', help = 'Action', default = 'print', choices = ['print', 'build', 'test', 'bisect'])
 parser.add_argument('command', nargs = '?', metavar = 'command', help = 'GCC command')
 parser.add_argument('--verbose', action = 'store_true', help = 'Verbose logging')
 parser.add_argument('--negate', action = 'store_true', help = 'FAIL if result code is equal to zero')
@@ -70,10 +69,10 @@ class GitRevision:
         return self.commit.hexsha + ':' + self.timestamp_str()
 
     def description(self):
-        return self.hash[0:16] + '(' + self.timestamp_str() + ')'
+        return self.commit.hexsha[0:16] + '(' + self.timestamp_str() + ')'
 
     def patch_name(self):
-        return self.hash + '.patch'
+        return self.commit.hexsha + '.patch'
 
     def run(self):
         start = datetime.now()
@@ -115,7 +114,7 @@ class GitRevision:
         return os.path.join(self.get_folder_path(), 'archive.7z')
 
     def get_folder_path(self):
-        return os.path.join(args.install, 'gcc-' + self.hash)
+        return os.path.join(args.install, 'gcc-' + self.commit.hexsha)
 
     def apply_patch(self, revision):
         p = os.path.join(script_dirname, 'gcc-release-patches', self.patch_name())
@@ -124,14 +123,14 @@ class GitRevision:
             run_cmd('patch -p1 < %s' % p)
 
     def build(self, is_release):
-        l = os.path.join(args.install, 'gcc-' + self.hash)
+        l = os.path.join(args.install, 'gcc-' + self.commit.hexsha)
         if os.path.exists(l):
             print('Revision %s already exists' % (str(self)))
         else:
             start = datetime.now()
             temp = tempfile.mkdtemp()
             os.chdir(args.git_location)
-            run_cmd('git checkout --force ' + self.hash)
+            run_cmd('git checkout --force ' + self.commit.hexsha)
             self.apply_patch(self)
             print('Bulding %s' % (str(self)))
             os.chdir(temp)
@@ -150,7 +149,9 @@ class GitRevision:
                 run_cmd('make install')
             shutil.rmtree(temp)
             print('Build has taken: %s' % str(datetime.now() - start))
-            self.compress()
+
+            if not is_release:
+                self.compress()
 
     def strip(self):
         if os.path.exists(self.get_binary_path()):
@@ -265,12 +266,6 @@ class GitRepository:
         for r in self.latest:
             r.print_status()
 
-    def compress_old(self):
-        for r in self.latest[compress_older_than:]:
-            if r.has_binary:
-                if r.compress():
-                    print(str(r) + ' has been compressed')
-
     def build(self):
         for r in self.latest:
             r.build(False)
@@ -349,5 +344,3 @@ elif args.action == 'test':
     g.test()
 elif args.action == 'bisect':
     g.bisect()
-elif args.action == 'gc':
-    g.compress_old()
