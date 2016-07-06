@@ -132,7 +132,6 @@ class GitRevision:
         else:
             start = datetime.now()
             temp = tempfile.mkdtemp()
-            os.chdir(args.git_location)
             repo.git.checkout(self.commit, force = True)
             self.apply_patch(self)
             print('Bulding %s' % (str(self)))
@@ -213,6 +212,9 @@ class Branch(GitRevision):
     def __str__(self):
         return self.commit.hexsha + ':' + self.name
 
+    def description(self):
+        return '%s (%s)' % (self.name, self.commit.hexsha)
+
     def print_info(self):
         base = repo.merge_base(head, self.commit)[0]
         r = '%s..%s' % (base.hexsha, self.commit.hexsha)
@@ -227,7 +229,6 @@ class GitRepository:
         self.branches = []
         self.latest = []
 
-        os.chdir(args.git_location)
         self.parse_releases()
         self.parse_branches()
         self.parse_latest_revisions()
@@ -274,6 +275,9 @@ class GitRepository:
         for r in self.latest:
             r.build(False)
 
+        for r in self.branches:
+            r.build(False)
+
         for r in self.releases:
             r.build(True)
 
@@ -290,6 +294,10 @@ class GitRepository:
             if r.commit.hexsha in existing:
                 r.has_binary = True
 
+        for r in self.branches:
+            if r.commit.hexsha in existing:
+                r.has_binary = True
+
         for r in self.latest:
             if r.commit.hexsha in existing:
                 r.has_binary = True
@@ -299,6 +307,10 @@ class GitRepository:
         for r in self.releases:
             r.test()
 
+        print('\nActive branches')
+        for r in self.branches:
+            r.test()
+
         print('\nLatest revisions')
         for r in self.latest:
             r.test()
@@ -306,6 +318,10 @@ class GitRepository:
     def bisect(self):
         print('Releases')
         for r in self.releases:
+            r.test()
+
+        print('\nActive branches')
+        for r in self.branches:
             r.test()
 
         print('\nBisecting latest revisions')
