@@ -59,6 +59,10 @@ def run_cmd(command, strict = False):
         assert not strict
         return False
 
+def revisions_in_range(source, target):
+    r = '%s..%s' % (source.hexsha, target.hexsha)
+    return list(repo.iter_commits(r))
+
 class GitRevision:
     def __init__(self, commit):
         self.commit = commit
@@ -217,10 +221,8 @@ class Branch(GitRevision):
 
     def print_info(self):
         base = repo.merge_base(head, self.commit)[0]
-        r = '%s..%s' % (base.hexsha, self.commit.hexsha)
-        branch_commits = list(repo.iter_commits(r))
-        r = '%s..%s' % (base.hexsha, head.hexsha)
-        head_commits = list(repo.iter_commits(r))
+        branch_commits = revisions_in_range(base, self.commit)
+        head_commits = revisions_in_range(base, head)
         print('%3s-branch: branch commits: %8d, head distance: %8d' % (self.name, len(branch_commits), len(head_commits)))
 
 class GitRepository:
@@ -348,6 +350,9 @@ class GitRepository:
             print('\nFirst change is:\n')
             candidates[0].test()
             candidates[1].test()
+            revisions = revisions_in_range(candidates[1].commit, candidates[0].commit)
+            l = len(revisions) - 1
+            print('Candidates in between: %d' % l)
         else:
             steps = math.ceil(math.log2(len(candidates))) - 1
             print('  bisecting: %d revisions (~%d steps)' % (len(candidates), steps))
