@@ -227,6 +227,7 @@ class GitRepository:
     def __init__(self):
         self.releases = []
         self.branches = []
+        self.branch_bases = []
         self.latest = []
 
         self.parse_releases()
@@ -251,7 +252,10 @@ class GitRepository:
         for b in branches:
             name = strip_suffix(strip_prefix(b.name, 'parent/gcc-'), '-branch').replace('_', '.')
             if name >= '4.9':
-                self.branches.append(Branch(name, repo.commit(b.name)))
+                b = Branch(name, repo.commit(b.name))
+                self.branches.append(b)
+                base = repo.merge_base(head, b.commit)[0]
+                self.branch_bases.append(Release(name + '-base', base))
 
     def parse_latest_revisions(self):
         for c in repo.iter_commits('parent/master~' + str(last_revision_count) + '..parent/master'):
@@ -267,6 +271,10 @@ class GitRepository:
             r.print_info()
             r.print_status()
 
+        print('\nActive branch bases')
+        for r in self.branch_bases:
+            r.print_status()
+
         print('\nLatest %d revisions' % last_revision_count)
         for r in self.latest:
             r.print_status()
@@ -276,6 +284,9 @@ class GitRepository:
             r.build(True)
 
         for r in self.branches:
+            r.build(False)
+
+        for r in self.branch_bases:
             r.build(False)
 
         for r in self.latest:
@@ -298,6 +309,10 @@ class GitRepository:
             if r.commit.hexsha in existing:
                 r.has_binary = True
 
+        for r in self.branch_bases:
+            if r.commit.hexsha in existing:
+                r.has_binary = True
+
         for r in self.latest:
             if r.commit.hexsha in existing:
                 r.has_binary = True
@@ -311,6 +326,10 @@ class GitRepository:
         for r in self.branches:
             r.test()
 
+        print('\nActive branch bases')
+        for r in self.branch_bases:
+            r.test()
+
         print('\nLatest revisions')
         for r in self.latest:
             r.test()
@@ -322,6 +341,10 @@ class GitRepository:
 
         print('\nActive branches')
         for r in self.branches:
+            r.test()
+
+        print('\nActive branch bases')
+        for r in self.branch_bases:
             r.test()
 
         print('\nBisecting latest revisions')
