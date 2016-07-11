@@ -19,6 +19,7 @@ from git import Repo
 script_dirname = os.path.abspath(os.path.dirname(__file__))
 last_revision_count = 3000
 lock = filelock.FileLock('/tmp/gcc_build_binary.lock')
+description_color = 'blue'
 
 parser = argparse.ArgumentParser(description='Build GCC binaries.')
 parser.add_argument('git_location', metavar = 'git', help = 'Location of git repository')
@@ -75,7 +76,7 @@ class GitRevision:
         return self.commit.hexsha + ':' + self.timestamp_str()
 
     def description(self):
-        return self.commit.hexsha[0:16] + '(' + self.timestamp_str() + ')'
+        return colored(self.commit.hexsha[0:16] + '(' + self.timestamp_str() + ')', description_color)
 
     def patch_name(self):
         return self.commit.hexsha + '.patch'
@@ -203,7 +204,7 @@ class Release(GitRevision):
         return self.commit.hexsha + ':' + self.name
 
     def description(self):
-        return self.name
+        return colored(self.name, description_color)
 
     def patch_name(self):
         return self.name + '.patch'
@@ -217,7 +218,7 @@ class Branch(GitRevision):
         return self.commit.hexsha + ':' + self.name
 
     def description(self):
-        return '%s (%s)' % (self.name, self.commit.hexsha)
+        return colored('%s (%s)' % (self.name, self.commit.hexsha), description_color)
 
     def print_info(self):
         base = repo.merge_base(head, self.commit)[0]
