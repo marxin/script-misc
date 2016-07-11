@@ -128,6 +128,7 @@ class GitRevision:
         p = os.path.join(script_dirname, 'gcc-release-patches', self.patch_name())
         if os.path.exists(p):
             print('Existing patch: %s' % p)
+            os.chdir(args.git_location)
             run_cmd('patch -p1 < %s' % p)
 
     def build(self, is_release):
