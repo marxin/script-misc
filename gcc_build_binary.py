@@ -142,7 +142,7 @@ class GitRevision:
             print('Bulding %s' % (str(self)))
             os.chdir(temp)
             print('Bulding in %s' % temp)
-            cmd = [os.path.join(args.git_location, 'configure'), '--prefix', l, '--disable-bootstrap']
+            cmd = [os.path.join(args.git_location, 'configure'), '--prefix', l, '--disable-bootstrap', '--enable-checking=yes']
             if not is_release:
                 cmd += ['--disable-libsanitizer', '--disable-multilib', '--enable-languages=c,c++,fortran']
             run_cmd(cmd, True)
@@ -204,7 +204,7 @@ class Release(GitRevision):
         return self.commit.hexsha + ':' + self.name
 
     def description(self):
-        return colored(self.name, description_color)
+        return colored('%s (%s)' % (self.name, self.commit.hexsha), description_color)
 
     def patch_name(self):
         return self.name + '.patch'
