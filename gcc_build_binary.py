@@ -23,7 +23,7 @@ lock = filelock.FileLock('/tmp/gcc_build_binary.lock')
 parser = argparse.ArgumentParser(description='Build GCC binaries.')
 parser.add_argument('git_location', metavar = 'git', help = 'Location of git repository')
 parser.add_argument('install', metavar = 'install', help = 'Installation location')
-parser.add_argument('action', nargs = '?', metavar = 'action', help = 'Action', default = 'print', choices = ['print', 'build', 'test', 'bisect'])
+parser.add_argument('action', nargs = '?', metavar = 'action', help = 'Action', default = 'print', choices = ['print', 'build', 'bisect'])
 parser.add_argument('command', nargs = '?', metavar = 'command', help = 'GCC command')
 parser.add_argument('--verbose', action = 'store_true', help = 'Verbose logging')
 parser.add_argument('--negate', action = 'store_true', help = 'FAIL if result code is equal to zero')
@@ -317,23 +317,6 @@ class GitRepository:
             if r.commit.hexsha in existing:
                 r.has_binary = True
 
-    def test(self):
-        print('Releases')
-        for r in self.releases:
-            r.test()
-
-        print('\nActive branches')
-        for r in self.branches:
-            r.test()
-
-        print('\nActive branch bases')
-        for r in self.branch_bases:
-            r.test()
-
-        print('\nLatest revisions')
-        for r in self.latest:
-            r.test()
-
     def bisect(self):
         print('Releases')
         for r in self.releases:
@@ -383,7 +366,5 @@ if args.action == 'print':
     g.print()
 elif args.action == 'build':
     g.build()
-elif args.action == 'test':
-    g.test()
 elif args.action == 'bisect':
     g.bisect()
