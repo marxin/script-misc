@@ -89,10 +89,11 @@ class GitRevision:
             if os.path.exists(self.get_archive_path()):
                 clean = self.decompress()
 
-            binary = strip_suffix(self.get_binary_path(), '/gcc')
-            cmd = binary + '/' + args.command
+            my_env = os.environ.copy()
+            my_env['PATH'] = os.path.join(self.get_folder_path(), 'bin') + ':' + my_env['PATH']
+            my_env['LD_LIBRARY_PATH'] = os.path.join(self.get_folder_path(), 'lib64') + ':' + my_env['LD_LIBRARY_PATH']
             with open(log, 'w') as out:
-                r = subprocess.call(cmd, shell = True, stdout = out, stderr = out)
+                r = subprocess.call(args.command, shell = True, stdout = out, stderr = out, env = my_env)
 
             success = r == 0
             if args.negate:
@@ -150,7 +151,7 @@ class GitRevision:
             run_cmd('echo "MAKEINFO = :" >> Makefile')
             cmd = 'nice make -j10'
             # TODO: hack because of -j problem seen on 5.x releases
-            if is_release and self.name.startswith('5.1'):
+            if is_release and self.name.startswith('5.') and not self.name.startswith('5.4'):
                 cmd = 'nice make'
             r = run_cmd(cmd)
             if r:
