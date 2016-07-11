@@ -76,7 +76,7 @@ class GitRevision:
         return self.commit.hexsha + ':' + self.timestamp_str()
 
     def description(self):
-        return colored(self.commit.hexsha[0:16] + '(' + self.timestamp_str() + ')', description_color)
+        return colored(self.commit.hexsha[0:16], description_color) + '(' + self.timestamp_str() + ')'
 
     def patch_name(self):
         return self.commit.hexsha + '.patch'
@@ -131,7 +131,7 @@ class GitRevision:
             os.chdir(args.git_location)
             run_cmd('patch -p1 < %s' % p)
 
-    def build(self, is_release):
+    def build(self, is_release, compress_binary):
         l = os.path.join(args.install, 'gcc-' + self.commit.hexsha)
         if os.path.exists(l):
             print('Revision %s already exists' % (str(self)))
@@ -150,14 +150,16 @@ class GitRevision:
             run_cmd('echo "MAKEINFO = :" >> Makefile')
             cmd = 'nice make -j10'
             # TODO: hack because of -j problem seen on 5.x releases
-            if is_release and self.name.startswith('5.') and not self.name.startswith('5.4'):
+            if is_release and self.name.startswith('5.1'):
                 cmd = 'nice make'
             r = run_cmd(cmd)
             if r:
                 run_cmd('make install')
                 shutil.rmtree(temp)
                 print('Build has taken: %s' % str(datetime.now() - start))
-                self.compress()
+
+                if compress_binary:
+                    self.compress()
             else:
                 print('GCC build is not going to be installed')
 
@@ -194,7 +196,7 @@ class GitRevision:
 
     def print_status(self):
         status = colored('OK', 'green') if self.has_binary else colored('missing binary', 'yellow')
-        print('%s: %s' % (str(self), status))
+        print('%s: %s' % (self.description(), status))
 
 class Release(GitRevision):
     def __init__(self, name, commit):
@@ -205,7 +207,7 @@ class Release(GitRevision):
         return self.commit.hexsha + ':' + self.name
 
     def description(self):
-        return colored('%s (%s)' % (self.name, self.commit.hexsha), description_color)
+        return '%s (%s)' % (colored(self.name, description_color), self.commit.hexsha)
 
     def patch_name(self):
         return self.name + '.patch'
@@ -219,7 +221,7 @@ class Branch(GitRevision):
         return self.commit.hexsha + ':' + self.name
 
     def description(self):
-        return colored('%s (%s)' % (self.name, self.commit.hexsha), description_color)
+        return '%s (%s)' % (colored(self.name, description_color), self.commit.hexsha)
 
     def print_info(self):
         base = repo.merge_base(head, self.commit)[0]
@@ -285,16 +287,16 @@ class GitRepository:
 
     def build(self):
         for r in self.releases:
-            r.build(True)
+            r.build(True, False)
 
         for r in self.branches:
-            r.build(False)
+            r.build(False, True)
 
         for r in self.branch_bases:
-            r.build(False)
+            r.build(False, False)
 
         for r in self.latest:
-            r.build(False)
+            r.build(False, True)
 
     def initialize_binaries(self):
         folders = os.listdir(args.install)
