@@ -287,6 +287,9 @@ class GitRepository:
             r.print_status()
 
     def build(self):
+        print('Pulling parent repository')
+        repo.remotes['parent'].fetch()
+
         for r in self.releases:
             r.build(True, False)
 
