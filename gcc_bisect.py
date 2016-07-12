@@ -30,6 +30,7 @@ parser.add_argument('command', nargs = '?', metavar = 'command', help = 'GCC com
 parser.add_argument('--verbose', action = 'store_true', help = 'Verbose logging')
 parser.add_argument('--negate', action = 'store_true', help = 'FAIL if result code is equal to zero')
 parser.add_argument('--bisect', action = 'store_true', help = 'Bisect releases')
+parser.add_argument('--pull', action = 'store_true', help = 'Pull repository')
 
 args = parser.parse_args()
 
@@ -288,17 +289,18 @@ class GitRepository:
             r.print_status()
 
     def build(self):
-        print('Pulling parent repository')
-        repo.remotes['parent'].fetch()
+        if args.pull:
+            print('Pulling parent repository')
+            repo.remotes['parent'].fetch()
 
         for r in self.releases:
             r.build(True, False)
 
-        for r in self.branches:
-            r.build(False, True)
-
         for r in self.branch_bases:
             r.build(False, False)
+
+        for r in self.branches:
+            r.build(False, True)
 
         for r in self.latest:
             r.build(False, True)
