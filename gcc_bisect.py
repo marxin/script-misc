@@ -19,6 +19,7 @@ from git import Repo
 # configuration
 script_dirname = os.path.abspath(os.path.dirname(__file__))
 last_revision_count = 3000
+oldest_release = '4.5'
 lock = filelock.FileLock('/tmp/gcc_build_binary.lock')
 description_color = 'blue'
 git_location = '/home/marxin/BIG/Programming/gcc/'
@@ -253,17 +254,19 @@ class GitRepository:
         # missing tag
         if not any(map(lambda x: x.name == '5.4.0', self.releases)):
             self.releases.append(Release('5.4.0', repo.commit('32c3b88e8ced4b6d022484a73c40f3d663e20fd4')))
-        self.releases = sorted(filter(lambda x: x.name >= '4.5.0', self.releases), key = lambda x: x.name)    
+        self.releases = sorted(filter(lambda x: x.name >= oldest_release, self.releases), key = lambda x: x.name)
 
     def parse_branches(self):
         remote = repo.remotes['parent']
         branches = list(filter(lambda x: 'parent/gcc-' in x.name, remote.refs))
         for b in branches:
             name = strip_suffix(strip_prefix(b.name, 'parent/gcc-'), '-branch').replace('_', '.')
+            branch_commit = repo.commit(b.name)
             if name >= '4.9':
-                b = Branch(name, repo.commit(b.name))
+                b = Branch(name, branch_commit)
                 self.branches.append(b)
-                base = repo.merge_base(head, b.commit)[0]
+            if name >= oldest_release:
+                base = repo.merge_base(head, branch_commit)[0]
                 self.branch_bases.append(Release(name + '-base', base))
 
     def parse_latest_revisions(self):
