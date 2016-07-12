@@ -16,14 +16,15 @@ from datetime import datetime
 from termcolor import colored
 from git import Repo
 
+# configuration
 script_dirname = os.path.abspath(os.path.dirname(__file__))
 last_revision_count = 3000
 lock = filelock.FileLock('/tmp/gcc_build_binary.lock')
 description_color = 'blue'
+git_location = '/home/marxin/BIG/Programming/gcc/'
+install_location = '/home/marxin/BIG/gcc-binaries/'
 
 parser = argparse.ArgumentParser(description='Build GCC binaries.')
-parser.add_argument('git_location', metavar = 'git', help = 'Location of git repository')
-parser.add_argument('install', metavar = 'install', help = 'Installation location')
 parser.add_argument('action', nargs = '?', metavar = 'action', help = 'Action', default = 'print', choices = ['print', 'build', 'bisect'])
 parser.add_argument('command', nargs = '?', metavar = 'command', help = 'GCC command')
 parser.add_argument('--verbose', action = 'store_true', help = 'Verbose logging')
@@ -32,7 +33,7 @@ parser.add_argument('--bisect', action = 'store_true', help = 'Bisect releases')
 
 args = parser.parse_args()
 
-repo = Repo(args.git_location)
+repo = Repo(git_location)
 head = repo.commit('parent/master')
 
 def strip_prefix(text, prefix):
@@ -123,17 +124,17 @@ class GitRevision:
         return os.path.join(self.get_folder_path(), 'archive.7z')
 
     def get_folder_path(self):
-        return os.path.join(args.install, 'gcc-' + self.commit.hexsha)
+        return os.path.join(install_location, 'gcc-' + self.commit.hexsha)
 
     def apply_patch(self, revision):
         p = os.path.join(script_dirname, 'gcc-release-patches', self.patch_name())
         if os.path.exists(p):
             print('Existing patch: %s' % p)
-            os.chdir(args.git_location)
+            os.chdir(git_location)
             run_cmd('patch -p1 < %s' % p)
 
     def build(self, is_release, compress_binary):
-        l = os.path.join(args.install, 'gcc-' + self.commit.hexsha)
+        l = os.path.join(install_location, 'gcc-' + self.commit.hexsha)
         if os.path.exists(l):
             print('Revision %s already exists' % (str(self)))
         else:
@@ -144,7 +145,7 @@ class GitRevision:
             print('Bulding %s' % (str(self)))
             os.chdir(temp)
             print('Bulding in %s' % temp)
-            cmd = [os.path.join(args.git_location, 'configure'), '--prefix', l, '--disable-bootstrap', '--enable-checking=yes']
+            cmd = [os.path.join(git_location, 'configure'), '--prefix', l, '--disable-bootstrap', '--enable-checking=yes']
             if not is_release:
                 cmd += ['--disable-libsanitizer', '--disable-multilib', '--enable-languages=c,c++,fortran']
             run_cmd(cmd, True)
@@ -191,7 +192,7 @@ class GitRevision:
         archive = self.get_archive_path()
         if not os.path.exists(archive):
             return False
-        cmd = '7z x %s -o%s -aoa' % (archive, args.install)
+        cmd = '7z x %s -o%s -aoa' % (archive, install_location)
         subprocess.check_output(cmd, shell = True)
         return True
 
@@ -303,12 +304,12 @@ class GitRepository:
             r.build(False, True)
 
     def initialize_binaries(self):
-        folders = os.listdir(args.install)
+        folders = os.listdir(install_location)
         existing = set()
         for f in folders:
-            full = os.path.join(args.install, f, 'bin/gcc')
+            full = os.path.join(install_location, f, 'bin/gcc')
             h = strip_prefix(os.path.basename(f), 'gcc-')
-            if os.path.exists(full) or os.path.exists(os.path.join(args.install, f, 'archive.7z')):
+            if os.path.exists(full) or os.path.exists(os.path.join(install_location, f, 'archive.7z')):
                 existing.add(h)
 
         for r in self.releases:
