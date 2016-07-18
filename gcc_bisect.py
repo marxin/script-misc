@@ -32,6 +32,7 @@ parser.add_argument('--verbose', action = 'store_true', help = 'Verbose logging'
 parser.add_argument('--negate', action = 'store_true', help = 'FAIL if result code is equal to zero')
 parser.add_argument('--bisect', action = 'store_true', help = 'Bisect releases')
 parser.add_argument('--pull', action = 'store_true', help = 'Pull repository')
+parser.add_argument('--only-latest', action = 'store_true', help = 'Test only latest revisions')
 
 args = parser.parse_args()
 
@@ -337,17 +338,18 @@ class GitRepository:
                 r.has_binary = True
 
     def bisect(self):
-        print('Releases')
-        for r in self.releases:
-            r.test()
+        if not args.only_latest:
+            print('Releases')
+            for r in self.releases:
+                r.test()
 
-        print('\nActive branches')
-        for r in self.branches:
-            r.test()
+            print('\nActive branches')
+            for r in self.branches:
+                r.test()
 
-        print('\nActive branch bases')
-        for r in self.branch_bases:
-            r.test()
+            print('\nActive branch bases')
+            for r in self.branch_bases:
+                r.test()
 
         print('\nBisecting latest revisions')
         candidates = list(filter(lambda x: x.has_binary, self.latest))
