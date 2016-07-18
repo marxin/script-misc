@@ -18,7 +18,7 @@ from git import Repo
 
 # configuration
 script_dirname = os.path.abspath(os.path.dirname(__file__))
-last_revision_count = 3000
+last_revision_count = 10000
 oldest_release = '4.5'
 lock = filelock.FileLock('/tmp/gcc_build_binary.lock')
 description_color = 'blue'
