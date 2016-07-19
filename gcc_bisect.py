@@ -160,13 +160,14 @@ class GitRevision:
             r = run_cmd(cmd)
             if r:
                 run_cmd('make install')
-                shutil.rmtree(temp)
                 print('Build has taken: %s' % str(datetime.now() - start))
 
                 if compress_binary:
                     self.compress()
             else:
                 print('GCC build is not going to be installed')
+
+            shutil.rmtree(temp)
 
     def strip(self):
         if os.path.exists(self.get_binary_path()):
