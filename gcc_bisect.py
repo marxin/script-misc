@@ -245,6 +245,10 @@ class GitRepository:
         self.branch_bases = []
         self.latest = []
 
+        if args.pull:
+            print('Pulling parent repository')
+            repo.remotes['parent'].fetch()
+
         self.parse_releases()
         self.parse_branches()
         self.parse_latest_revisions()
@@ -297,10 +301,6 @@ class GitRepository:
             r.print_status()
 
     def build(self):
-        if args.pull:
-            print('Pulling parent repository')
-            repo.remotes['parent'].fetch()
-
         for r in self.releases:
             r.build(True, False)
 
