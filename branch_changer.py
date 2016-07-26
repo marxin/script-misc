@@ -64,7 +64,7 @@ def search(api_key, remove, add, limit):
 parser = argparse.ArgumentParser(description='')
 parser.add_argument('api_key', help = 'API key')
 parser.add_argument('--remove', nargs = '?', help = 'Remove a release from summary')
-parser.add_argument('--add', nargs = '?', help = 'Add a new release to summary, e.g. 6:7 will add 7 when 6 is included')
+parser.add_argument('--add', nargs = '?', help = 'Add a new release to summary, e.g. 6:7 will add 7 where 6 is included')
 parser.add_argument('--limit', nargs = '?', help = 'Limit number of bugs affected by the script')
 
 args = parser.parse_args()
