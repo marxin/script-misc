@@ -23,7 +23,6 @@ def modify_bug(api_key, id, params, doit):
         'api_key': api_key }
 
     data.update(params)
-    print(data)
 
     if doit:
         r = requests.put(u, json = data)
