@@ -66,6 +66,7 @@ class Bug:
 
         args = {'target_milestone': new_milestone}
         if comment != None:
+            print('  adding comment: "%s"' % comment)
             args['comment'] = {'comment': comment }
         self.modify_bug(api_key, args, doit)
 
