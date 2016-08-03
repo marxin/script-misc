@@ -57,7 +57,11 @@ class Bug:
                 break
 
     def add_known_to_fail(self, release):
-        self.fail_versions.append(release)
+        if release in self.fail_versions:
+            return False
+        else:
+            self.fail_versions.append(release)
+            return True
 
     def update_summary(self, api_key, doit):
         summary = self.data['summary']
@@ -71,24 +75,33 @@ class Bug:
 
         return False
 
-    def change_milestone(self, api_key, old_milestone, new_milestone, comment, doit):
+    def change_milestone(self, api_key, old_milestone, new_milestone, comment, new_fail_version, doit):
         old_major = Bug.get_major_version(old_milestone)
         new_major = Bug.get_major_version(new_milestone)
 
         print(self.name())
+        args = {}
         if old_major == new_major:
+            args['target_milestone'] = new_milestone
             print('  changing target milestone: "%s" to "%s" (same branch)' % (old_milestone, new_milestone))
         elif self.is_regression and new_major in self.versions:
+            args['target_milestone'] = new_milestone
             print('  changing target milestone: "%s" to "%s" (regresses with the new milestone)' % (old_milestone, new_milestone))
         else:
             print('  not changing target milestone: not a regression or does not regress with the new milestone')
-            return False
 
-        args = {'target_milestone': new_milestone}
-        if comment != None:
+        if 'target_milestone' in args and comment != None:
             print('  adding comment: "%s"' % comment)
             args['comment'] = {'comment': comment }
-        self.modify_bug(api_key, args, doit)
+
+        if new_fail_version != None:
+            if self.add_known_to_fail(new_fail_version):
+                s = self.serialize_known_to_fail()
+                print('  changing known_to_fail: "%s" to "%s"' % (self.data['cf_known_to_fail'], s))
+                args['cf_known_to_fail'] = s
+
+        if len(args.keys()) != 0:
+            self.modify_bug(api_key, args, doit)
 
         return True
 
@@ -147,12 +160,12 @@ def search(api_key, remove, add, limit, doit):
 
     print('\nModified PRs: %d' % modified)
 
-def replace_milestone(api_key, limit, old_milestone, new_milestone, comment, doit):
+def replace_milestone(api_key, limit, old_milestone, new_milestone, comment, add_known_to_fail, doit):
     bugs = Bug.get_bugs(api_key, {'api_key': api_key, 'bug_status': statuses, 'target_milestone': old_milestone})
 
     modified = 0
     for bug in bugs:
-        if bug.change_milestone(api_key, old_milestone, new_milestone, comment, doit):
+        if bug.change_milestone(api_key, old_milestone, new_milestone, comment, add_known_to_fail, doit):
             modified += 1
             if modified == limit:
                 break
@@ -166,6 +179,7 @@ parser.add_argument('--add', nargs = '?', help = 'Add a new release to summary, 
 parser.add_argument('--limit', nargs = '?', help = 'Limit number of bugs affected by the script')
 parser.add_argument('--doit', action = 'store_true', help = 'Really modify BUGs in the bugzilla')
 parser.add_argument('--new-target-milestone', help = 'Set a new target milestone, e.g. 4.9.3:4.9.4 will set milestone to 4.9.4 for all PRs having milestone set to 4.9.3')
+parser.add_argument('--add-known-to-fail', help = 'Set a new known to fail for all PRs affected by --new-target-milestone')
 parser.add_argument('--comment', help = 'Comment a PR for which we set a new target milestore')
 
 args = parser.parse_args()
@@ -177,4 +191,4 @@ if args.remove != None or args.add != None:
 if args.new_target_milestone != None:
     t = args.new_target_milestone.split(':')
     assert len(t) == 2
-    replace_milestone(args.api_key, args.limit, t[0], t[1], args.comment, args.doit)
+    replace_milestone(args.api_key, args.limit, t[0], t[1], args.comment, args.add_known_to_fail, args.doit)
