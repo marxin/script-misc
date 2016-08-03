@@ -102,8 +102,9 @@ class Bug:
 
         if len(args.keys()) != 0:
             self.modify_bug(api_key, args, doit)
-
-        return True
+            return True
+        else:
+            return False
 
     def serialize_summary(self):
         assert self.versions != None
