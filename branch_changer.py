@@ -93,7 +93,7 @@ class Bug:
         data.update(params)
 
         if doit:
-            r = requests.put(u, json = data)
+            r = requests.put(u, data = json.dumps(data), headers = {"content-type": "text/javascript"})
             print(r)
 
     @staticmethod
