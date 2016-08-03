@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# The script requires simplejson and requests packages, in case
+# of openSUSE: zypper in python3-simplejson python3-requests
+
 import requests
 import json
 import argparse
