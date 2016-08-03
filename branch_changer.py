@@ -111,7 +111,6 @@ class Bug:
 def search(api_key, remove, add, limit, doit):
     bugs = Bug.get_bugs(api_key, {'api_key': api_key, 'summary': search_summary, 'bug_status': statuses})
     bugs = list(filter(lambda x: x.is_regression, bugs))
-    bugs = bugs[:limit]
 
     modified = 0
     for bug in bugs:
@@ -122,17 +121,20 @@ def search(api_key, remove, add, limit, doit):
 
         if bug.update_summary(api_key, doit):
             modified += 1
+            if modified == limit:
+                break
 
     print('\nModified PRs: %d' % modified)
 
 def replace_milestone(api_key, limit, old_milestone, new_milestone, comment, doit):
     bugs = Bug.get_bugs(api_key, {'api_key': api_key, 'bug_status': statuses, 'target_milestone': old_milestone})
-    bugs = bugs[:limit]
 
     modified = 0
     for bug in bugs:
         if bug.change_milestone(api_key, old_milestone, new_milestone, comment, doit):
             modified += 1
+            if modified == limit:
+                break
 
     print('\nModified PRs: %d' % modified)
 
