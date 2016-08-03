@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 
-# The script requires simplejson and requests packages, in case
-# of openSUSE: zypper in python3-simplejson python3-requests
+# The script requires simplejson, requests, semantic_version packages, in case
+# of openSUSE:
+# zypper in python3-simplejson python3-requests
+# pip3 install semantic_version
 
 import requests
 import json
 import argparse
 import re
+
+from semantic_version import Version
 
 base_url = 'https://gcc.gnu.org/bugzilla/rest.cgi/'
 statuses = ['UNCONFIRMED', 'ASSIGNED', 'SUSPENDED', 'NEW', 'WAITING', 'REOPENED']
@@ -17,9 +21,11 @@ class Bug:
     def __init__(self, data):
         self.data = data
         self.versions = None
+        self.fail_versions = []
         self.is_regression = False
 
         self.parse_summary()
+        self.parse_known_to_fail()
 
     def parse_summary(self):
         m = re.match(regex, self.data['summary'])
@@ -28,10 +34,18 @@ class Bug:
             self.is_regression = True
             self.regex_match = m
 
+    def parse_known_to_fail(self):
+        v = self.data['cf_known_to_fail'].strip()
+        if v != '':
+            self.fail_versions = [x for x in re.split(' |,', v) if x != '']
+
     def name(self):
         return 'PR%d (%s)' % (self.data['id'], self.data['summary'])
 
     def remove_release(self, release):
+        # Do not remove last value of [x Regression]
+        if len(self.versions) == 1:
+            return
         self.versions = list(filter(lambda x: x != release, self.versions))
 
     def add_release(self, releases):
@@ -41,6 +55,9 @@ class Bug:
             if v == parts[0]:
                 self.versions.insert(i + 1, parts[1])
                 break
+
+    def add_known_to_fail(self, release):
+        self.fail_versions.append(release)
 
     def update_summary(self, api_key, doit):
         summary = self.data['summary']
@@ -79,12 +96,13 @@ class Bug:
         assert self.versions != None
         assert self.is_regression == True
 
-        if len(self.versions) == 0:
-            return self.regex_match.group(4).strip()
-        else:
-            new_version = '/'.join(self.versions)
-            new_summary = self.regex_match.group(1) + new_version + self.regex_match.group(3) + self.regex_match.group(4)
-            return new_summary
+        new_version = '/'.join(self.versions)
+        new_summary = self.regex_match.group(1) + new_version + self.regex_match.group(3) + self.regex_match.group(4)
+        return new_summary
+
+    def serialize_known_to_fail(self):
+        assert type(self.fail_versions) is list
+        return ', '.join(sorted(self.fail_versions, key = lambda x: Version(x, partial = True)))
 
     def modify_bug(self, api_key, params, doit):
         u = base_url + 'bug/' + str(self.data['id'])
