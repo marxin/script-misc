@@ -33,8 +33,11 @@ parser.add_argument('--negate', action = 'store_true', help = 'FAIL if result co
 parser.add_argument('--bisect', action = 'store_true', help = 'Bisect releases')
 parser.add_argument('--pull', action = 'store_true', help = 'Pull repository')
 parser.add_argument('--only-latest', action = 'store_true', help = 'Test only latest revisions')
+parser.add_argument('--n', help = 'Number of revisions to build')
 
 args = parser.parse_args()
+
+to_build = 10**10 if args.n == None else int(args.n)
 
 repo = Repo(git_location)
 head = repo.commit('parent/master')
@@ -135,6 +138,10 @@ class GitRevision:
             print('Existing patch: %s' % p)
             os.chdir(git_location)
             run_cmd('patch -p1 < %s' % p)
+
+    def build_with_limit(self, is_release, compress_binary):
+        if to_build > 0:
+            self.build(is_release, compress_binary)
 
     def build(self, is_release, compress_binary):
         l = os.path.join(install_location, 'gcc-' + self.commit.hexsha)
@@ -302,16 +309,16 @@ class GitRepository:
 
     def build(self):
         for r in self.releases:
-            r.build(True, False)
+            r.build_with_limit(True, False)
 
         for r in self.branch_bases:
-            r.build(False, False)
+            r.build_with_limit(False, False)
 
         for r in self.branches:
-            r.build(False, True)
+            r.build_with_limit(False, True)
 
         for r in self.latest:
-            r.build(False, True)
+            r.build_with_limit(False, True)
 
     def initialize_binaries(self):
         folders = os.listdir(install_location)
