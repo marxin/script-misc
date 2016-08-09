@@ -24,6 +24,7 @@ lock = filelock.FileLock('/tmp/gcc_build_binary.lock')
 description_color = 'blue'
 git_location = '/home/marxin/BIG/Programming/gcc/'
 install_location = '/home/marxin/BIG/gcc-binaries/'
+log_file = '/home/marxin/Programming/script-misc/gcc-build.log'
 
 parser = argparse.ArgumentParser(description='Build GCC binaries.')
 parser.add_argument('action', nargs = '?', metavar = 'action', help = 'Action', default = 'print', choices = ['print', 'build', 'bisect'])
@@ -52,20 +53,24 @@ def strip_suffix(text, suffix):
         return text[:-len(suffix)]
     return text
 
+def log(revision_hash, message):
+    with open(log_file, 'a+') as f:
+        f.write('%s:%s\n' % (revision_hash, message))
+
 def run_cmd(command, strict = False):
     if isinstance(command, list):
         command = ' '.join(command)
     print('Running: %s' % command)
-    try:
-        with open('/tmp/gcc-build.stderr', 'a') as err:
-            subprocess.check_output(command, shell = True, stderr = err)
-        return True
-    except subprocess.CalledProcessError as e:
-        print(str(e))
-        lines = e.output.decode('utf-8').split('\n')
-        print('\n'.join(lines))
+    r = subprocess.run(command, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    if r.returncode == 0:
+        return (True, None)
+    else:
+        print('Command failed with return code %d' % r.returncode)
+        lines = r.stderr.decode('utf-8').split('\n')
+        error = ';'.join([x for x in lines if 'error: ' in x])
+        print(error)
         assert not strict
-        return False
+        return (False, error)
 
 def revisions_in_range(source, target):
     r = '%s..%s' % (source.hexsha, target.hexsha)
@@ -140,13 +145,17 @@ class GitRevision:
             run_cmd('patch -p1 < %s' % p)
 
     def build_with_limit(self, is_release, compress_binary):
+        global to_build
         if to_build > 0:
-            self.build(is_release, compress_binary)
+            result = self.build(is_release, compress_binary)
+            if result:
+                to_build -= 1
 
     def build(self, is_release, compress_binary):
         l = os.path.join(install_location, 'gcc-' + self.commit.hexsha)
         if os.path.exists(l):
             print('Revision %s already exists' % (str(self)))
+            return False
         else:
             tmp_folder = '/dev/shm/gcc-tmp'
             start = datetime.now()
@@ -168,16 +177,21 @@ class GitRevision:
             if is_release and self.name.startswith('5.') and not self.name.startswith('5.4'):
                 cmd = 'nice make'
             r = run_cmd(cmd)
-            if r:
+            result = True
+            if r[0]:
                 run_cmd('make install')
                 print('Build has taken: %s' % str(datetime.now() - start))
+                log(self.commit.hexsha, 'OK')
 
                 if compress_binary:
                     self.compress()
             else:
+                log(self.commit.hexsha, r[1])
                 print('GCC build is not going to be installed')
+                result = False
 
             shutil.rmtree(temp)
+            return result
 
     def strip(self):
         if os.path.exists(self.get_binary_path()):
