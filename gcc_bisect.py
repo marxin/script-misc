@@ -148,8 +148,11 @@ class GitRevision:
         if os.path.exists(l):
             print('Revision %s already exists' % (str(self)))
         else:
+            tmp_folder = '/dev/shm/gcc-tmp'
             start = datetime.now()
-            temp = tempfile.mkdtemp()
+            if not os.path.exists(tmp_folder):
+                os.mkdir(tmp_folder)
+            temp = tempfile.mkdtemp(dir = tmp_folder)
             repo.git.checkout(self.commit, force = True)
             self.apply_patch(self)
             print('Bulding %s' % (str(self)))
