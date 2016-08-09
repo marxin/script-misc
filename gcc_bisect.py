@@ -270,9 +270,6 @@ class GitRepository:
             version = strip_suffix(strip_prefix(r.name, 'gcc-'), '-release').replace('_', '-').replace('-', '.')
             self.releases.append(Release(version, repo.commit(r.name)))
 
-        # missing tag
-        if not any(map(lambda x: x.name == '5.4.0', self.releases)):
-            self.releases.append(Release('5.4.0', repo.commit('32c3b88e8ced4b6d022484a73c40f3d663e20fd4')))
         self.releases = sorted(filter(lambda x: x.name >= oldest_release, self.releases), key = lambda x: x.name)
 
     def parse_branches(self):
