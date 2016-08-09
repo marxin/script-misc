@@ -278,7 +278,7 @@ class GitRepository:
         for b in branches:
             name = strip_suffix(strip_prefix(b.name, 'parent/gcc-'), '-branch').replace('_', '.')
             branch_commit = repo.commit(b.name)
-            if name >= '4.9':
+            if name >= '5':
                 b = Branch(name, branch_commit)
                 self.branches.append(b)
             if name >= oldest_release:
