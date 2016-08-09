@@ -158,6 +158,7 @@ class GitRevision:
             return False
         else:
             tmp_folder = '/dev/shm/gcc-tmp'
+            shutil.rmtree(tmp_folder)
             start = datetime.now()
             if not os.path.exists(tmp_folder):
                 os.mkdir(tmp_folder)
