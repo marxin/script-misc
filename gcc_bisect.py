@@ -275,13 +275,27 @@ class GitRepository:
         self.latest = []
 
         if args.pull:
-            flush_print('Pulling parent repository')
-            repo.remotes['parent'].fetch()
+            attempts = 10
+            for i in range(attempts):
+                r = self.pull()
+                if r:
+                    break
+                else:
+                    sleep(30)
 
         self.parse_releases()
         self.parse_branches()
         self.parse_latest_revisions()
         self.initialize_binaries()
+
+    def pull(self):
+        flush_print('Pulling parent repository')
+        try:
+            repo.remotes['parent'].fetch()
+            return True
+        except Error as e:
+            flush_print(str(e))
+            return False
 
     def parse_releases(self):
         releases = list(filter(lambda x: x.name.endswith('-release'), repo.tags))
