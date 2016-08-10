@@ -43,6 +43,10 @@ to_build = 10**10 if args.n == None else int(args.n)
 repo = Repo(git_location)
 head = repo.commit('parent/master')
 
+def flush_print(text, end = '\n'):
+    print(text, end = end)
+    sys.stdout.flush()
+
 def strip_prefix(text, prefix):
     if text.startswith(prefix):
         return text[len(prefix):]
@@ -60,15 +64,15 @@ def log(revision_hash, message):
 def run_cmd(command, strict = False):
     if isinstance(command, list):
         command = ' '.join(command)
-    print('Running: %s' % command)
+    flush_print('Running: %s' % command)
     r = subprocess.run(command, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     if r.returncode == 0:
         return (True, None)
     else:
-        print('Command failed with return code %d' % r.returncode)
+        flush_print('Command failed with return code %d' % r.returncode)
         lines = r.stderr.decode('utf-8').split('\n')
         error = ';'.join([x for x in lines if 'error: ' in x])
-        print(error)
+        flush_print(error)
         assert not strict
         return (False, error)
 
@@ -112,9 +116,9 @@ class GitRevision:
                 success = not success
 
             text = colored('OK', 'green') if success else colored('FAILED', 'red')
-            print('  %s: [took: %3.3fs] running command with result: %s' % (self.description(), (datetime.now() - start).total_seconds(), text))
+            flush_print('  %s: [took: %3.3fs] running command with result: %s' % (self.description(), (datetime.now() - start).total_seconds(), text))
             if args.verbose:
-                print(open(log).read(), end = '')
+                flush_print(open(log).read(), end = '')
 
             if clean:
                 self.remove_extracted()
@@ -123,7 +127,7 @@ class GitRevision:
 
     def test(self):
         if not self.has_binary:
-            print('  %s: missing binary' % (self.description()))
+            flush_print('  %s: missing binary' % (self.description()))
             return False
         else:
             return self.run()
@@ -140,7 +144,7 @@ class GitRevision:
     def apply_patch(self, revision):
         p = os.path.join(script_dirname, 'gcc-release-patches', self.patch_name())
         if os.path.exists(p):
-            print('Existing patch: %s' % p)
+            flush_print('Existing patch: %s' % p)
             os.chdir(git_location)
             run_cmd('patch -p1 < %s' % p)
 
@@ -154,7 +158,7 @@ class GitRevision:
     def build(self, is_release, compress_binary):
         l = os.path.join(install_location, 'gcc-' + self.commit.hexsha)
         if os.path.exists(l):
-            print('Revision %s already exists' % (str(self)))
+            flush_print('Revision %s already exists' % (str(self)))
             return False
         else:
             tmp_folder = '/dev/shm/gcc-tmp'
@@ -165,9 +169,9 @@ class GitRevision:
             temp = tempfile.mkdtemp(dir = tmp_folder)
             repo.git.checkout(self.commit, force = True)
             self.apply_patch(self)
-            print('Bulding %s' % (str(self)))
+            flush_print('Bulding %s' % (str(self)))
             os.chdir(temp)
-            print('Bulding in %s' % temp)
+            flush_print('Bulding in %s' % temp)
             cmd = [os.path.join(git_location, 'configure'), '--prefix', l, '--disable-bootstrap', '--enable-checking=yes']
             if not is_release:
                 cmd += ['--disable-libsanitizer', '--disable-multilib', '--enable-languages=c,c++,fortran']
@@ -181,14 +185,14 @@ class GitRevision:
             result = True
             if r[0]:
                 run_cmd('make install')
-                print('Build has taken: %s' % str(datetime.now() - start))
+                flush_print('Build has taken: %s' % str(datetime.now() - start))
                 log(self.commit.hexsha, 'OK')
 
                 if compress_binary:
                     self.compress()
             else:
                 log(self.commit.hexsha, r[1])
-                print('GCC build is not going to be installed')
+                flush_print('GCC build is not going to be installed')
                 result = False
 
             shutil.rmtree(temp)
@@ -227,7 +231,7 @@ class GitRevision:
 
     def print_status(self):
         status = colored('OK', 'green') if self.has_binary else colored('missing binary', 'yellow')
-        print('%s: %s' % (self.description(), status))
+        flush_print('%s: %s' % (self.description(), status))
 
 class Release(GitRevision):
     def __init__(self, name, commit):
@@ -261,7 +265,7 @@ class Branch(GitRevision):
 
         built = set(map(lambda x: x.commit.hexsha, filter(lambda x: x.has_binary, g.latest)))
         existing_head_commits = list(filter(lambda x: x.hexsha in built, head_commits))
-        print('%3s-branch: branch commits: %8d, head distance: %8d (have: %d)' % (self.name, len(branch_commits), len(head_commits), len(existing_head_commits)))
+        flush_print('%3s-branch: branch commits: %8d, head distance: %8d (have: %d)' % (self.name, len(branch_commits), len(head_commits), len(existing_head_commits)))
 
 class GitRepository:
     def __init__(self):
@@ -271,7 +275,7 @@ class GitRepository:
         self.latest = []
 
         if args.pull:
-            print('Pulling parent repository')
+            flush_print('Pulling parent repository')
             repo.remotes['parent'].fetch()
 
         self.parse_releases()
@@ -305,20 +309,20 @@ class GitRepository:
             self.latest.append(GitRevision(c))
 
     def print(self):
-        print('Releases')
+        flush_print('Releases')
         for r in self.releases:
             r.print_status()
 
-        print('\nActive branches')
+        flush_print('\nActive branches')
         for r in self.branches:
             r.print_info()
             r.print_status()
 
-        print('\nActive branch bases')
+        flush_print('\nActive branch bases')
         for r in self.branch_bases:
             r.print_status()
 
-        print('\nLatest %d revisions' % last_revision_count)
+        flush_print('\nLatest %d revisions' % last_revision_count)
         for r in self.latest:
             r.print_status()
 
@@ -362,19 +366,19 @@ class GitRepository:
 
     def bisect(self):
         if not args.only_latest:
-            print('Releases')
+            flush_print('Releases')
             for r in self.releases:
                 r.test()
 
-            print('\nActive branches')
+            flush_print('\nActive branches')
             for r in self.branches:
                 r.test()
 
-            print('\nActive branch bases')
+            flush_print('\nActive branch bases')
             for r in self.branch_bases:
                 r.test()
 
-        print('\nBisecting latest revisions')
+        flush_print('\nBisecting latest revisions')
         candidates = list(filter(lambda x: x.has_binary, self.latest))
 
         # test whether there's a change in return code
@@ -384,20 +388,20 @@ class GitRepository:
         if first != last:
             GitRepository.bisect_recursive(candidates, first, last)
         else:
-            print('  bisect finished: ' +  colored('there is no change!', 'red'))
+            flush_print('  bisect finished: ' +  colored('there is no change!', 'red'))
 
     @staticmethod
     def bisect_recursive(candidates, r1, r2):
         if len(candidates) == 2:
-            print('\nFirst change is:\n')
+            flush_print('\nFirst change is:\n')
             candidates[0].test()
             candidates[1].test()
             revisions = revisions_in_range(candidates[1].commit, candidates[0].commit)
             l = len(revisions) - 1
-            print('Candidates in between: %d' % l)
+            flush_print('Candidates in between: %d' % l)
         else:
             steps = math.ceil(math.log2(len(candidates))) - 1
-            print('  bisecting: %d revisions (~%d steps)' % (len(candidates), steps))
+            flush_print('  bisecting: %d revisions (~%d steps)' % (len(candidates), steps))
             assert r1 != r2
             index = int(len(candidates) / 2)
             middle = candidates[index].test()
