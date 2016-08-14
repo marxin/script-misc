@@ -18,7 +18,9 @@ from git import Repo
 
 # configuration
 script_dirname = os.path.abspath(os.path.dirname(__file__))
-last_revision_count = 10000
+patches_folder = os.path.join(script_dirname, 'gcc-release-patches')
+
+last_revision_count = 11000
 oldest_release = '4.5'
 lock = filelock.FileLock('/tmp/gcc_build_binary.lock')
 description_color = 'blue'
@@ -43,6 +45,10 @@ to_build = 10**10 if args.n == None else int(args.n)
 repo = Repo(git_location)
 head = repo.commit('parent/master')
 
+def revisions_in_range(source, target):
+    r = '%s..%s' % (source.hexsha, target.hexsha)
+    return list(repo.iter_commits(r))
+
 def flush_print(text, end = '\n'):
     print(text, end = end)
     sys.stdout.flush()
@@ -61,6 +67,19 @@ def log(revision_hash, message):
     with open(log_file, 'a+') as f:
         f.write('%s:%s\n' % (revision_hash, message))
 
+def build_failed_for_revision(revision_hash):
+    if not os.path.exists(log_file):
+        return False
+
+    lines = [x.strip() for x in open(log_file).readlines()]
+    for l in lines:
+        i = l.find(':')
+        revision = l[:i]
+        if revision == revision_hash:
+            return True
+
+    return False
+
 def run_cmd(command, strict = False):
     if isinstance(command, list):
         command = ' '.join(command)
@@ -75,10 +94,6 @@ def run_cmd(command, strict = False):
         flush_print(error)
         assert not strict
         return (False, error)
-
-def revisions_in_range(source, target):
-    r = '%s..%s' % (source.hexsha, target.hexsha)
-    return list(repo.iter_commits(r))
 
 class GitRevision:
     def __init__(self, commit):
@@ -142,11 +157,13 @@ class GitRevision:
         return os.path.join(install_location, 'gcc-' + self.commit.hexsha)
 
     def apply_patch(self, revision):
-        p = os.path.join(script_dirname, 'gcc-release-patches', self.patch_name())
+        p = os.path.join(patches_folder, self.patch_name())
+        if not os.path.exists(p) and self.commit.hexsha in g.patches_map:
+            p = os.path.join(patches_folder, g.patches_map[self.commit.hexsha])
         if os.path.exists(p):
             flush_print('Existing patch: %s' % p)
             os.chdir(git_location)
-            run_cmd('patch -p1 < %s' % p)
+            run_cmd('patch -p1 -f < %s' % p)
 
     def build_with_limit(self, is_release, compress_binary):
         global to_build
@@ -159,6 +176,9 @@ class GitRevision:
         l = os.path.join(install_location, 'gcc-' + self.commit.hexsha)
         if os.path.exists(l):
             flush_print('Revision %s already exists' % (str(self)))
+            return False
+        elif build_failed_for_revision(self.commit.hexsha):
+            flush_print('Revision %s already failed' % (str(self)))
             return False
         else:
             tmp_folder = '/dev/shm/gcc-tmp'
@@ -195,7 +215,7 @@ class GitRevision:
                 flush_print('GCC build is not going to be installed')
                 result = False
 
-            shutil.rmtree(temp)
+            shutil.rmtree(temp, ignore_errors = True)
             return result
 
     def strip(self):
@@ -287,6 +307,7 @@ class GitRepository:
         self.parse_branches()
         self.parse_latest_revisions()
         self.initialize_binaries()
+        self.parse_patches_range()
 
     def pull(self):
         flush_print('Pulling parent repository')
@@ -321,6 +342,14 @@ class GitRepository:
     def parse_latest_revisions(self):
         for c in repo.iter_commits('parent/master~' + str(last_revision_count) + '..parent/master'):
             self.latest.append(GitRevision(c))
+
+    def parse_patches_range(self):
+        self.patches_map = {}
+        for file in os.listdir(patches_folder):
+            if '..' in file:
+                tokens = os.path.splitext(file)[0].split('..')
+                for r in revisions_in_range(repo.commit(tokens[0]), repo.commit(tokens[1])):
+                    self.patches_map[r.hexsha] = file
 
     def print(self):
         flush_print('Releases')
