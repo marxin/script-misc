@@ -11,6 +11,7 @@ import shutil
 import time
 import math
 import filelock
+import re
 
 from datetime import datetime
 from termcolor import colored
@@ -90,8 +91,9 @@ def run_cmd(command, strict = False):
     else:
         flush_print('Command failed with return code %d' % r.returncode)
         lines = r.stderr.decode('utf-8').split('\n')
-        error = ';'.join([x for x in lines if 'error: ' in x])
-        flush_print(error)
+        error = ';'.join([x for x in lines if 'error: ' in x]).strip()
+        if error != '':
+            flush_print(error)
         assert not strict
         return (False, error)
 
@@ -111,6 +113,13 @@ class GitRevision:
 
     def patch_name(self):
         return self.commit.hexsha + '.patch'
+
+    def print_svn_revision(self):
+        r = '.*svn/gcc/trunk@([0-9]+).*'
+        for l in self.commit.message.split('\n'):
+            m = re.match(r, l)
+            if m != None:
+                print('SVN revision: ' + m.group(1))
 
     def run(self):
         start = datetime.now()
@@ -436,9 +445,13 @@ class GitRepository:
     @staticmethod
     def bisect_recursive(candidates, r1, r2):
         if len(candidates) == 2:
-            flush_print('\nFirst change is:\n')
+            flush_print('\nFirst change is:')
             candidates[0].test()
+            candidates[0].print_svn_revision()
+            print(candidates[0].commit.message)
             candidates[1].test()
+            candidates[1].print_svn_revision()
+            print(candidates[1].commit.message)
             revisions = revisions_in_range(candidates[1].commit, candidates[0].commit)
             l = len(revisions) - 1
             flush_print('Candidates in between: %d' % l)
