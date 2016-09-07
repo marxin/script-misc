@@ -122,6 +122,7 @@ class GitRevision:
             m = re.match(r, l)
             if m != None:
                 print('SVN revision: ' + m.group(1))
+        print('Author: %s' % self.commit.author)
 
     def run(self):
         start = datetime.now()
