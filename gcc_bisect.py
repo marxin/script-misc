@@ -37,6 +37,8 @@ parser.add_argument('--negate', action = 'store_true', help = 'FAIL if result co
 parser.add_argument('--bisect', action = 'store_true', help = 'Bisect releases')
 parser.add_argument('--pull', action = 'store_true', help = 'Pull repository')
 parser.add_argument('--only-latest', action = 'store_true', help = 'Test only latest revisions')
+parser.add_argument('--bisect-start', help = 'Bisection start revision')
+parser.add_argument('--bisect-end', help = 'Bisection end revision')
 parser.add_argument('--n', help = 'Number of revisions to build')
 
 args = parser.parse_args()
@@ -434,6 +436,15 @@ class GitRepository:
         candidates = list(filter(lambda x: x.has_binary, self.latest))
 
         # test whether there's a change in return code
+
+        if args.bisect_start != None:
+            r = list(filter(lambda x: x.commit.hexsha == args.bisect_start, candidates))[0]
+            candidates = candidates[candidates.index(r):]
+
+        if args.bisect_end != None:
+            r = list(filter(lambda x: x.commit.hexsha == args.bisect_end, candidates))[0]
+            candidates = candidates[:candidates.index(r)]
+
         first = candidates[0].test()
         last = candidates[-1].test()
 
