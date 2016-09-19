@@ -26,7 +26,7 @@ oldest_release = '4.5'
 lock = filelock.FileLock('/tmp/gcc_build_binary.lock')
 description_color = 'blue'
 git_location = '/home/marxin/BIG/Programming/gcc/'
-install_location = '/home/marxin/BIG/gcc-binaries/'
+install_location = '/home/marxin/DATA/gcc-binaries/'
 log_file = '/home/marxin/Programming/script-misc/gcc-build.log'
 
 parser = argparse.ArgumentParser(description='Build GCC binaries.')
@@ -194,7 +194,8 @@ class GitRevision:
             return False
         else:
             tmp_folder = '/dev/shm/gcc-tmp'
-            shutil.rmtree(tmp_folder)
+            if os.path.exists(tmp_folder):
+                shutil.rmtree(tmp_folder)
             start = datetime.now()
             if not os.path.exists(tmp_folder):
                 os.mkdir(tmp_folder)
