@@ -275,7 +275,7 @@ class Release(GitRevision):
         return self.commit.hexsha + ':' + self.name
 
     def description(self):
-        return '%s (%s)' % (colored(self.name, description_color), self.commit.hexsha)
+        return '%s (%s)(%s)' % (colored(self.name, description_color), self.commit.hexsha, self.timestamp_str())
 
     def patch_name(self):
         return self.name + '.patch'
@@ -289,7 +289,7 @@ class Branch(GitRevision):
         return self.commit.hexsha + ':' + self.name
 
     def description(self):
-        return '%s (%s)' % (colored(self.name, description_color), self.commit.hexsha)
+        return '%s (%s)(%s)' % (colored(self.name, description_color), self.commit.hexsha, self.timestamp_str())
 
     def print_info(self):
         base = repo.merge_base(head, self.commit)[0]
