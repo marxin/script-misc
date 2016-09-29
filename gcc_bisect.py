@@ -32,7 +32,7 @@ log_file = '/home/marxin/Programming/script-misc/gcc-build.log'
 parser = argparse.ArgumentParser(description='Build GCC binaries.')
 parser.add_argument('action', nargs = '?', metavar = 'action', help = 'Action', default = 'print', choices = ['print', 'build', 'bisect'])
 parser.add_argument('command', nargs = '?', metavar = 'command', help = 'GCC command')
-parser.add_argument('--verbose', action = 'store_true', help = 'Verbose logging')
+parser.add_argument('-s', '--silent', action = 'store_true', help = 'Silent logging')
 parser.add_argument('--negate', action = 'store_true', help = 'FAIL if result code is equal to zero')
 parser.add_argument('--bisect', action = 'store_true', help = 'Bisect releases')
 parser.add_argument('--pull', action = 'store_true', help = 'Pull repository')
@@ -144,7 +144,7 @@ class GitRevision:
 
             text = colored('OK', 'green') if success else colored('FAILED', 'red')
             flush_print('  %s: [took: %3.3fs] running command with result: %s' % (self.description(), (datetime.now() - start).total_seconds(), text))
-            if args.verbose:
+            if not args.silent:
                 flush_print(open(log).read(), end = '')
 
             if clean:
