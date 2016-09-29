@@ -16,6 +16,7 @@ import re
 from datetime import datetime
 from termcolor import colored
 from git import Repo
+from semantic_version import Version
 
 # configuration
 script_dirname = os.path.abspath(os.path.dirname(__file__))
@@ -98,6 +99,25 @@ def run_cmd(command, strict = False):
             flush_print(error)
         assert not strict
         return (False, error)
+
+def get_release_name(version):
+    v = Version(version)
+    if v.major < 5:
+        return '%d.%d' % (v.major, v.minor)
+    else:
+        return v.major
+
+def filter_versions(versions):
+    seen = set()
+    r = []
+    versions = reversed(versions)
+    for i, v in enumerate(versions):
+        name = get_release_name(v)
+        if not name in seen:
+            seen.add(name)
+            r.append(v)
+
+    return reversed(r)
 
 class GitRevision:
     def __init__(self, commit):
@@ -286,6 +306,10 @@ class Release(GitRevision):
     def patch_name(self):
         return self.name + '.patch'
 
+    @staticmethod
+    def print_known_to(text, versions):
+        print('known-to-%s: %s' % (text, ', '.join(versions)))
+
 class Branch(GitRevision):
     def __init__(self, name, commit):
         GitRevision.__init__(self, commit)
@@ -429,8 +453,12 @@ class GitRepository:
     def bisect(self):
         if not args.only_latest:
             flush_print('Releases')
+            results = {True: [], False: []}
             for r in self.releases:
-                r.test()
+                results[r.test()].append(r.name)
+
+            Release.print_known_to('work', filter_versions(results[True]))
+            Release.print_known_to('fail', filter_versions(results[False]))
 
             flush_print('\nActive branches')
             for r in self.branches:
