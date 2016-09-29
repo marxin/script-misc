@@ -33,13 +33,13 @@ parser = argparse.ArgumentParser(description='Build GCC binaries.')
 parser.add_argument('action', nargs = '?', metavar = 'action', help = 'Action', default = 'print', choices = ['print', 'build', 'bisect'])
 parser.add_argument('command', nargs = '?', metavar = 'command', help = 'GCC command')
 parser.add_argument('-s', '--silent', action = 'store_true', help = 'Silent logging')
-parser.add_argument('--negate', action = 'store_true', help = 'FAIL if result code is equal to zero')
-parser.add_argument('--bisect', action = 'store_true', help = 'Bisect releases')
-parser.add_argument('--pull', action = 'store_true', help = 'Pull repository')
+parser.add_argument('-x', '--negate', action = 'store_true', help = 'FAIL if result code is equal to zero')
+parser.add_argument('-p', '--pull', action = 'store_true', help = 'Pull repository')
 parser.add_argument('--only-latest', action = 'store_true', help = 'Test only latest revisions')
 parser.add_argument('--bisect-start', help = 'Bisection start revision')
 parser.add_argument('--bisect-end', help = 'Bisection end revision')
-parser.add_argument('--n', help = 'Number of revisions to build')
+parser.add_argument('-n', help = 'Number of revisions to build')
+parser.add_argument('-i', '--ice', action = 'store_true', help = 'Grep stderr for ICE')
 
 args = parser.parse_args()
 
@@ -138,14 +138,20 @@ class GitRevision:
             with open(log, 'w') as out:
                 r = subprocess.call(args.command, shell = True, stdout = out, stderr = out, env = my_env)
 
+            # handle ICE
+            output = open(log).read()
             success = r == 0
+            if args.ice:
+                messages = ['internal compiler error']
+                success = any(map(lambda m: m in output, messages))
+
             if args.negate:
                 success = not success
 
             text = colored('OK', 'green') if success else colored('FAILED', 'red')
             flush_print('  %s: [took: %3.3fs] running command with result: %s' % (self.description(), (datetime.now() - start).total_seconds(), text))
             if not args.silent:
-                flush_print(open(log).read(), end = '')
+                flush_print(output, end = '')
 
             if clean:
                 self.remove_extracted()
