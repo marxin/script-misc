@@ -130,8 +130,11 @@ class GitRevision:
     def __str__(self):
         return self.commit.hexsha + ':' + self.timestamp_str()
 
+    def short_hexsha(self):
+        return self.commit.hexsha[0:16]
+
     def description(self):
-        return colored(self.commit.hexsha[0:16], description_color) + '(' + self.timestamp_str() + ')'
+        return colored(self.short_hexsha(), description_color) + '(' + self.timestamp_str() + ')'
 
     def patch_name(self):
         return self.commit.hexsha + '.patch'
@@ -169,7 +172,7 @@ class GitRevision:
                 success = not success
 
             text = colored('OK', 'green') if success else colored('FAILED', 'red')
-            flush_print('  %s: [took: %3.3fs] running command with result: %s' % (self.description(), (datetime.now() - start).total_seconds(), text))
+            flush_print('  %s: [took: %3.3fs] result: %s' % (self.description(), (datetime.now() - start).total_seconds(), text))
             if not args.silent:
                 flush_print(output, end = '')
 
@@ -301,7 +304,7 @@ class Release(GitRevision):
         return self.commit.hexsha + ':' + self.name
 
     def description(self):
-        return '%s (%s)(%s)' % (colored(self.name, description_color), self.commit.hexsha, self.timestamp_str())
+        return '%s (%s)(%s)' % (colored(self.name, description_color), self.short_hexsha(), self.timestamp_str())
 
     def patch_name(self):
         return self.name + '.patch'
@@ -319,7 +322,7 @@ class Branch(GitRevision):
         return self.commit.hexsha + ':' + self.name
 
     def description(self):
-        return '%s (%s)(%s)' % (colored(self.name, description_color), self.commit.hexsha, self.timestamp_str())
+        return '%s (%s)(%s)' % (colored(self.name, description_color), self.short_hexsha(), self.timestamp_str())
 
     def print_info(self):
         base = repo.merge_base(head, self.commit)[0]
