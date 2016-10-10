@@ -198,10 +198,16 @@ class GitRevision:
         return os.path.join(install_location, 'gcc-' + self.commit.hexsha)
 
     def apply_patch(self, revision):
+        patch_files = []
         p = os.path.join(patches_folder, self.patch_name())
-        if not os.path.exists(p) and self.commit.hexsha in g.patches_map:
-            p = os.path.join(patches_folder, g.patches_map[self.commit.hexsha])
         if os.path.exists(p):
+            patch_files.append(p)
+
+        if self.commit.hexsha in g.patches_map:
+            for f in g.patches_map[self.commit.hexsha]:
+                patch_files.append(os.path.join(patches_folder, f))
+
+        for p in patch_files:
             flush_print('Existing patch: %s' % p)
             os.chdir(git_location)
             run_cmd('patch -p1 -f < %s' % p)
@@ -395,7 +401,9 @@ class GitRepository:
             if '..' in file:
                 tokens = os.path.splitext(file)[0].split('..')
                 for r in revisions_in_range(repo.commit(tokens[0]), repo.commit(tokens[1])):
-                    self.patches_map[r.hexsha] = file
+                    if not r.hexsha in self.patches_map:
+                        self.patches_map[r.hexsha] = []
+                    self.patches_map[r.hexsha].append(file)
 
     def print(self):
         flush_print('Releases')
