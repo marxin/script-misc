@@ -22,6 +22,7 @@ from semantic_version import Version
 script_dirname = os.path.abspath(os.path.dirname(__file__))
 patches_folder = os.path.join(script_dirname, 'gcc-release-patches')
 
+last_revision = '1bb162fe73cbc72872e75220caa957b995621f1e' # 1.1.2015
 last_revision_count = 11000
 oldest_release = '4.5'
 lock = filelock.FileLock('/tmp/gcc_build_binary.lock')
@@ -392,7 +393,7 @@ class GitRepository:
                 self.branch_bases.append(Release(name + '-base', base))
 
     def parse_latest_revisions(self):
-        for c in repo.iter_commits('parent/master~' + str(last_revision_count) + '..parent/master'):
+        for c in repo.iter_commits(last_revision + '..parent/master'):
             self.latest.append(GitRevision(c))
 
     def parse_patches_range(self):
@@ -419,7 +420,7 @@ class GitRepository:
         for r in self.branch_bases:
             r.print_status()
 
-        flush_print('\nLatest %d revisions' % last_revision_count)
+        flush_print('\nLatest %d revisions' % len(self.latest))
         for r in self.latest:
             r.print_status()
 
