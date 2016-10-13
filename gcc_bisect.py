@@ -420,7 +420,7 @@ class GitRepository:
         for r in self.branch_bases:
             r.print_status()
 
-        flush_print('\nLatest %d revisions' % len(self.latest))
+        flush_print('\nLatest %d revisions (have: %d)' % (len(self.latest), len(list(filter(lambda x: x.has_binary, self.latest)))))
         for r in self.latest:
             r.print_status()
 
