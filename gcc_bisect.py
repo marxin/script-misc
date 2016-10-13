@@ -37,7 +37,7 @@ parser.add_argument('command', nargs = '?', metavar = 'command', help = 'GCC com
 parser.add_argument('-s', '--silent', action = 'store_true', help = 'Silent logging')
 parser.add_argument('-x', '--negate', action = 'store_true', help = 'FAIL if result code is equal to zero')
 parser.add_argument('-p', '--pull', action = 'store_true', help = 'Pull repository')
-parser.add_argument('--only-latest', action = 'store_true', help = 'Test only latest revisions')
+parser.add_argument('-l', '--only-latest', action = 'store_true', help = 'Test only latest revisions')
 parser.add_argument('--bisect-start', help = 'Bisection start revision')
 parser.add_argument('--bisect-end', help = 'Bisection end revision')
 parser.add_argument('-n', help = 'Number of revisions to build')
