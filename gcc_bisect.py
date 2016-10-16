@@ -22,6 +22,7 @@ from semantic_version import Version
 script_dirname = os.path.abspath(os.path.dirname(__file__))
 patches_folder = os.path.join(script_dirname, 'gcc-release-patches')
 
+# WARNING: older commits include wide-int branch merged commits
 last_revision = '4f3db60ba863eebeab1df6c7ec21324feba3bca1' # 1.6.2014
 
 oldest_release = '4.5'
