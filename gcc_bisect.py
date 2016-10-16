@@ -52,7 +52,7 @@ head = repo.commit('parent/master')
 
 def revisions_in_range(source, target):
     r = '%s..%s' % (source.hexsha, target.hexsha)
-    return list(repo.iter_commits(r))
+    return list(repo.iter_commits(r)) + [source]
 
 def flush_print(text, end = '\n'):
     print(text, end = end)
