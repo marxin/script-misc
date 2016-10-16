@@ -22,8 +22,7 @@ from semantic_version import Version
 script_dirname = os.path.abspath(os.path.dirname(__file__))
 patches_folder = os.path.join(script_dirname, 'gcc-release-patches')
 
-last_revision = '1bb162fe73cbc72872e75220caa957b995621f1e' # 1.1.2015
-last_revision_count = 11000
+last_revision = 'a80c339f05a6d68e94674b885ede65b397ef1aeb' # 1.1.2014
 oldest_release = '4.5'
 lock = filelock.FileLock('/tmp/gcc_build_binary.lock')
 description_color = 'blue'
