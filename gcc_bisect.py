@@ -51,6 +51,13 @@ to_build = 10**10 if args.n == None else int(args.n)
 repo = Repo(git_location)
 head = repo.commit('parent/master')
 
+def single_or_default(fn, items):
+    r = list(filter(fn, items))
+    if len(r) == 1:
+        return r[0]
+    else:
+        raise Exception()
+
 def revisions_in_range(source, target):
     r = '%s..%s' % (source.hexsha, target.hexsha)
     return list(repo.iter_commits(r)) + [source]
@@ -490,12 +497,12 @@ class GitRepository:
         # test whether there's a change in return code
 
         if args.bisect_start != None:
-            r = list(filter(lambda x: x.commit.hexsha == args.bisect_start, candidates))[0]
+            r = single_or_default (lambda x: x.commit.hexsha.startswith(args.bisect_start), candidates)
             candidates = candidates[candidates.index(r):]
 
         if args.bisect_end != None:
-            r = list(filter(lambda x: x.commit.hexsha == args.bisect_end, candidates))[0]
-            candidates = candidates[:candidates.index(r)]
+            r = single_or_default (lambda x: x.commit.hexsha.startswith(args.bisect_end), candidates)
+            candidates = candidates[:candidates.index(r)+1]
 
         first = candidates[0].test()
         last = candidates[-1].test()
