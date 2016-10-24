@@ -13,7 +13,7 @@ import math
 import filelock
 import re
 
-from datetime import datetime
+from datetime import datetime,timedelta
 from termcolor import colored
 from git import Repo
 from semantic_version import Version
@@ -421,7 +421,10 @@ class GitRepository:
         for r in self.branch_bases:
             r.print_status()
 
-        flush_print('\nLatest %d revisions (have: %d)' % (len(self.latest), len(list(filter(lambda x: x.has_binary, self.latest)))))
+        existing_revisions = len(list(filter(lambda x: x.has_binary, self.latest)))
+        missing = len(self.latest) - existing_revisions
+        flush_print('\nLatest %d revisions (have: %d)' % (len(self.latest), existing_revisions))
+        flush_print('Missing: %d (time to build: %s)\n' % (missing, str(timedelta(minutes = 6 * missing))))
         for r in self.latest:
             r.print_status()
 
