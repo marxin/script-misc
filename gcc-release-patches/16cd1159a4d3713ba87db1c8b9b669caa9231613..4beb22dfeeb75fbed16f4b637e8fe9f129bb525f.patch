@@ -1,0 +1,55 @@
+From 7493d3493b787714e244fa2ac8ea2ca3a04cf499 Mon Sep 17 00:00:00 2001
+From: hjl <hjl@138bc75d-0d04-0410-961f-82ee72b054a4>
+Date: Thu, 5 Feb 2015 16:40:44 +0000
+Subject: [PATCH] Call release_input_file only if file is claimed
+
+	* lto-plugin.c (claim_file_handler): Call release_input_file only
+	if file is claimed.
+
+
+git-svn-id: svn+ssh://gcc.gnu.org/svn/gcc/trunk@220455 138bc75d-0d04-0410-961f-82ee72b054a4
+---
+ lto-plugin/ChangeLog    | 5 +++++
+ lto-plugin/lto-plugin.c | 6 +++---
+ 2 files changed, 8 insertions(+), 3 deletions(-)
+
+diff --git a/lto-plugin/ChangeLog b/lto-plugin/ChangeLog
+index 81752e7..510e738 100644
+--- a/lto-plugin/ChangeLog
++++ b/lto-plugin/ChangeLog
+@@ -1,3 +1,8 @@
++2015-02-05  H.J. Lu  <hongjiu.lu@intel.com>
++
++	* lto-plugin.c (claim_file_handler): Call release_input_file only
++	if file is claimed.
++
+ 2015-01-28  H.J. Lu  <hongjiu.lu@intel.com>
+ 
+ 	* lto-plugin.c (claim_file_handler): Call release_input_file only
+diff --git a/lto-plugin/lto-plugin.c b/lto-plugin/lto-plugin.c
+index add83f2..e25bbf9 100644
+--- a/lto-plugin/lto-plugin.c
++++ b/lto-plugin/lto-plugin.c
+@@ -998,6 +998,9 @@ claim_file_handler (const struct ld_plugin_input_file *file, int *claimed)
+ 
+   *claimed = 1;
+ 
++  if (release_input_file)
++    release_input_file (file);
++
+   goto cleanup;
+ 
+  err:
+@@ -1007,9 +1010,6 @@ claim_file_handler (const struct ld_plugin_input_file *file, int *claimed)
+   if (obj.objfile)
+     simple_object_release_read (obj.objfile);
+ 
+-  if (release_input_file)
+-    release_input_file (file);
+-
+   return LDPS_OK;
+ }
+ 
+-- 
+2.10.1
+
