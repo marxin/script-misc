@@ -216,7 +216,10 @@ class GitRevision:
             for f in g.patches_map[self.commit.hexsha]:
                 patch_files.append(os.path.join(patches_folder, f))
 
-        for p in patch_files:
+        # sort patch files to be able to apply accumulated patches
+        sorted_files = sorted(patch_files, key = lambda x: repo.commit(GitRepository.get_patch_name_tokens(x)[1]).committed_datetime)
+
+        for p in sorted_files:
             flush_print('Existing patch: %s' % p)
             os.chdir(git_location)
             run_cmd('patch -p1 -f < %s' % p)
@@ -404,11 +407,15 @@ class GitRepository:
         for c in repo.iter_commits(last_revision + '..parent/master'):
             self.latest.append(GitRevision(c))
 
+    @staticmethod
+    def get_patch_name_tokens(file):
+        return os.path.splitext(os.path.basename(file))[0].split('..')
+
     def parse_patches_range(self):
         self.patches_map = {}
         for file in os.listdir(patches_folder):
             if '..' in file:
-                tokens = os.path.splitext(file)[0].split('..')
+                tokens = GitRepository.get_patch_name_tokens(file)
                 for r in revisions_in_range(repo.commit(tokens[0]), repo.commit(tokens[1])):
                     if not r.hexsha in self.patches_map:
                         self.patches_map[r.hexsha] = []
