@@ -23,7 +23,7 @@ script_dirname = os.path.abspath(os.path.dirname(__file__))
 patches_folder = os.path.join(script_dirname, 'gcc-release-patches')
 
 # WARNING: older commits include wide-int branch merged commits
-last_revision = '4f3db60ba863eebeab1df6c7ec21324feba3bca1' # 1.6.2014
+last_revision = 'fda23bcce3c6a9db436896cb0f2e03d1101ab60c' # 10.11.2014
 
 oldest_release = '4.5'
 lock = filelock.FileLock('/tmp/gcc_build_binary.lock')
