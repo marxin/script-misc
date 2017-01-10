@@ -25,9 +25,11 @@ patches_folder = os.path.join(script_dirname, 'gcc-release-patches')
 # WARNING: older commits include wide-int branch merged commits
 last_revision = 'fda23bcce3c6a9db436896cb0f2e03d1101ab60c' # 10.11.2014
 
+description_color = 'blue'
+title_color = 'cyan'
+
 oldest_release = '4.5'
 lock = filelock.FileLock('/tmp/gcc_build_binary.lock')
-description_color = 'blue'
 git_location = '/home/marxin/BIG/Programming/gcc/'
 install_location = '/home/marxin/DATA/gcc-binaries/'
 log_file = '/home/marxin/Programming/script-misc/gcc-build.log'
@@ -422,22 +424,22 @@ class GitRepository:
                     self.patches_map[r.hexsha].append(file)
 
     def print(self):
-        flush_print('Releases')
+        flush_print(colored('Releases', title_color))
         for r in self.releases:
             r.print_status()
 
-        flush_print('\nActive branches')
+        flush_print(colored('\nActive branches', title_color))
         for r in self.branches:
             r.print_info()
             r.print_status()
 
-        flush_print('\nActive branch bases')
+        flush_print(colored('\nActive branch bases', title_color))
         for r in self.branch_bases:
             r.print_status()
 
         existing_revisions = len(list(filter(lambda x: x.has_binary, self.latest)))
         missing = len(self.latest) - existing_revisions
-        flush_print('\nLatest %d revisions (have: %d)' % (len(self.latest), existing_revisions))
+        flush_print(colored('\nLatest %d revisions (have: %d)' % (len(self.latest), existing_revisions), title_color))
         flush_print('Missing: %d (time to build: %s)\n' % (missing, str(timedelta(minutes = 6 * missing))))
         for r in self.latest:
             r.print_status()
@@ -482,7 +484,7 @@ class GitRepository:
 
     def bisect(self):
         if not args.only_latest:
-            flush_print('Releases')
+            flush_print(colored('Releases', title_color))
             results = {True: [], False: []}
             for r in self.releases:
                 results[r.test()].append(r.name)
@@ -490,15 +492,15 @@ class GitRepository:
             Release.print_known_to('work', filter_versions(results[True]))
             Release.print_known_to('fail', filter_versions(results[False]))
 
-            flush_print('\nActive branches')
+            flush_print(colored('\nActive branches', title_color))
             for r in self.branches:
                 r.test()
 
-            flush_print('\nActive branch bases')
+            flush_print(colored('\nActive branch bases', title_color))
             for r in self.branch_bases:
                 r.test()
 
-        flush_print('\nBisecting latest revisions')
+        flush_print(colored('\nBisecting latest revisions', title_color))
         candidates = list(filter(lambda x: x.has_binary, self.latest))
 
         # test whether there's a change in return code
