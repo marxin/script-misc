@@ -43,6 +43,8 @@ parser.add_argument('-p', '--pull', action = 'store_true', help = 'Pull reposito
 parser.add_argument('-l', '--only-latest', action = 'store_true', help = 'Test only latest revisions')
 parser.add_argument('--bisect-start', help = 'Bisection start revision')
 parser.add_argument('--bisect-end', help = 'Bisection end revision')
+parser.add_argument('--all', action = 'store_true', help = 'Run all revisions in a range')
+parser.add_argument('--smart-sequence', action = 'store_true', help = 'Run all revisions in a smart sequence')
 parser.add_argument('-n', help = 'Number of revisions to build')
 parser.add_argument('-i', '--ice', action = 'store_true', help = 'Grep stderr for ICE')
 
@@ -129,6 +131,28 @@ def filter_versions(versions):
             r.append(v)
 
     return reversed(r)
+
+def generate_sequence(maximum):
+    values = []
+    todo = [(0, maximum - 1)]
+    while len(todo) > 0:
+        x = todo.pop(0)
+        min = x[0]
+        max = x[1]
+        if not min in values:
+            values.append(min)
+
+        if not max in values:
+            values.append(max)
+        diff = max - min
+        if diff > 1:
+            half = min + int(diff / 2)
+            todo.append((min, half))
+            todo.append((half, max))
+
+    # validate that
+    assert len(values) == maximum
+    return values
 
 class GitRevision:
     def __init__(self, commit):
@@ -513,13 +537,23 @@ class GitRepository:
             r = single_or_default (lambda x: x.commit.hexsha.startswith(args.bisect_end), candidates)
             candidates = candidates[:candidates.index(r)+1]
 
-        first = candidates[0].test()
-        last = candidates[-1].test()
-
-        if first != last:
-            GitRepository.bisect_recursive(candidates, first, last)
+        if args.all:
+            flush_print('  running: %d revisions' % len(candidates))
+            for c in candidates:
+                c.test()
+        elif args.smart_sequence:
+            flush_print('  running: %d revisions' % len(candidates))
+            sequence = generate_sequence(len(candidates))
+            for i in sequence:
+                candidates[i].test()
         else:
-            flush_print('  bisect finished: ' +  colored('there is no change!', 'red'))
+            first = candidates[0].test()
+            last = candidates[-1].test()
+
+            if first != last:
+                GitRepository.bisect_recursive(candidates, first, last)
+            else:
+                flush_print('  bisect finished: ' +  colored('there is no change!', 'red'))
 
     @staticmethod
     def bisect_recursive(candidates, r1, r2):
