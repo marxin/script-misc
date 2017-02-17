@@ -20,7 +20,7 @@ def does_ice(command):
 def do_cmd(base, flags):
     return '%s %s' % (' '.join(base), ' '.join(flags))
 
-command_line = [x for x in sys.argv[1].split(' ') if x != '']
+command_line = [x.replace('#', '--param ') for x in sys.argv[1].replace('--param ', '#').split(' ') if x != '']
 
 base = [x for x in command_line if not x.startswith('-')]
 flags = set([x for x in command_line if not x in base])

@@ -5,6 +5,9 @@ import subprocess
 import random
 import sys
 import glob
+import re
+
+from itertools import *
 
 # parser = argparse.ArgumentParser(description='')
 # parser.add_argument('api_key', help = 'API key')
@@ -19,7 +22,11 @@ import glob
 #
 
 option_validity_cache = {}
-source_files = glob.glob('/home/marxin/Programming/gcc/**/pr[0-9]*.c', recursive = True)
+
+# source_files = ['/tmp/test.c']
+source_files = glob.glob('/home/marxin/Programming/gcc/gcc/testsuite/**/pr[0-9]*.c', recursive = True)
+
+print('Found %d files.' % len(source_files))
 
 def split_by_space(line):
     return [x for x in line.replace('\t', ' ').split(' ') if x != '']
@@ -27,7 +34,7 @@ def split_by_space(line):
 def output_for_command(command):
     r = subprocess.run(command, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     assert r.returncode == 0
-    lines = [x.strip() for x in r.stdout.decode('utf-8').split('\n') if x.strip() != '']
+    lines = [x.strip() for x in r.stdout.decode('utf-8').split('\n')]
     lines = lines[1:]
     return lines
 
@@ -41,29 +48,114 @@ def check_option(level, option):
     option_validity_cache[option] = result
     return result
 
-def switch_option(option):
-    assert option.startswith('-f') or option.startswith('-m')
-    prefix = option[:2]
-    option = option[2:]
-    if option.startswith('no-'):
-        return prefix + option[3:]
-    else:
-        return prefix + 'no-' + option
+class BooleanFlag:
+    def __init__(self, name, default):
+        self.name = name
+        self.default = default
+
+    def check_option(self, level):
+        return check_option(level, self.switch_option())
+
+    def switch_option(self):
+        assert self.name.startswith('-f') or self.name.startswith('-m')
+        prefix = self.name[:2]
+        option = self.name[2:]
+        if option.startswith('no-'):
+            return prefix + option[3:]
+        else:
+            return prefix + 'no-' + option
+
+    def select_nondefault(self):
+        return self.switch_option() if self.default else self.name
+
+class EnumFlag:
+    def __init__(self, name, default, values):
+        self.name = name
+        self.default = default
+        self.values = values
+
+    def check_option(self, level):
+        for value in self.values:
+            if not check_option(level, self.name + value):
+                return False
+
+        return True
+
+    def select_nondefault(self):
+        options = [x for x in self.values if x != self.default]
+        return self.name + random.choice(options)
+
+class Param:
+    def __init__(self, name, tokens):
+        self.name = name
+        self.default = int(tokens[1])
+        self.min = int(tokens[3])
+        self.max = int(tokens[5])
+
+        if self.max == 0:
+            self.max = 2147483647
+
+    def check_option(self, level):
+        return check_option(level, '--param %s=%d' % (self.name, self.default))
+
+    def select_nondefault(self):
+        value = None
+        coin = random.randint(0, 2)
+        if coin == 0:
+            value = self.min
+        elif coin == 1:
+            value = self.max
+        else:
+            value = random.randint(self.min, self.max)
+        
+        return '--param %s=%d' % (self.name, value)
 
 class OptimizationLevel:
     def __init__(self, level):
         self.level = level
-        self.enabled = []
-        self.disabled = []
+        self.options = []
 
-        self.parse_options('target')        
+        self.parse_options('target')
         self.parse_options('optimize')
+        self.parse_params()
 
-        self.enabled = self.filter_options(self.enabled)
-        self.disabled= self.filter_options(self.disabled)
+        self.options = self.filter_options(self.options)
+
+    def parse_enum_values(self, name):
+        d = {}
+
+        if name == 'target':
+            # enums are listed at the end
+            lines = output_for_command('gcc -Q --help=%s %s' % (name, self.level))
+            start = takewhile(lambda x: x != '', lines)
+            lines = lines[len(list(start)):]
+
+            for i, v in enumerate(lines):
+                m = re.match('.* (-m.*=).*', v)
+                if m != None:
+                    print(m.group(1))
+                    d[m.group(1)] = lines[i + 1].split(' ')
+
+        else:
+            # run without -Q
+            lines = output_for_command('gcc --help=%s %s' % (name, self.level))
+
+            for l in lines:
+                parts = split_by_space(l)
+                if len(parts) >= 2 and parts[1].endswith(']'):
+                    key = parts[0]
+                    s = parts[1]
+                    s = s[s.find('=[') + 2:-1]
+                    d[key] = s.split('|')
+
+        return d
 
     def parse_options(self, name):
+        enum_values = self.parse_enum_values(name)
+
         for l in output_for_command('gcc -Q --help=%s %s' % (name, self.level)):
+            if l == '':
+               break
             parts = split_by_space(l)
 
             if len(parts) != 2:
@@ -77,50 +169,49 @@ class OptimizationLevel:
             if key == '-m3dnowa':
                 continue
 
-            # TODO: report bug #2
-            if key == '-msse' or key == '-mfp-ret-in-387' or key == '-m80387':
-                continue
+            # TODO: do not disable -mno-sse because it prevents from double usage
 
             # TODO: report bug #3
-            if key == '-fselective-scheduling2':
-                continue
+#            if key == '-fselective-scheduling2':
+#                continue
 
             if key == '-miamcu':
                 continue
 
             if value == '[enabled]':
-                self.enabled.append(key)
+                self.options.append(BooleanFlag(key, True))
             elif value == '[disabled]':
-                self.disabled.append(key)
+                self.options.append(BooleanFlag(key, False))
+            elif key.endswith('=') and key in enum_values:
+                self.options.append(EnumFlag(key, value, enum_values[key]))
             else:
+                print('WARNING: parsing error: ' + l)
                 # TODO
-                pass        
+                pass
+
+    def parse_params(self):
+        for l in output_for_command('gcc -Q --help=params %s' % (self.level)):
+            if l == '':
+                continue
+            parts = split_by_space(l)
+
+            assert len(parts) == 7
+            self.options.append(Param(parts[0], parts[1:]))
 
     def filter_options(self, l):
         filtered = []
 
-        for o in self.enabled + self.disabled:
-            r = check_option(self.level, o)
-            assert r
-               
-            # switch option
-            s = switch_option(o)
-            r = check_option(self.level, s)
+        for option in self.options:
+            r = option.check_option(self.level)
             if not r:
-                print('failed: ' + s)
+                print('failed: ' + option.name)
             else:
-                filtered.append(o)
+                filtered.append(option)
 
         return filtered
 
     def test(self, option_count):
-        options = []
-
-        for i in range(option_count):
-            if random.choice([True, False]):
-                options.append(switch_option(random.choice(self.enabled)))
-            else:
-                options.append(random.choice(self.disabled))
+        options = [random.choice(self.options).select_nondefault() for option in range(option_count)]
 
         # TODO: warning
         cmd = 'gcc -c -Wno-overflow %s %s %s' % (self.level, random.choice(source_files), ' '.join(options))
@@ -134,12 +225,7 @@ class OptimizationLevel:
 
 levels = [OptimizationLevel(x) for x in ['', '-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os', '-Og']]
 
-for l in levels:
-    print(l.level)
-    print(l.enabled)
-    print(l.disabled)
-
-random.seed(11111111)
+random.seed(111111111111)
 for i in range(1000 * 1000):
     level = random.choice(levels)
     level.test(random.randint(1, 20))
