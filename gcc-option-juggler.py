@@ -6,6 +6,7 @@ import random
 import sys
 import glob
 import re
+import concurrent.futures
 
 from itertools import *
 
@@ -24,7 +25,7 @@ from itertools import *
 option_validity_cache = {}
 
 # source_files = ['/tmp/test.c']
-source_files = glob.glob('/home/marxin/Programming/gcc/gcc/testsuite/**/pr[0-9]*.c', recursive = True)
+source_files = glob.glob('/tmp/csmith/test-*.c', recursive = True)
 
 # TODO: remove
 source_files = list(filter(lambda x: not 'pr21255' in x, source_files))
@@ -245,9 +246,13 @@ class OptimizationLevel:
             sys.stdout.flush()
 
 levels = [OptimizationLevel(x) for x in ['', '-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os', '-Og']]
-
 random.seed(129834719823)
-for i in range(1000 * 1000):
+
+def test():
     level = random.choice(levels)
     level.test(random.randint(1, 20))
 
+with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
+    futures = {executor.submit(test): x for x in range(1000 * 1000)}
+    for future in concurrent.futures.as_completed(futures):
+        pass
