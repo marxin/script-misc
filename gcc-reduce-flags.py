@@ -15,10 +15,10 @@ if len(sys.argv) == 3:
 def does_ice(command):
     r = subprocess.run(command, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     stderr = r.stderr.decode('utf-8')
-    return pattern in stderr
+    return r.returncode == 124 or pattern in stderr
 
 def do_cmd(base, flags):
-    return '%s %s' % (' '.join(base), ' '.join(flags))
+    return 'timeout 1 %s %s' % (' '.join(base), ' '.join(flags))
 
 command_line = [x.replace('#', '--param ') for x in sys.argv[1].replace('--param ', '#').split(' ') if x != '']
 

@@ -26,6 +26,9 @@ option_validity_cache = {}
 # source_files = ['/tmp/test.c']
 source_files = glob.glob('/home/marxin/Programming/gcc/gcc/testsuite/**/pr[0-9]*.c', recursive = True)
 
+# TODO: remove
+source_files = list(filter(lambda x: not 'pr21255' in x, source_files))
+
 print('Found %d files.' % len(source_files))
 
 def split_by_space(line):
@@ -57,7 +60,7 @@ class BooleanFlag:
         return check_option(level, self.switch_option())
 
     def switch_option(self):
-        assert self.name.startswith('-f') or self.name.startswith('-m')
+        assert self.name.startswith('-f') or self.name.startswith('-m') or self.name.startswith('-W')
         prefix = self.name[:2]
         option = self.name[2:]
         if option.startswith('no-'):
@@ -69,10 +72,11 @@ class BooleanFlag:
         return self.switch_option() if self.default else self.name
 
 class EnumFlag:
-    def __init__(self, name, default, values):
+    def __init__(self, name, default, values, multi):
         self.name = name
         self.default = default
         self.values = values
+        self.multi = multi
 
     def check_option(self, level):
         for value in self.values:
@@ -83,7 +87,13 @@ class EnumFlag:
 
     def select_nondefault(self):
         options = [x for x in self.values if x != self.default]
-        return self.name + random.choice(options)
+        choice = None
+        if self.multi:
+            choice = ','.join(random.sample(self.values, random.randint(1, len(self.values))))
+        else:
+            choice = random.choice(options)
+
+        return self.name + choice
 
 class Param:
     def __init__(self, name, tokens):
@@ -117,7 +127,9 @@ class OptimizationLevel:
 
         self.parse_options('target')
         self.parse_options('optimize')
+        self.parse_options('warning')
         self.parse_params()
+        self.add_interesting_options()
 
         self.options = self.filter_options(self.options)
 
@@ -165,6 +177,9 @@ class OptimizationLevel:
             key = parts[0]
             value = parts[1]
 
+            if key == '-Wall' or key == 'Wextra':
+                continue
+
             # TODO: report bug
             if key == '-m3dnowa':
                 continue
@@ -183,7 +198,7 @@ class OptimizationLevel:
             elif value == '[disabled]':
                 self.options.append(BooleanFlag(key, False))
             elif key.endswith('=') and key in enum_values:
-                self.options.append(EnumFlag(key, value, enum_values[key]))
+                self.options.append(EnumFlag(key, value, enum_values[key], False))
             else:
                 print('WARNING: parsing error: ' + l)
                 # TODO
@@ -197,6 +212,10 @@ class OptimizationLevel:
 
             assert len(parts) == 7
             self.options.append(Param(parts[0], parts[1:]))
+
+    def add_interesting_options(self):
+        sanitize_values = 'address,kernel-address,thread,leak,undefined,vptr'.split(',')
+        self.options.append(EnumFlag('-fsanitize=', None, sanitize_values, False))
 
     def filter_options(self, l):
         filtered = []
@@ -214,18 +233,20 @@ class OptimizationLevel:
         options = [random.choice(self.options).select_nondefault() for option in range(option_count)]
 
         # TODO: warning
-        cmd = 'gcc -c -Wno-overflow %s %s %s' % (self.level, random.choice(source_files), ' '.join(options))
+        cmd = 'timeout 3 gcc -c -flto -Wno-overflow %s %s %s' % (self.level, random.choice(source_files), ' '.join(options))
         r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
         if r.returncode != 0:
             print('\n' + cmd)
             print(r.stderr.decode('utf-8'))
+            if r.returncode == 124:
+                print('internal compiler error: !!!timeout!!!')
         else:
             print('.' , end = '')
             sys.stdout.flush()
 
 levels = [OptimizationLevel(x) for x in ['', '-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os', '-Og']]
 
-random.seed(111111111111)
+random.seed(129834719823)
 for i in range(1000 * 1000):
     level = random.choice(levels)
     level.test(random.randint(1, 20))
