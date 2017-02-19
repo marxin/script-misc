@@ -26,10 +26,10 @@ option_validity_cache = {}
 
 # source_files = ['/tmp/test.c']
 source_files = glob.glob('/tmp/csmith/test-*.c', recursive = True)
+# source_files = glob.glob('/home/marxin/Programming/gcc/gcc/testsuite/**/pr*.c', recursive = True)
 
 # TODO: remove
-source_files = list(filter(lambda x: not 'pr21255' in x, source_files))
-
+# source_files = list(filter(lambda x: not 'pr21255' in x, source_files))
 print('Found %d files.' % len(source_files))
 
 def split_by_space(line):
@@ -237,13 +237,12 @@ class OptimizationLevel:
         cmd = 'timeout 3 gcc -c -flto -Wno-overflow %s %s %s' % (self.level, random.choice(source_files), ' '.join(options))
         r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
         if r.returncode != 0:
-            print('\n' + cmd)
+            print('FAILED:' + cmd)
             print(r.stderr.decode('utf-8'))
             if r.returncode == 124:
                 print('internal compiler error: !!!timeout!!!')
         else:
             print('.' , end = '')
-            sys.stdout.flush()
 
 levels = [OptimizationLevel(x) for x in ['', '-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os', '-Og']]
 random.seed(129834719823)
@@ -253,6 +252,7 @@ def test():
     level.test(random.randint(1, 20))
 
 with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
-    futures = {executor.submit(test): x for x in range(1000 * 1000)}
-    for future in concurrent.futures.as_completed(futures):
-        pass
+    for i in range(1000):
+        futures = {executor.submit(test): x for x in range(1000)}
+        for future in concurrent.futures.as_completed(futures):
+            pass
