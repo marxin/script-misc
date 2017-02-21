@@ -280,6 +280,7 @@ def test():
     level.test(random.randint(1, 20))
 
 with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
-    futures = {executor.submit(test): x for x in range(1000 * 1000)}
-    for future in concurrent.futures.as_completed(futures):
-        pass
+    for i in range(1000):
+        futures = {executor.submit(test): x for x in range(1000)}
+        for future in concurrent.futures.as_completed(futures):
+            pass
