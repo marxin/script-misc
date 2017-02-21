@@ -6,6 +6,7 @@ import random
 import sys
 import glob
 import re
+import concurrent.futures
 
 from itertools import *
 from datetime import datetime
@@ -30,12 +31,11 @@ def get_compiler_by_extension(f):
     elif f.endswith('.C') or f.endswith('.cpp'):
         return 'g++'
     else:
-        print(f)
-        assert False
+        return None
 
 source_files = glob.glob('/home/marxin/Programming/gcc/gcc/testsuite/**/*', recursive = True)
 source_files += glob.glob('/home/marxin/BIG/Programming/llvm-project/**/test/**/*', recursive = True)
-source_files = list(filter(lambda x: x.endswith('.c') or x.endswith('.cpp') or x.endswith('.C'), source_files))
+source_files = list(filter(lambda x: get_compiler_by_extension(x) != None, source_files))
 
 for f in source_files:
     get_compiler_by_extension(f)
@@ -273,9 +273,13 @@ class OptimizationLevel:
             sys.stdout.flush()
 
 levels = [OptimizationLevel(x) for x in ['', '-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os', '-Og']]
+random.seed(129834719823)
 
-random.seed(123123)
-for i in range(1000 * 1000 * 1000):
+def test():
     level = random.choice(levels)
     level.test(random.randint(1, 20))
 
+with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
+    futures = {executor.submit(test): x for x in range(1000 * 1000)}
+    for future in concurrent.futures.as_completed(futures):
+        pass
