@@ -203,10 +203,6 @@ class OptimizationLevel:
             if key == '-Wall' or key == 'Wextra':
                 continue
 
-            # TODO: report bug
-            if key == '-m3dnowa':
-                continue
-
             # TODO: do not disable -mno-sse because it prevents from double usage
 
             # TODO: report bug #3
@@ -273,7 +269,7 @@ class OptimizationLevel:
             sys.stdout.flush()
 
 levels = [OptimizationLevel(x) for x in ['', '-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os', '-Og']]
-random.seed(129834719823)
+random.seed(2345234523)
 
 def test():
     level = random.choice(levels)
