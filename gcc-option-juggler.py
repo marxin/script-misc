@@ -8,6 +8,7 @@ import glob
 import re
 
 from itertools import *
+from datetime import datetime
 
 # parser = argparse.ArgumentParser(description='')
 # parser.add_argument('api_key', help = 'API key')
@@ -23,11 +24,21 @@ from itertools import *
 
 option_validity_cache = {}
 
-# source_files = ['/tmp/test.c']
-source_files = glob.glob('/home/marxin/Programming/gcc/gcc/testsuite/**/pr[0-9]*.c', recursive = True)
+def get_compiler_by_extension(f):
+    if f.endswith('.c'):
+        return 'gcc'
+    elif f.endswith('.C') or f.endswith('.cpp'):
+        return 'g++'
+    else:
+        print(f)
+        assert False
 
-# TODO: remove
-source_files = list(filter(lambda x: not 'pr21255' in x, source_files))
+source_files = glob.glob('/home/marxin/Programming/gcc/gcc/testsuite/**/*', recursive = True)
+source_files += glob.glob('/home/marxin/BIG/Programming/llvm-project/**/test/**/*', recursive = True)
+source_files = list(filter(lambda x: x.endswith('.c') or x.endswith('.cpp') or x.endswith('.C'), source_files))
+
+for f in source_files:
+    get_compiler_by_extension(f)
 
 print('Found %d files.' % len(source_files))
 
@@ -48,6 +59,8 @@ def check_option(level, option):
     cmd = 'gcc -c /tmp/empty.c %s %s' % (level, option)
     r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     result = r.returncode == 0
+    if not result:
+        print(cmd)
     option_validity_cache[option] = result
     return result
 
@@ -102,8 +115,18 @@ class Param:
         self.min = int(tokens[3])
         self.max = int(tokens[5])
 
+        if self.default == -1:
+            self.default = 0
+
+        if self.min == -1:
+            self.min = 0
+
         if self.max == 0:
             self.max = 2147483647
+
+        # TODO: write somewhere these
+        if self.name == 'max-iterations-to-track':
+            self.max = 1000
 
     def check_option(self, level):
         return check_option(level, '--param %s=%d' % (self.name, self.default))
@@ -231,13 +254,18 @@ class OptimizationLevel:
 
     def test(self, option_count):
         options = [random.choice(self.options).select_nondefault() for option in range(option_count)]
+        source_file = random.choice(source_files)
+        compiler = 'gcc' if source_file.endswith('.c') else 'g++'
 
         # TODO: warning
-        cmd = 'timeout 3 gcc -c -flto -Wno-overflow %s %s %s' % (self.level, random.choice(source_files), ' '.join(options))
+        cmd = 'timeout 10 %s -c -flto -I/home/marxin/BIG/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s %s %s' % (compiler, self.level, source_file, ' '.join(options))
         r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
         if r.returncode != 0:
             print('\n' + cmd)
-            print(r.stderr.decode('utf-8'))
+            try:
+                print(r.stderr.decode('utf-8'))
+            except UnicodeDecodeError as e:
+                print('internal compiler error: !!!cannot decode stderr!!!')
             if r.returncode == 124:
                 print('internal compiler error: !!!timeout!!!')
         else:
@@ -246,8 +274,8 @@ class OptimizationLevel:
 
 levels = [OptimizationLevel(x) for x in ['', '-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os', '-Og']]
 
-random.seed(129834719823)
-for i in range(1000 * 1000):
+random.seed(123123)
+for i in range(1000 * 1000 * 1000):
     level = random.choice(levels)
     level.test(random.randint(1, 20))
 
