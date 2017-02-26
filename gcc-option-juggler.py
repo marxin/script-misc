@@ -34,8 +34,9 @@ def get_compiler_by_extension(f):
         return None
 
 source_files = glob.glob('/home/marxin/Programming/gcc/gcc/testsuite/**/*', recursive = True)
-source_files += glob.glob('/home/marxin/BIG/Programming/llvm-project/**/test/**/*', recursive = True)
+# source_files += glob.glob('/home/marxin/BIG/Programming/llvm-project/**/test/**/*', recursive = True)
 source_files = list(filter(lambda x: get_compiler_by_extension(x) != None, source_files))
+# source_files = ['/tmp/empty.c']
 
 for f in source_files:
     get_compiler_by_extension(f)
@@ -82,6 +83,7 @@ class BooleanFlag:
             return prefix + 'no-' + option
 
     def select_nondefault(self):
+        assert False
         return self.switch_option() if self.default else self.name
 
 class EnumFlag:
@@ -107,6 +109,34 @@ class EnumFlag:
             choice = random.choice(options)
 
         return self.name + choice
+
+class MarchFlag:
+    def __init__(self):
+        self.name = '-march='
+        self.options = 'native,i386,i486,i586,pentium,lakemont,pentium-mmx,pentiumpro,i686,pentium2,pentium3,pentium3m,pentium-m,pentium4,pentium4m,prescott,nocona,core2,nehalem,westmere,sandybridge,ivybridge,haswell,broadwell,skylake,bonnell,silvermont,knl,skylake-avx512,k6,k6-2,k6-3,athlon,athlon-tbird,athlon-4,athlon-xp,athlon-mp,k8,opteron,athlon64,athlon-fx,k8-sse3,opteron-sse3,athlon64-sse3,amdfam10,barcelona,bdver1,bdver2,bdver3,bdver4,znver1,btver1,btver2,winchip-c6,winchip2,c3,c3-2,geode'.split(',')
+        self.tuples = []
+
+    def check_option(self, level):
+        for o in self.options:
+            s = self.name + o
+            r = check_option(level, s)
+            needs_m32 = False
+            if not r:
+                r = check_option(level, s + ' -m32')
+                assert r
+                needs_m32 = True
+
+            self.tuples.append((o, needs_m32))
+
+        return True
+
+    def select_nondefault(self):
+        choice = random.choice(self.tuples)
+        s = self.name + choice[0]
+        if choice[1]:
+            s += ' -m32'
+
+        return s
 
 class Param:
     def __init__(self, name, tokens):
@@ -148,6 +178,7 @@ class OptimizationLevel:
         self.level = level
         self.options = []
 
+        self.options.append(MarchFlag())
         self.parse_options('target')
         self.parse_options('optimize')
         self.parse_options('warning')
@@ -177,16 +208,17 @@ class OptimizationLevel:
 
             for l in lines:
                 parts = split_by_space(l)
-                if len(parts) >= 2 and parts[1].endswith(']'):
-                    key = parts[0]
-                    s = parts[1]
-                    s = s[s.find('=[') + 2:-1]
+                if len(parts) >= 2 and parts[0].endswith(']') and '=' in parts[0]:
+                    parts2 = parts[0].split('=')
+                    key = parts2[0]
+                    s = parts2[1][1:-1]
                     d[key] = s.split('|')
 
         return d
 
     def parse_options(self, name):
         enum_values = self.parse_enum_values(name)
+        print(enum_values)
 
         for l in output_for_command('gcc -Q --help=%s %s' % (name, self.level)):
             if l == '':
@@ -203,13 +235,7 @@ class OptimizationLevel:
             if key == '-Wall' or key == 'Wextra':
                 continue
 
-            # TODO: do not disable -mno-sse because it prevents from double usage
-
-            # TODO: report bug #3
-#            if key == '-fselective-scheduling2':
-#                continue
-
-            if key == '-miamcu':
+            if key == '-miamcu' or key == '-march=':
                 continue
 
             if value == '[enabled]':
