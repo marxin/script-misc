@@ -138,6 +138,27 @@ class MarchFlag:
 
         return s
 
+class IntegerRangeFlag:
+    def __init__(self, name, min, max):
+        self.name = name
+        self.min = min
+        self.max = max
+
+    def check_option(self, level):
+        for o in range(self.min, self.max + 1):
+            s = self.name + str(o)
+            r = check_option(level, s)
+            if r == False:
+                return False
+
+        return True
+
+    def select_nondefault(self):
+        choice = random.randint(self.min, self.max + 1)
+
+        s = self.name + choice
+        return s
+
 class Param:
     def __init__(self, name, tokens):
         self.name = name
@@ -230,6 +251,7 @@ class OptimizationLevel:
                 # TODO
                 continue
 
+            original = parts[0]
             i = parts[0].find('=')
             if i != -1:
                 parts[0] = parts[0][:i+1]
@@ -249,6 +271,13 @@ class OptimizationLevel:
                 self.options.append(BooleanFlag(key, False))
             elif key.endswith('=') and key in enum_values:
                 self.options.append(EnumFlag(key, value, enum_values[key], False))
+            elif original[-1] == '>' and '=' in original and ',' in original:
+                i = original.find('=')
+                value = original[i+2:-1]
+                key = original[:i+1]
+                parts = value.split(',')
+                assert len(parts) == 2
+                self.options.append(IntegerRangeFlag(key, int(parts[0]), int(parts[1])))
             else:
                 print('WARNING: parsing error: ' + l)
                 # TODO
