@@ -145,7 +145,9 @@ class IntegerRangeFlag:
         self.max = max
 
     def check_option(self, level):
-        for o in range(self.min, self.max + 1):
+        r = [self.min, self.max] if self.max > 100 else range(self.min, self.max + 1)
+
+        for o in r:
             s = self.name + str(o)
             r = check_option(level, s)
             if r == False:
@@ -220,7 +222,6 @@ class OptimizationLevel:
             for i, v in enumerate(lines):
                 m = re.match('.* (-m.*=).*', v)
                 if m != None:
-                    print(m.group(1))
                     d[m.group(1)] = lines[i + 1].split(' ')
 
         else:
@@ -271,13 +272,22 @@ class OptimizationLevel:
                 self.options.append(BooleanFlag(key, False))
             elif key.endswith('=') and key in enum_values:
                 self.options.append(EnumFlag(key, value, enum_values[key], False))
-            elif original[-1] == '>' and '=' in original and ',' in original:
+            elif original[-1] == '>' and '=' in original:
                 i = original.find('=')
                 value = original[i+2:-1]
                 key = original[:i+1]
+
+                min = 1
+                max = 4294967294
+
                 parts = value.split(',')
-                assert len(parts) == 2
-                self.options.append(IntegerRangeFlag(key, int(parts[0]), int(parts[1])))
+                if len(parts) == 2:
+                    min = int(parts[0])
+                    max = int(parts[1])
+                else:
+                    assert original.endswith('<number>')
+
+                self.options.append(IntegerRangeFlag(key, min, max))
             else:
                 print('WARNING: parsing error: ' + l)
                 # TODO
@@ -336,7 +346,7 @@ def test():
     level.test(random.randint(1, 20))
 
 with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
-    for i in range(1000):
+    for i in range(1000000):
         futures = {executor.submit(test): x for x in range(1000)}
         for future in concurrent.futures.as_completed(futures):
             pass
