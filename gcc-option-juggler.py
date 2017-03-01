@@ -12,6 +12,7 @@ import traceback
 from itertools import *
 from datetime import datetime
 from termcolor import colored
+from time import time
 
 parser = argparse.ArgumentParser(description = 'Yet another stupid GCC fuzzer')
 parser.add_argument('--iterations', type = int, default = 100, help = 'Number of tested test-cases (in thousands)')
@@ -75,7 +76,7 @@ def find_ice(stderr):
         if ice in l:
             subject = l[l.find(ice) + len(ice):]
             found_ice = True
-        elif l.startswith('0x'):
+        elif l.startswith('0x') and subject == None:
             subject = ''
             bt.append(l)
         elif 'Please submit a full bug report' in l:
@@ -344,18 +345,18 @@ class OptimizationLevel:
             compiler = 'gcc' if source_file.endswith('.c') else 'g++'
 
             # TODO: warning
-            cmd = 'timeout %d %s -c %s -I/home/marxin/BIG/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s %s %s' % (args.timeout, compiler, args.cflags, self.level, source_file, ' '.join(options))
+            cmd = 'timeout %d %s -c %s -I/home/marxin/BIG/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s %s %s -o/dev/null' % (args.timeout, compiler, args.cflags, self.level, source_file, ' '.join(options))
             r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
             if r.returncode != 0:
                 try:
                     stderr = r.stderr.decode('utf-8')
                     ice = find_ice(stderr)
                     if ice != None and not ice[1] in ice_cache:
-                        print(colored('NEW ICE: %s' % ice[0], 'red'))
+                        ice_cache.add(ice[1])
+                        print(colored('NEW ICE #%d: %s' % (len(ice_cache), ice[0]), 'red'))
                         print(cmd)
                         print(ice[1])
                         print()
-                        ice_cache.add(ice[1])
                 except UnicodeDecodeError as e:
                     print('internal compiler error: !!!cannot decode stderr!!!')
                 if r.returncode == 124:
@@ -372,10 +373,14 @@ def test():
     level = random.choice(levels)
     level.test(random.randint(1, 20))
 
+start = time()
+N = 1000
+
 with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
-    for i in range(args.iterations):
-        futures = {executor.submit(test): x for x in range(1000)}
+    for i in range(1, args.iterations):
+        futures = {executor.submit(test): x for x in range(N)}
         for future in concurrent.futures.as_completed(futures):
             pass
         if args.verbose:
-            print('progress: %d/%d' % (i, args.iterations))
+            c = i * N
+            print('progress: %d/%d, %.2f tests/s' % (c, args.iterations * N, c / (time() - start)))
