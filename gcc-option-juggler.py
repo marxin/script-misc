@@ -16,7 +16,7 @@ from time import time
 
 parser = argparse.ArgumentParser(description = 'Yet another stupid GCC fuzzer')
 parser.add_argument('--iterations', type = int, default = 100, help = 'Number of tested test-cases (in thousands)')
-parser.add_argument('--cflags', help = 'Additional compile flags')
+parser.add_argument('--cflags', default = '', help = 'Additional compile flags')
 parser.add_argument('--timeout', type = int, default = 10, help = 'Default timeout for GCC command')
 parser.add_argument('-v', '--verbose', action = 'store_true', help = 'Verbose messages')
 args = parser.parse_args()
@@ -359,7 +359,7 @@ class OptimizationLevel:
                         print()
                 except UnicodeDecodeError as e:
                     print('internal compiler error: !!!cannot decode stderr!!!')
-                if r.returncode == 124:
+                if r.returncode == 124 and args.verbose:
                     print(colored('TIMEOUT:', 'red'))
                     print(cmd)
         except Exception as e:
@@ -367,7 +367,7 @@ class OptimizationLevel:
             traceback.print_exc(file = sys.stdout)
 
 levels = [OptimizationLevel(x) for x in ['', '-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os', '-Og']]
-random.seed(2345234523)
+random.seed(1231231231)
 
 def test():
     level = random.choice(levels)
