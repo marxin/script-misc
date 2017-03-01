@@ -10,6 +10,7 @@ import concurrent.futures
 
 from itertools import *
 from datetime import datetime
+from termcolor import colored
 
 # parser = argparse.ArgumentParser(description='')
 # parser.add_argument('api_key', help = 'API key')
@@ -34,9 +35,10 @@ def get_compiler_by_extension(f):
         return None
 
 source_files = glob.glob('/home/marxin/Programming/gcc/gcc/testsuite/**/*', recursive = True)
-# source_files += glob.glob('/home/marxin/BIG/Programming/llvm-project/**/test/**/*', recursive = True)
+source_files += glob.glob('/home/marxin/BIG/Programming/llvm-project/**/test/**/*', recursive = True)
 source_files = list(filter(lambda x: get_compiler_by_extension(x) != None, source_files))
-# source_files = ['/tmp/empty.c']
+
+ice_cache = set()
 
 for f in source_files:
     get_compiler_by_extension(f)
@@ -64,6 +66,25 @@ def check_option(level, option):
         print(cmd)
     option_validity_cache[option] = result
     return result
+
+def find_ice(stderr):
+    lines = stderr.split('\n')
+    subject = None
+    ice = 'internal compiler error: '
+
+    bt = []
+
+    for l in lines:
+        l = l.strip()
+        if ice in l:
+            subject = l[l.find(ice) + len(ice):]
+            found_ice = True
+        elif 'Please submit a full bug report' in l:
+            return (subject, '\n'.join(bt))
+        elif subject != None:
+            bt.append(l)
+
+    return None
 
 class BooleanFlag:
     def __init__(self, name, default):
@@ -324,19 +345,23 @@ class OptimizationLevel:
         compiler = 'gcc' if source_file.endswith('.c') else 'g++'
 
         # TODO: warning
-        cmd = 'timeout 10 %s -c -flto -I/home/marxin/BIG/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s %s %s' % (compiler, self.level, source_file, ' '.join(options))
+        cmd = 'timeout 10 %s -c -flto -mmpx -fcheck-pointer-bounds -I/home/marxin/BIG/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s %s %s' % (compiler, self.level, source_file, ' '.join(options))
         r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
         if r.returncode != 0:
-            print('\n' + cmd)
             try:
-                print(r.stderr.decode('utf-8'))
+                stderr = r.stderr.decode('utf-8')
+                ice = find_ice(stderr)
+                if ice != None and not ice[1] in ice_cache:
+                    print(colored('NEW ICE: %s' % ice[0], 'red'))
+                    print(cmd)
+                    print(ice[1])
+                    print()
+                    ice_cache.add(ice[1])
             except UnicodeDecodeError as e:
                 print('internal compiler error: !!!cannot decode stderr!!!')
             if r.returncode == 124:
-                print('internal compiler error: !!!timeout!!!')
-        else:
-            print('.' , end = '')
-            sys.stdout.flush()
+                print(colored('TIMEOUT:', red))
+                print(cmd)
 
 levels = [OptimizationLevel(x) for x in ['', '-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os', '-Og']]
 random.seed(2345234523)
