@@ -360,6 +360,7 @@ class OptimizationLevel:
                         print(cmd)
                         print(ice[1])
                         print()
+                        sys.stdout.flush()
                 except UnicodeDecodeError as e:
                     print('internal compiler error: !!!cannot decode stderr!!!')
                 if r.returncode == 124 and args.verbose:
