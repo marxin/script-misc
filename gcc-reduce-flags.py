@@ -18,7 +18,7 @@ def does_ice(command):
     return r.returncode == 124 or pattern in stderr
 
 def do_cmd(base, flags):
-    return 'timeout 1 %s %s' % (' '.join(base), ' '.join(flags))
+    return 'timeout 3 %s %s' % (' '.join(base), ' '.join(flags))
 
 command_line = [x.replace('#', '--param ') for x in sys.argv[1].replace('--param ', '#').split(' ') if x != '']
 
