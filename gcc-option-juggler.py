@@ -7,22 +7,18 @@ import sys
 import glob
 import re
 import concurrent.futures
+import traceback
 
 from itertools import *
 from datetime import datetime
 from termcolor import colored
 
-# parser = argparse.ArgumentParser(description='')
-# parser.add_argument('api_key', help = 'API key')
-# parser.add_argument('--remove', nargs = '?', help = 'Remove a release from summary')
-# parser.add_argument('--add', nargs = '?', help = 'Add a new release to summary, e.g. 6:7 will add 7 where 6 is included')
-# parser.add_argument('--limit', nargs = '?', help = 'Limit number of bugs affected by the script')
-# parser.add_argument('--doit', action = 'store_true', help = 'Really modify BUGs in the bugzilla')
-# parser.add_argument('--new-target-milestone', help = 'Set a new target milestone, e.g. 4.9.3:4.9.4 will set milestone to 4.9.4 for all PRs having milestone set to 4.9.3')
-# parser.add_argument('--add-known-to-fail', help = 'Set a new known to fail for all PRs affected by --new-target-milestone')
-# parser.add_argument('--comment', help = 'Comment a PR for which we set a new target milestore')
-# args = parser.parse_args()
-#
+parser = argparse.ArgumentParser(description = 'Yet another stupid GCC fuzzer')
+parser.add_argument('--iterations', type = int, default = 100, help = 'Number of tested test-cases (in thousands)')
+parser.add_argument('--cflags', help = 'Additional compile flags')
+parser.add_argument('--timeout', type = int, default = 10, help = 'Default timeout for GCC command')
+parser.add_argument('-v', '--verbose', action = 'store_true', help = 'Verbose messages')
+args = parser.parse_args()
 
 option_validity_cache = {}
 
@@ -79,6 +75,9 @@ def find_ice(stderr):
         if ice in l:
             subject = l[l.find(ice) + len(ice):]
             found_ice = True
+        elif l.startswith('0x'):
+            subject = ''
+            bt.append(l)
         elif 'Please submit a full bug report' in l:
             return (subject, '\n'.join(bt))
         elif subject != None:
@@ -104,7 +103,6 @@ class BooleanFlag:
             return prefix + 'no-' + option
 
     def select_nondefault(self):
-        assert False
         return self.switch_option() if self.default else self.name
 
 class EnumFlag:
@@ -179,7 +177,7 @@ class IntegerRangeFlag:
     def select_nondefault(self):
         choice = random.randint(self.min, self.max + 1)
 
-        s = self.name + choice
+        s = self.name + str(choice)
         return s
 
 class Param:
@@ -340,28 +338,32 @@ class OptimizationLevel:
         return filtered
 
     def test(self, option_count):
-        options = [random.choice(self.options).select_nondefault() for option in range(option_count)]
-        source_file = random.choice(source_files)
-        compiler = 'gcc' if source_file.endswith('.c') else 'g++'
+        try:
+            options = [random.choice(self.options).select_nondefault() for option in range(option_count)]
+            source_file = random.choice(source_files)
+            compiler = 'gcc' if source_file.endswith('.c') else 'g++'
 
-        # TODO: warning
-        cmd = 'timeout 10 %s -c -flto -mmpx -fcheck-pointer-bounds -I/home/marxin/BIG/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s %s %s' % (compiler, self.level, source_file, ' '.join(options))
-        r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
-        if r.returncode != 0:
-            try:
-                stderr = r.stderr.decode('utf-8')
-                ice = find_ice(stderr)
-                if ice != None and not ice[1] in ice_cache:
-                    print(colored('NEW ICE: %s' % ice[0], 'red'))
+            # TODO: warning
+            cmd = 'timeout %d %s -c %s -I/home/marxin/BIG/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s %s %s' % (args.timeout, compiler, args.cflags, self.level, source_file, ' '.join(options))
+            r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+            if r.returncode != 0:
+                try:
+                    stderr = r.stderr.decode('utf-8')
+                    ice = find_ice(stderr)
+                    if ice != None and not ice[1] in ice_cache:
+                        print(colored('NEW ICE: %s' % ice[0], 'red'))
+                        print(cmd)
+                        print(ice[1])
+                        print()
+                        ice_cache.add(ice[1])
+                except UnicodeDecodeError as e:
+                    print('internal compiler error: !!!cannot decode stderr!!!')
+                if r.returncode == 124:
+                    print(colored('TIMEOUT:', 'red'))
                     print(cmd)
-                    print(ice[1])
-                    print()
-                    ice_cache.add(ice[1])
-            except UnicodeDecodeError as e:
-                print('internal compiler error: !!!cannot decode stderr!!!')
-            if r.returncode == 124:
-                print(colored('TIMEOUT:', red))
-                print(cmd)
+        except Exception as e:
+            print('FATAL ERROR')
+            traceback.print_exc(file = sys.stdout)
 
 levels = [OptimizationLevel(x) for x in ['', '-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os', '-Og']]
 random.seed(2345234523)
@@ -371,7 +373,9 @@ def test():
     level.test(random.randint(1, 20))
 
 with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
-    for i in range(1000000):
+    for i in range(args.iterations):
         futures = {executor.submit(test): x for x in range(1000)}
         for future in concurrent.futures.as_completed(futures):
             pass
+        if args.verbose:
+            print('progress: %d/%d' % (i, args.iterations))
