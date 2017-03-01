@@ -80,6 +80,9 @@ def find_ice(stderr):
             subject = ''
             bt.append(l)
         elif 'Please submit a full bug report' in l:
+            # unify stack addresses
+            bt = ['0xstack_address' + x[x.find(' '):] if x.startswith('0x') else x for x in bt]
+
             return (subject, '\n'.join(bt))
         elif subject != None:
             bt.append(l)
