@@ -35,6 +35,9 @@ source_files = glob.glob('/home/marxin/Programming/gcc/gcc/testsuite/**/*', recu
 source_files += glob.glob('/home/marxin/BIG/Programming/llvm-project/**/test/**/*', recursive = True)
 source_files = list(filter(lambda x: get_compiler_by_extension(x) != None, source_files))
 
+# remove RTL test-cases
+source_files = list(filter(lambda x: not '/rtl/' in x, source_files))
+
 ice_cache = set()
 
 for f in source_files:
@@ -202,6 +205,10 @@ class Param:
 
         # TODO: write somewhere these
         if self.name == 'max-iterations-to-track':
+            self.max = 1000
+
+        # TODO: likewise
+        if self.name == 'min-nondebug-insn-uid':
             self.max = 1000
 
     def check_option(self, level):
