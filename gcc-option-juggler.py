@@ -41,6 +41,7 @@ source_files = list(filter(lambda x: get_compiler_by_extension(x) != None, sourc
 source_files = list(filter(lambda x: not '/rtl/' in x, source_files))
 
 ice_cache = set()
+ice_locations = set()
 
 for f in source_files:
     get_compiler_by_extension(f)
@@ -78,7 +79,7 @@ def find_ice(stderr):
 
     for l in lines:
         l = l.strip()
-        if ice in l:
+        if ice in l or ('in ' in l and ' at ' in l):
             subject = l[l.find(ice) + len(ice):]
             found_ice = True
         elif l.startswith('0x') and subject == None:
@@ -354,7 +355,7 @@ class OptimizationLevel:
         try:
             options = [random.choice(self.options).select_nondefault() for option in range(option_count)]
             source_file = random.choice(source_files)
-            compiler = 'gcc' if source_file.endswith('.c') else 'g++'
+            compiler = get_compiler_by_extension(source_file)
 
             # TODO: warning
             cmd = 'timeout %d %s -c %s -I/home/marxin/BIG/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s %s %s -o/dev/null' % (args.timeout, compiler, args.cflags, self.level, source_file, ' '.join(options))
@@ -364,6 +365,7 @@ class OptimizationLevel:
                     stderr = r.stderr.decode('utf-8')
                     ice = find_ice(stderr)
                     if ice != None and not ice[1] in ice_cache:
+                        ice_locations.add(ice[0])
                         ice_cache.add(ice[1])
                         print(colored('NEW ICE #%d: %s' % (len(ice_cache), ice[0]), 'red'))
                         print(cmd)
@@ -399,3 +401,7 @@ with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
             speed = c / (time() - start)
             remaining = args.iterations * N - c
             print('progress: %d/%d, %.2f tests/s, remaining: %d, ETA: %s' % (c, args.iterations * N, speed, remaining, str(timedelta(seconds = round(remaining / speed )))))
+
+print('=== SUMMARY ===')
+for i in ice_locations:
+    print('ICE: %s' % i)

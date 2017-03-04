@@ -9,13 +9,14 @@ import glob
 assert len(sys.argv) >= 2
 
 pattern = 'internal compiler error'
+
 if len(sys.argv) == 3:
     pattern = sys.argv[2]
 
 def does_ice(command):
     r = subprocess.run(command, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     stderr = r.stderr.decode('utf-8')
-    return r.returncode == 124 or pattern in stderr
+    return r.returncode == 124 or pattern in stderr or ('in ' in stderr and ' at ' in stderr)
 
 def do_cmd(base, flags):
     return 'timeout 3 %s %s' % (' '.join(base), ' '.join(flags))
