@@ -401,6 +401,7 @@ with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
             speed = c / (time() - start)
             remaining = args.iterations * N - c
             print('progress: %d/%d, %.2f tests/s, remaining: %d, ETA: %s' % (c, args.iterations * N, speed, remaining, str(timedelta(seconds = round(remaining / speed )))))
+            sys.stdout.flush()
 
 print('=== SUMMARY ===')
 for i in ice_locations:
