@@ -19,17 +19,20 @@ parser.add_argument('--iterations', type = int, default = 100, help = 'Number of
 parser.add_argument('--cflags', default = '', help = 'Additional compile flags')
 parser.add_argument('--timeout', type = int, default = 10, help = 'Default timeout for GCC command')
 parser.add_argument('-v', '--verbose', action = 'store_true', help = 'Verbose messages')
+parser.add_argument('-prefix', default = '', help = 'GCC command prefix (used for cross builds)')
 args = parser.parse_args()
 
 option_validity_cache = {}
+compiler_prefix = args.prefix
+default = compiler_prefix + 'gcc'
 
 def get_compiler_by_extension(f):
     if f.endswith('.c'):
-        return 'gcc'
+        return default
     elif f.endswith('.C') or f.endswith('.cpp'):
-        return 'g++'
+        return compiler_prefix + 'g++'
     elif f.endswith('.f') or f.endswith('.f90'):
-        return 'gfortran'
+        return compiler_prefix + 'gfortran'
     else:
         return None
 
@@ -62,7 +65,7 @@ def check_option(level, option):
     if option in option_validity_cache:
         return option_validity_cache[option]
 
-    cmd = 'gcc -c /tmp/empty.c %s %s' % (level, option)
+    cmd = '%s -c /tmp/empty.c %s %s' % (default, level, option)
     r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     result = r.returncode == 0
     if not result:
@@ -248,7 +251,7 @@ class OptimizationLevel:
 
         if name == 'target':
             # enums are listed at the end
-            lines = output_for_command('gcc -Q --help=%s %s' % (name, self.level))
+            lines = output_for_command('%s -Q --help=%s %s' % (default, name, self.level))
             start = takewhile(lambda x: x != '', lines)
             lines = lines[len(list(start)):]
 
@@ -259,7 +262,7 @@ class OptimizationLevel:
 
         else:
             # run without -Q
-            lines = output_for_command('gcc --help=%s %s' % (name, self.level))
+            lines = output_for_command('%s --help=%s %s' % (default, name, self.level))
 
             for l in lines:
                 parts = split_by_space(l)
@@ -276,7 +279,7 @@ class OptimizationLevel:
     def parse_options(self, name):
         enum_values = self.parse_enum_values(name)
 
-        for l in output_for_command('gcc -Q --help=%s %s' % (name, self.level)):
+        for l in output_for_command('%s -Q --help=%s %s' % (default, name, self.level)):
             if l == '':
                break
             parts = split_by_space(l)
@@ -327,7 +330,7 @@ class OptimizationLevel:
                 pass
 
     def parse_params(self):
-        for l in output_for_command('gcc -Q --help=params %s' % (self.level)):
+        for l in output_for_command('%s -Q --help=params %s' % (default, self.level)):
             if l == '':
                 continue
             parts = split_by_space(l)
