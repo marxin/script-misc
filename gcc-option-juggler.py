@@ -10,7 +10,7 @@ import concurrent.futures
 import traceback
 
 from itertools import *
-from datetime import datetime
+from datetime import datetime, timedelta
 from termcolor import colored
 from time import time
 
@@ -28,6 +28,8 @@ def get_compiler_by_extension(f):
         return 'gcc'
     elif f.endswith('.C') or f.endswith('.cpp'):
         return 'g++'
+    elif f.endswith('.f') or f.endswith('.f90'):
+        return 'gfortran'
     else:
         return None
 
@@ -84,7 +86,7 @@ def find_ice(stderr):
             bt.append(l)
         elif 'Please submit a full bug report' in l:
             # unify stack addresses
-            bt = ['0xstack_address' + x[x.find(' '):] if x.startswith('0x') else x for x in bt]
+            bt = ['0xdeadbeef' + x[x.find(' '):] if x.startswith('0x') else x for x in bt]
 
             return (subject, '\n'.join(bt))
         elif subject != None:
@@ -394,4 +396,6 @@ with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
             pass
         if args.verbose:
             c = i * N
-            print('progress: %d/%d, %.2f tests/s' % (c, args.iterations * N, c / (time() - start)))
+            speed = c / (time() - start)
+            remaining = args.iterations * N - c
+            print('progress: %d/%d, %.2f tests/s, remaining: %d, ETA: %s' % (c, args.iterations * N, speed, remaining, str(timedelta(seconds = round(remaining / speed )))))
