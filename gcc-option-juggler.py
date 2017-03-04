@@ -382,7 +382,6 @@ class OptimizationLevel:
             traceback.print_exc(file = sys.stdout)
 
 levels = [OptimizationLevel(x) for x in ['', '-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os', '-Og']]
-random.seed(1231231231)
 
 def test():
     level = random.choice(levels)
