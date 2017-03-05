@@ -170,7 +170,12 @@ class MarchFlag:
         self.tuples = []
 
     def build(self, value):
-        return '-mtune=%s -mcpu=%s' % (value, value)
+        f = None
+        if args.target == 'aarch64':
+            f = '-mtune=%s -mcpu=%s'
+        else:
+            f = '-mtune=%s -march=%s'
+        return f % (value, value)
 
     def check_option(self, level):
         for o in self.options[args.target]:
@@ -428,7 +433,7 @@ with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
             c = i * N
             speed = c / (time() - start)
             remaining = args.iterations * N - c
-            print('progress: %d/%d, failed: %d, %.2f tests/s, remaining: %d, ETA: %s' % (c, args.iterations * N, failed_tests, speed, remaining, str(timedelta(seconds = round(remaining / speed )))))
+            print('progress: %d/%d, failed: %.2f%%, %.2f tests/s, remaining: %d, ETA: %s' % (c, args.iterations * N, 100.0 * failed_tests / c, speed, remaining, str(timedelta(seconds = round(remaining / speed )))))
             sys.stdout.flush()
 
 print('=== SUMMARY ===')
