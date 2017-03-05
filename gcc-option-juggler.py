@@ -171,7 +171,7 @@ class MarchFlag:
 
     def build(self, value):
         f = None
-        if args.target == 'aarch64':
+        if args.target == 'aarch64' or args.target == 'ppc64le':
             f = '-mtune=%s -mcpu=%s'
         else:
             f = '-mtune=%s -march=%s'
@@ -184,7 +184,8 @@ class MarchFlag:
             needs_m32 = False
             if not r:
                 r = check_option(level, s + ' -m32')
-                assert r
+                if not r:
+                    continue
                 needs_m32 = True
 
             self.tuples.append((o, needs_m32))
@@ -350,6 +351,7 @@ class OptimizationLevel:
                     min = int(parts[0])
                     max = int(parts[1])
                 else:
+                    print(original)
                     assert original.endswith('<number>')
 
                 self.options.append(IntegerRangeFlag(key, min, max))
