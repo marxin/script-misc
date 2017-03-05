@@ -19,20 +19,34 @@ parser.add_argument('--iterations', type = int, default = 100, help = 'Number of
 parser.add_argument('--cflags', default = '', help = 'Additional compile flags')
 parser.add_argument('--timeout', type = int, default = 10, help = 'Default timeout for GCC command')
 parser.add_argument('-v', '--verbose', action = 'store_true', help = 'Verbose messages')
-parser.add_argument('-prefix', default = '', help = 'GCC command prefix (used for cross builds)')
+parser.add_argument('-t', '--target', default = 'x86_64', help = 'Default target', choices = ['x86_64', 'ppc64le', 's390x', 'aarch64'])
 args = parser.parse_args()
 
 option_validity_cache = {}
-compiler_prefix = args.prefix
-default = compiler_prefix + 'gcc'
+failed_tests = 0
+
+def get_compiler_prefix():
+    if args.target == 'x86_64':
+        return ''
+    elif args.target == 'ppc64le':
+        return 'ppc64le-linux-gnu-'
+    elif args.target == 's390x':
+        return 's390x-linux-gnu-'
+    elif args.target == 'aarch64':
+        return 'aarch64-linux-gnu-'
+    else:
+        assert False
+
+def get_compiler():
+    return get_compiler_prefix() + 'gcc'
 
 def get_compiler_by_extension(f):
     if f.endswith('.c'):
-        return default
+        return get_compiler()
     elif f.endswith('.C') or f.endswith('.cpp'):
-        return compiler_prefix + 'g++'
+        return get_compiler_prefix() + 'g++'
     elif f.endswith('.f') or f.endswith('.f90'):
-        return compiler_prefix + 'gfortran'
+        return get_compiler_prefix() + 'gfortran'
     else:
         return None
 
@@ -55,6 +69,7 @@ def split_by_space(line):
     return [x for x in line.replace('\t', ' ').split(' ') if x != '']
 
 def output_for_command(command):
+    print(command)
     r = subprocess.run(command, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     assert r.returncode == 0
     lines = [x.strip() for x in r.stdout.decode('utf-8').split('\n')]
@@ -65,7 +80,7 @@ def check_option(level, option):
     if option in option_validity_cache:
         return option_validity_cache[option]
 
-    cmd = '%s -c /tmp/empty.c %s %s' % (default, level, option)
+    cmd = '%s -c /tmp/empty.c %s %s' % (get_compiler(), level, option)
     r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     result = r.returncode == 0
     if not result:
@@ -144,13 +159,22 @@ class EnumFlag:
 
 class MarchFlag:
     def __init__(self):
-        self.name = '-march='
-        self.options = 'native,i386,i486,i586,pentium,lakemont,pentium-mmx,pentiumpro,i686,pentium2,pentium3,pentium3m,pentium-m,pentium4,pentium4m,prescott,nocona,core2,nehalem,westmere,sandybridge,ivybridge,haswell,broadwell,skylake,bonnell,silvermont,knl,skylake-avx512,k6,k6-2,k6-3,athlon,athlon-tbird,athlon-4,athlon-xp,athlon-mp,k8,opteron,athlon64,athlon-fx,k8-sse3,opteron-sse3,athlon64-sse3,amdfam10,barcelona,bdver1,bdver2,bdver3,bdver4,znver1,btver1,btver2,winchip-c6,winchip2,c3,c3-2,geode'.split(',')
+        self.name = '-mtune='
+        self.options = {}
+
+        self.options['x86_64'] = 'native,i386,i486,i586,pentium,lakemont,pentium-mmx,pentiumpro,i686,pentium2,pentium3,pentium3m,pentium-m,pentium4,pentium4m,prescott,nocona,core2,nehalem,westmere,sandybridge,ivybridge,haswell,broadwell,skylake,bonnell,silvermont,knl,skylake-avx512,k6,k6-2,k6-3,athlon,athlon-tbird,athlon-4,athlon-xp,athlon-mp,k8,opteron,athlon64,athlon-fx,k8-sse3,opteron-sse3,athlon64-sse3,amdfam10,barcelona,bdver1,bdver2,bdver3,bdver4,znver1,btver1,btver2,winchip-c6,winchip2,c3,c3-2,geode'.split(',')
+        self.options['ppc64le'] = '401,403,405,405fp,440,440fp,464,464fp,476,476fp,505,601,602,603,603e,604,604e,620,630,740,7400,7450,750,801,821,823,860,970,8540,a2,e300c2,e300c3,e500mc,e500mc64,e5500,e6500,ec603e,G3,G4,G5,titan,power3,power4,power5,power5+,power6,power6x,power7,power8,power9,powerpc,powerpc64,powerpc64le,rs64'.split(',')
+        self.options['aarch64'] = 'generic,cortex-a35,cortex-a53,cortex-a57,cortex-a72,exynos-m1,qdf24xx,thunderx,xgene1'.split(',')
+        self.options['s390x'] = 'z900,z990,z9-109,z9-ec,z10,z196,zEC12,z13'.split(',')
+
         self.tuples = []
 
+    def build(self, value):
+        return '-mtune=%s -mcpu=%s' % (value, value)
+
     def check_option(self, level):
-        for o in self.options:
-            s = self.name + o
+        for o in self.options[args.target]:
+            s = self.build(o)
             r = check_option(level, s)
             needs_m32 = False
             if not r:
@@ -164,7 +188,7 @@ class MarchFlag:
 
     def select_nondefault(self):
         choice = random.choice(self.tuples)
-        s = self.name + choice[0]
+        s = self.build(choice[0])
         if choice[1]:
             s += ' -m32'
 
@@ -251,7 +275,7 @@ class OptimizationLevel:
 
         if name == 'target':
             # enums are listed at the end
-            lines = output_for_command('%s -Q --help=%s %s' % (default, name, self.level))
+            lines = output_for_command('%s -Q --help=%s %s' % (get_compiler(), name, self.level))
             start = takewhile(lambda x: x != '', lines)
             lines = lines[len(list(start)):]
 
@@ -262,7 +286,7 @@ class OptimizationLevel:
 
         else:
             # run without -Q
-            lines = output_for_command('%s --help=%s %s' % (default, name, self.level))
+            lines = output_for_command('%s --help=%s %s' % (get_compiler(), name, self.level))
 
             for l in lines:
                 parts = split_by_space(l)
@@ -279,7 +303,7 @@ class OptimizationLevel:
     def parse_options(self, name):
         enum_values = self.parse_enum_values(name)
 
-        for l in output_for_command('%s -Q --help=%s %s' % (default, name, self.level)):
+        for l in output_for_command('%s -Q --help=%s %s' % (get_compiler(), name, self.level)):
             if l == '':
                break
             parts = split_by_space(l)
@@ -330,7 +354,7 @@ class OptimizationLevel:
                 pass
 
     def parse_params(self):
-        for l in output_for_command('%s -Q --help=params %s' % (default, self.level)):
+        for l in output_for_command('%s -Q --help=params %s' % (get_compiler(), self.level)):
             if l == '':
                 continue
             parts = split_by_space(l)
@@ -364,6 +388,8 @@ class OptimizationLevel:
             cmd = 'timeout %d %s -c %s -I/home/marxin/BIG/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s %s %s -o/dev/null' % (args.timeout, compiler, args.cflags, self.level, source_file, ' '.join(options))
             r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
             if r.returncode != 0:
+                global failed_tests
+                failed_tests += 1
                 try:
                     stderr = r.stderr.decode('utf-8')
                     ice = find_ice(stderr)
@@ -402,7 +428,7 @@ with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
             c = i * N
             speed = c / (time() - start)
             remaining = args.iterations * N - c
-            print('progress: %d/%d, %.2f tests/s, remaining: %d, ETA: %s' % (c, args.iterations * N, speed, remaining, str(timedelta(seconds = round(remaining / speed )))))
+            print('progress: %d/%d, failed: %d, %.2f tests/s, remaining: %d, ETA: %s' % (c, args.iterations * N, failed_tests, speed, remaining, str(timedelta(seconds = round(remaining / speed )))))
             sys.stdout.flush()
 
 print('=== SUMMARY ===')
