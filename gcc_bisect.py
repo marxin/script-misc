@@ -280,7 +280,7 @@ class GitRevision:
             flush_print('Bulding in %s' % temp)
             cmd = [os.path.join(git_location, 'configure'), '--prefix', l, '--disable-bootstrap', '--enable-checking=yes']
             if not is_release:
-                cmd += ['--disable-libsanitizer', '--disable-multilib', '--enable-languages=c,c++,fortran']
+                cmd += ['--disable-libsanitizer', '--enable-languages=c,c++,fortran']
             run_cmd(cmd, True)
             run_cmd('echo "MAKEINFO = :" >> Makefile')
             cmd = 'nice make -j10'
