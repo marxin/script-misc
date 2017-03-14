@@ -280,7 +280,14 @@ class OptimizationLevel:
         self.parse_params()
         self.add_interesting_options()
 
+        if args.verbose:
+            self.print_options()
+
         self.options = self.filter_options(self.options)
+
+    def print_options(self):
+        for o in self.options:
+            print(str(o) + ': option: ' + o.name)
 
     def parse_enum_values(self, name):
         d = {}
@@ -326,7 +333,7 @@ class OptimizationLevel:
 
             original = parts[0]
             i = parts[0].find('=')
-            if i != -1:
+            if i != -1 and parts[1] != '[enabled]' and parts[1] != '[disabled]':
                 parts[0] = parts[0][:i+1]
 
             key = parts[0]
