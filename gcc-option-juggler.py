@@ -14,11 +14,15 @@ from datetime import datetime, timedelta
 from termcolor import colored
 from time import time
 
+import logging
+logging.basicConfig(filename='/tmp/gcc-option-juggling.log',level=logging.DEBUG)
+
 parser = argparse.ArgumentParser(description = 'Yet another stupid GCC fuzzer')
 parser.add_argument('--iterations', type = int, default = 100, help = 'Number of tested test-cases (in thousands)')
 parser.add_argument('--cflags', default = '', help = 'Additional compile flags')
 parser.add_argument('--timeout', type = int, default = 10, help = 'Default timeout for GCC command')
 parser.add_argument('-v', '--verbose', action = 'store_true', help = 'Verbose messages')
+parser.add_argument('-l', '--logging', action = 'store_true', help = 'Log error output')
 parser.add_argument('-t', '--target', default = 'x86_64', help = 'Default target', choices = ['x86_64', 'ppc64', 'ppc64le', 's390x', 'aarch64', 'arm'])
 args = parser.parse_args()
 
@@ -421,8 +425,10 @@ class OptimizationLevel:
                         print(ice[1])
                         print()
                         sys.stdout.flush()
+                    elif args.logging:
+                        logging.debug(stderr)
                 except UnicodeDecodeError as e:
-                    print('internal compiler error: !!!cannot decode stderr!!!')
+                    print('ERROR: !!!cannot decode stderr!!!')
                 if r.returncode == 124 and args.verbose:
                     print(colored('TIMEOUT:', 'red'))
                     print(cmd)
