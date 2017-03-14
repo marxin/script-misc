@@ -406,8 +406,7 @@ class OptimizationLevel:
                 try:
                     stderr = r.stderr.decode('utf-8')
                     ice = find_ice(stderr)
-                    # TODO: remove
-                    if ice != None and not ice[1] in ice_cache and not 'print.c:681' in ice[0]:
+                    if ice != None and not ice[1] in ice_cache:
                         ice_locations.add(ice[0])
                         ice_cache.add(ice[1])
                         print(colored('NEW ICE #%d: %s' % (len(ice_cache), ice[0]), 'red'))
