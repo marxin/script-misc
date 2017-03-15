@@ -284,8 +284,7 @@ class OptimizationLevel:
         self.parse_params()
         self.add_interesting_options()
 
-        if args.verbose:
-            self.print_options()
+        # self.print_options()
 
         self.options = self.filter_options(self.options)
 
