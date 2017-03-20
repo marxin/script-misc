@@ -8,11 +8,14 @@ import glob
 import re
 import concurrent.futures
 import traceback
+import os
 
 from itertools import *
 from datetime import datetime, timedelta
 from termcolor import colored
 from time import time
+from os import path
+import tempfile
 
 import logging
 logging.basicConfig(filename='/tmp/gcc-option-juggling.log',level=logging.DEBUG)
@@ -105,8 +108,11 @@ def find_ice(stderr):
 
     for l in lines:
         l = l.strip()
-        if ice in l or ('in ' in l and ' at ' in l):
+        if ice in l:
             subject = l[l.find(ice) + len(ice):]
+            found_ice = True
+        elif 'in ' in l and ' at ' in l:
+            subject = l
             found_ice = True
         elif l.startswith('0x') and subject == None:
             subject = ''
@@ -424,6 +430,7 @@ class OptimizationLevel:
                         print(cmd)
                         print(ice[1])
                         print()
+                        self.reduce(cmd)
                         sys.stdout.flush()
                     elif args.logging:
                         logging.debug(stderr)
@@ -436,6 +443,65 @@ class OptimizationLevel:
             print('FATAL ERROR')
             traceback.print_exc(file = sys.stdout)
 
+    def reduce(self, cmd):
+        r = subprocess.run("gcc-reduce-flags.py '%s'" % cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        assert r.returncode == 0
+        reduced_command = r.stdout.decode('utf-8').strip()
+        print('Reduced command: ' + reduced_command)
+        self.reduce_testcase(reduced_command)
+
+    def reduce_testcase(self, cmd):
+        parts = cmd.split(' ')
+        f = parts[1]
+        compiler = get_compiler_by_extension(f)
+        assert compiler != None
+
+        if not compiler.endswith('gcc') and not compiler.endswith('g++'):
+            return
+
+        suffix = '.i' if compiler.endswith('gcc') else '.ii'
+
+        r = subprocess.run(cmd + ' -E', shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        assert r.returncode == 0
+        content = r.stdout.decode('utf-8')
+
+        extension = path.splitext(f)[1]
+        source = tempfile.NamedTemporaryFile(mode = 'w+', suffix = suffix, delete = False)
+        source.write(content)
+        source.close()
+        source_filename = path.basename(source.name)
+
+        # generate reduce-ice shell script
+        reduce_script = tempfile.NamedTemporaryFile(mode = 'w+', suffix = '.sh', delete = False)
+
+        tmp = """
+#!/bin/sh
+
+TC1=${1:-%s}
+COMMAND="%s $TC1 -c"
+
+$COMMAND 2>&1 | grep 'internal compiler'
+
+if ! test $? = 0; then
+  exit 1
+fi
+
+exit 0"""
+        c = ' '.join([parts[0]] + parts[2:])
+        reduce_script.write(tmp % (source_filename, c))
+        reduce_script.close()
+        os.chmod(reduce_script.name, 0o766)
+
+        start = time()
+        r = subprocess.run('nice creduce --n 10 %s %s' % (reduce_script.name, source_filename), shell = True, stdout = subprocess.PIPE)
+        assert r.returncode == 0
+        lines = r.stdout.decode('utf-8').split('\n')
+        lines = list(dropwhile(lambda x: not '*******' in x, lines))
+        print('\n'.join(lines))
+        print(colored('CREDUCE ', 'cyan'), end = '')
+        print('took %s s, to test:\n%s %s' % (str(time() - start), c, source.name))
+
+os.chdir('/tmp/')
 levels = [OptimizationLevel(x) for x in ['', '-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os', '-Og']]
 
 def test():

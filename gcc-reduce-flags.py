@@ -21,6 +21,13 @@ def does_ice(command):
 def do_cmd(base, flags):
     return 'timeout 3 %s %s' % (' '.join(base), ' '.join(flags))
 
+def strip_timeout(command):
+    tokens = command.split(' ')
+    while len(tokens) > 0 and tokens[0] == 'timeout':
+        tokens = tokens[2:]
+
+    return ' '.join(tokens)
+
 command_line = [x.replace('#', '--param ') for x in sys.argv[1].replace('--param ', '#').split(' ') if x != '']
 
 base = [x for x in command_line if not x.startswith('-')]
@@ -38,6 +45,8 @@ def reduce(base, flags):
                 flags.add(f)
 
         if not change:
-            return do_cmd(base, flags)
+            cmd = do_cmd(base, flags)
+            stripped = strip_timeout(cmd)
+            return stripped if does_ice(stripped) else cmd
 
 print(reduce(base, flags))
