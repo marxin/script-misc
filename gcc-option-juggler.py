@@ -16,8 +16,10 @@ from termcolor import colored
 from time import time
 from os import path
 import tempfile
-
 import logging
+
+script_dir = os.path.dirname(os.path.realpath(__file__))
+
 logging.basicConfig(filename='/tmp/gcc-option-juggling.log',level=logging.DEBUG)
 
 parser = argparse.ArgumentParser(description = 'Yet another stupid GCC fuzzer')
@@ -444,7 +446,7 @@ class OptimizationLevel:
             traceback.print_exc(file = sys.stdout)
 
     def reduce(self, cmd):
-        r = subprocess.run("gcc-reduce-flags.py '%s'" % cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        r = subprocess.run(os.path.join(script_dir, "gcc-reduce-flags.py") + " '" + cmd + "'", shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
         assert r.returncode == 0
         reduced_command = r.stdout.decode('utf-8').strip()
         print('Reduced command: ' + reduced_command)
