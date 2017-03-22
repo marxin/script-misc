@@ -8,6 +8,9 @@ import argparse
 from git import Repo
 from itertools import *
 
+def strip_empty_strings(lines):
+    return list(reversed(list(dropwhile(lambda x: x == '', reversed(lines)))))
+
 parser = argparse.ArgumentParser(description='Extract SVN revisions to patches.')
 parser.add_argument('gitlocation', help = 'GIT repository location')
 parser.add_argument('revisions', help = 'SVN revisions separated by space')
@@ -30,7 +33,6 @@ for revision in revisions:
             continue
 
 assert len(revisions) == len(commits)
-
 patches = []
 
 for i, c in enumerate(commits):
@@ -62,9 +64,10 @@ for i, c in enumerate(commits):
             changelog_lines.append('')
             chunk = list(takewhile(lambda x: not x.startswith(diff_string), lines))
             diff = [x[1:] for x in chunk if x.startswith('+') and not x.startswith('+++')]
-            diff = list(reversed(list(dropwhile(lambda x: x == '', reversed(diff)))))
+            diff = strip_empty_strings(diff)
             if diff[-1].startswith('20'):
-                diff = [diff[-1]] + diff[:-1]
+                diff = [diff[-1], ''] + diff[:-1]
+            diff = strip_empty_strings(diff)
 
             for d in diff[1:]:
                 assert not d.startswith('20')
