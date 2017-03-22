@@ -3,19 +3,20 @@
 import os
 import sys
 import subprocess
+import argparse
 
 from git import Repo
 from itertools import *
 
-git_location = '/home/marxin/BIG/Programming/gcc/'
-os.chdir(git_location)
-repo = Repo(git_location)
+parser = argparse.ArgumentParser(description='Extract SVN revisions to patches.')
+parser.add_argument('gitlocation', help = 'GIT repository location')
+parser.add_argument('revisions', help = 'SVN revisions separated by space')
+args = parser.parse_args()
 
-if len(sys.argv) != 2:
-    print('Usage: gcc-extract-backport-patch.py FILE')
-    exit(1)
+os.chdir(args.gitlocation)
+repo = Repo('.')
 
-revisions = sorted([x.strip() for x in open(sys.argv[1]).readlines()])
+revisions = sorted(args.revisions.split(','))
 assert len(revisions) == len(set(revisions))
 
 commits = []
