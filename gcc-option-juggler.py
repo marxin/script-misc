@@ -18,6 +18,15 @@ from os import path
 import tempfile
 import logging
 
+known_bugs = {
+        'in lambda_expr_this_capture, at cp/lambda.c:720': 'PR79651',
+        'in assemble_integer, at varasm.c:2754': 'PR80163',
+        'in print_reg, at config/i386/i386.c:': 'invalid target',
+        'in lookup_base, at cp/search.c:203': 'PR71450',
+        'int_mode_for_mode, at stor-layout.c:406': 'PR79733',
+        'print.c:681': 'PR79886'
+        }
+
 script_dir = os.path.dirname(os.path.realpath(__file__))
 
 logging.basicConfig(filename='/tmp/gcc-option-juggling.log',level=logging.DEBUG)
@@ -63,9 +72,14 @@ def get_compiler_by_extension(f):
     else:
         return None
 
+ignored_tests = set(['instantiate-typeof.cpp', 'multi-level-substitution.cpp', 'constructor-template.cpp', 'instantiate-typeof.cpp',
+        'enum-unscoped-nonexistent.cpp', 'dr6xx.cpp', 'cxx1y-generic-lambdas-capturing.cpp', 'cxx1y-variable-templates_in_class.cpp',
+        'temp_arg_nontype.cpp', 'constant-expression-cxx1y.cpp', 'cxx1z-using-declaration.cpp', 'pack-deduction.cpp', 'pr65693.c', 'const-init.cpp',
+        'temp_arg_nontype_cxx1z.cpp', 'cxx1z-decomposition.cpp'])
+
 source_files = glob.glob('/home/marxin/Programming/gcc/gcc/testsuite/**/*', recursive = True)
 source_files += glob.glob('/home/marxin/BIG/Programming/llvm-project/**/test/**/*', recursive = True)
-source_files = list(filter(lambda x: get_compiler_by_extension(x) != None, source_files))
+source_files = list(filter(lambda x: get_compiler_by_extension(x) != None and not any([i in x for i in ignored_tests]), source_files))
 
 # remove RTL test-cases
 source_files = list(filter(lambda x: not '/rtl/' in x, source_files))
@@ -425,7 +439,7 @@ class OptimizationLevel:
                     stderr = r.stderr.decode('utf-8')
                     ice = find_ice(stderr)
                     # TODO: remove
-                    if ice != None and not ice[1] in ice_cache and not 'print.c:681' in ice[0]:
+                    if ice != None and not ice[1] in ice_cache and not ice[0] in known_bugs.keys():
                         ice_locations.add(ice[0])
                         ice_cache.add(ice[1])
                         print(colored('NEW ICE #%d: %s' % (len(ice_cache), ice[0]), 'red'))
