@@ -24,7 +24,8 @@ known_bugs = {
         'in print_reg, at config/i386/i386.c:': 'invalid target',
         'in lookup_base, at cp/search.c:203': 'PR71450',
         'int_mode_for_mode, at stor-layout.c:406': 'PR79733',
-        'print.c:681': 'PR79886'
+        'print.c:681': 'PR79886',
+        'expected record_type or union_type or qual_union_type, have template_type_parm in lookup_base, at cp/search.c': 'PR71450'
         }
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -75,7 +76,7 @@ def get_compiler_by_extension(f):
 ignored_tests = set(['instantiate-typeof.cpp', 'multi-level-substitution.cpp', 'constructor-template.cpp', 'instantiate-typeof.cpp',
         'enum-unscoped-nonexistent.cpp', 'dr6xx.cpp', 'cxx1y-generic-lambdas-capturing.cpp', 'cxx1y-variable-templates_in_class.cpp',
         'temp_arg_nontype.cpp', 'constant-expression-cxx1y.cpp', 'cxx1z-using-declaration.cpp', 'pack-deduction.cpp', 'pr65693.c', 'const-init.cpp',
-        'temp_arg_nontype_cxx1z.cpp', 'cxx1z-decomposition.cpp'])
+        'temp_arg_nontype_cxx1z.cpp', 'cxx1z-decomposition.cpp', 'vla-lambda-capturing.cpp'])
 
 source_files = glob.glob('/home/marxin/Programming/gcc/gcc/testsuite/**/*', recursive = True)
 source_files += glob.glob('/home/marxin/BIG/Programming/llvm-project/**/test/**/*', recursive = True)
