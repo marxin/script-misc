@@ -440,7 +440,7 @@ class OptimizationLevel:
                     stderr = r.stderr.decode('utf-8')
                     ice = find_ice(stderr)
                     # TODO: remove
-                    if ice != None and not ice[1] in ice_cache and not ice[0] in known_bugs.keys():
+                    if ice != None and not ice[1] in ice_cache and not any([x in ice[0] for x in known_bugs.keys()]):
                         ice_locations.add(ice[0])
                         ice_cache.add(ice[1])
                         print(colored('NEW ICE #%d: %s' % (len(ice_cache), ice[0]), 'red'))
