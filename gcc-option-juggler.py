@@ -25,7 +25,8 @@ known_bugs = {
         'in lookup_base, at cp/search.c:203': 'PR71450',
         'int_mode_for_mode, at stor-layout.c:406': 'PR79733',
         'print.c:681': 'PR79886',
-        'expected record_type or union_type or qual_union_type, have template_type_parm in lookup_base, at cp/search.c': 'PR71450'
+        'expected record_type or union_type or qual_union_type, have template_type_parm in lookup_base, at cp/search.c': 'PR71450',
+        'in ira_init_register_move_cost, at ira.c:1580': 'different target probably'
         }
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
