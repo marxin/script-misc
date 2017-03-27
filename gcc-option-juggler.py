@@ -26,7 +26,13 @@ known_bugs = {
         'int_mode_for_mode, at stor-layout.c:406': 'PR79733',
         'print.c:681': 'PR79886',
         'expected record_type or union_type or qual_union_type, have template_type_parm in lookup_base, at cp/search.c': 'PR71450',
-        'in ira_init_register_move_cost, at ira.c:1580': 'different target probably'
+        'in ira_init_register_move_cost, at ira.c:1580': 'different target probably',
+        'in make_decl_rtl, at varasm.c:1311': 'PR80168',
+        'in arm_print_operand, at config/arm/arm.c': 'ARM wrong target assembly',
+        'in insert_vi_for_tree, at tree-ssa-structalias.c:2807': 'PR79766',
+        'in print_operand, at config/rs6000/rs6000.c': 'PPC invalid assembly',
+        'canonical types differ for identical types __vector(4) int and V4i {aka __vector(4) int}': 'PR79905',
+        'in s390_compare_and_branch_condition_mask, at config/s390/s390.c': 's390x strange assembly from a different target'
         }
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
