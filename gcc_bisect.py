@@ -35,7 +35,7 @@ install_location = '/home/marxin/DATA/gcc-binaries/'
 log_file = '/home/marxin/Programming/script-misc/gcc-build.log'
 
 parser = argparse.ArgumentParser(description='Build GCC binaries.')
-parser.add_argument('action', nargs = '?', metavar = 'action', help = 'Action', default = 'print', choices = ['print', 'build', 'bisect'])
+parser.add_argument('action', nargs = '?', metavar = 'action', help = 'Action', default = 'print', choices = ['print', 'build', 'bisect', 'gc'])
 parser.add_argument('command', nargs = '?', metavar = 'command', help = 'GCC command')
 parser.add_argument('-s', '--silent', action = 'store_true', help = 'Silent logging')
 parser.add_argument('-x', '--negate', action = 'store_true', help = 'FAIL if result code is equal to zero')
@@ -555,6 +555,28 @@ class GitRepository:
             else:
                 flush_print('  bisect finished: ' +  colored('there is no change!', 'red'))
 
+    def gc(self):
+        # remove not needed folders
+        current_folders = [os.path.join(install_location, x) for x in os.listdir(install_location)]
+        git_revisions = set([x.get_folder_path() for x in self.releases + self.latest])
+
+        diff = [x for x in current_folders if not x in git_revisions]
+        print('GIT revisions: %d, existing: %d' % (len(git_revisions), len(current_folders)))
+        print('Dead revisions: %d' % len(diff))
+
+        for d in diff:
+            print('rm %s' % d)
+            shutil.rmtree(d)
+
+        # verify that we have either an archive file or extracted tree
+        failed = 0
+        for x in self.releases + self.latest:
+            if os.path.exists(x.get_folder_path()) and not os.path.exists(x.get_archive_path()) and not os.path.exists(x.get_binary_path()):
+                failed += 1
+                print('Broken revision: %s' % x.get_folder_path())
+
+        print('Broken revisions: %d' % failed)
+
     @staticmethod
     def bisect_recursive(candidates, r1, r2):
         if len(candidates) == 2:
@@ -588,3 +610,5 @@ elif args.action == 'build':
     g.build()
 elif args.action == 'bisect':
     g.bisect()
+elif args.action == 'gc':
+    g.gc()
