@@ -23,7 +23,7 @@ script_dirname = os.path.abspath(os.path.dirname(__file__))
 patches_folder = os.path.join(script_dirname, 'gcc-release-patches')
 
 # WARNING: older commits include wide-int branch merged commits
-last_revision = 'fda23bcce3c6a9db436896cb0f2e03d1101ab60c' # 10.11.2014
+last_revision = 'ec86f0be138e2f976eb8f249bbcc82246586e6a0' # base of trunk and 4.9
 
 description_color = 'blue'
 title_color = 'cyan'
@@ -430,7 +430,7 @@ class GitRepository:
                 self.branch_bases.append(Release(name + '-base', base))
 
     def parse_latest_revisions(self):
-        for c in repo.iter_commits(last_revision + '..parent/master'):
+        for c in repo.iter_commits(last_revision + '..parent/master', first_parent = True):
             self.latest.append(GitRevision(c))
 
     @staticmethod
@@ -557,8 +557,9 @@ class GitRepository:
 
     def gc(self):
         # remove not needed folders
+        revisions = self.releases + self.latest + self.branches + self.branch_bases
         current_folders = [os.path.join(install_location, x) for x in os.listdir(install_location)]
-        git_revisions = set([x.get_folder_path() for x in self.releases + self.latest])
+        git_revisions = set([x.get_folder_path() for x in revisions])
 
         diff = [x for x in current_folders if not x in git_revisions]
         print('GIT revisions: %d, existing: %d' % (len(git_revisions), len(current_folders)))
@@ -566,7 +567,7 @@ class GitRepository:
 
         for d in diff:
             print('rm %s' % d)
-            shutil.rmtree(d)
+#            shutil.rmtree(d)
 
         # verify that we have either an archive file or extracted tree
         failed = 0
