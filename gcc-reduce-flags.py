@@ -19,7 +19,7 @@ def does_ice(command):
     return r.returncode == 124 or pattern in stderr or ('in ' in stderr and ' at ' in stderr) or 'Segmentation fault' in stderr
 
 def do_cmd(base, flags):
-    return 'timeout 3 %s %s' % (' '.join(base), ' '.join(flags))
+    return 'timeout 10 %s %s' % (' '.join(base), ' '.join(flags))
 
 def strip_timeout(command):
     tokens = command.split(' ')

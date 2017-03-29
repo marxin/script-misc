@@ -232,18 +232,21 @@ class GitRevision:
     def get_folder_path(self):
         return os.path.join(install_location, 'gcc-' + self.commit.hexsha)
 
-    def apply_patch(self, revision):
+    def apply_patch(self):
         patch_files = []
-        p = os.path.join(patches_folder, self.patch_name())
-        if os.path.exists(p):
-            patch_files.append(p)
 
-        if self.commit.hexsha in g.patches_map:
-            for f in g.patches_map[self.commit.hexsha]:
-                patch_files.append(os.path.join(patches_folder, f))
+        for file in os.listdir(patches_folder):
+            if '..' in file:
+                tokens = GitRepository.get_patch_name_tokens(file)
+                if self.commit in revisions_in_range(repo.commit(tokens[0]), repo.commit(tokens[1])):
+                    patch_files.append(file)
 
         # sort patch files to be able to apply accumulated patches
         sorted_files = sorted(patch_files, key = lambda x: repo.commit(GitRepository.get_patch_name_tokens(x)[1]).committed_datetime)
+
+        p = os.path.join(patches_folder, self.patch_name())
+        if os.path.exists(p):
+            sorted_files.append(p)
 
         for p in sorted_files:
             flush_print('Existing patch: %s' % p)
@@ -274,7 +277,7 @@ class GitRevision:
                 os.mkdir(tmp_folder)
             temp = tempfile.mkdtemp(dir = tmp_folder)
             repo.git.checkout(self.commit, force = True)
-            self.apply_patch(self)
+            self.apply_patch()
             flush_print('Bulding %s' % (str(self)))
             os.chdir(temp)
             flush_print('Bulding in %s' % temp)
@@ -397,7 +400,6 @@ class GitRepository:
         self.parse_branches()
         self.parse_latest_revisions()
         self.initialize_binaries()
-        self.parse_patches_range()
 
     def pull(self):
         flush_print('Pulling parent repository')
@@ -435,17 +437,8 @@ class GitRepository:
 
     @staticmethod
     def get_patch_name_tokens(file):
-        return os.path.splitext(os.path.basename(file))[0].split('..')
-
-    def parse_patches_range(self):
-        self.patches_map = {}
-        for file in os.listdir(patches_folder):
-            if '..' in file:
-                tokens = GitRepository.get_patch_name_tokens(file)
-                for r in revisions_in_range(repo.commit(tokens[0]), repo.commit(tokens[1])):
-                    if not r.hexsha in self.patches_map:
-                        self.patches_map[r.hexsha] = []
-                    self.patches_map[r.hexsha].append(file)
+        r = os.path.splitext(os.path.basename(file))[0].split('..')
+        return r
 
     def print(self):
         flush_print(colored('Releases', title_color))
