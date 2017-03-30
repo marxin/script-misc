@@ -251,7 +251,7 @@ class GitRevision:
         for p in sorted_files:
             flush_print('Existing patch: %s' % p)
             os.chdir(git_location)
-            run_cmd('patch -p1 -f < %s' % p)
+            run_cmd('patch -p1 -f < %s' % os.path.join(patches_folder, p))
 
     def build_with_limit(self, is_release, compress_binary):
         global to_build
