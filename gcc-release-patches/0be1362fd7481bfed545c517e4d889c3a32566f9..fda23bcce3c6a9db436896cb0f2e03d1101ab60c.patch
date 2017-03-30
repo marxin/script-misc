@@ -1,13 +1,14 @@
 diff --git a/gcc/Makefile.in b/gcc/Makefile.in
-index 4e856b16064..9ca6e6bbd44 100644
+index 2c3f02e8953..9ca6e6bbd44 100644
 --- a/gcc/Makefile.in
 +++ b/gcc/Makefile.in
-@@ -1242,15 +1242,6 @@ OBJS = \
+@@ -1242,16 +1242,6 @@ OBJS = \
  	godump.o \
  	graph.o \
  	graphds.o \
 -	graphite.o \
 -	graphite-blocking.o \
+-	graphite-clast-to-gimple.o \
 -	graphite-isl-ast-to-gimple.o \
 -	graphite-dependences.o \
 -	graphite-interchange.o \
