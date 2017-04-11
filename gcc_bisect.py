@@ -206,7 +206,7 @@ class GitRevision:
             if args.negate:
                 success = not success
 
-            text = colored('OK', 'green') if success else colored('FAILED', 'red')
+            text = colored('OK', 'green') if success else colored('FAILED', 'red') + ' (%d)' % r
             flush_print('  %s: [took: %3.3fs] result: %s' % (self.description(), (datetime.now() - start).total_seconds(), text))
             if not args.silent:
                 flush_print(output, end = '')
