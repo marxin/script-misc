@@ -51,6 +51,9 @@ args = parser.parse_args()
 option_validity_cache = {}
 failed_tests = 0
 
+
+empty = tempfile.NamedTemporaryFile(suffix = '.c', delete = False).name
+
 def get_compiler_prefix():
     if args.target == 'x86_64':
         return ''
@@ -115,7 +118,7 @@ def check_option(level, option):
     if option in option_validity_cache:
         return option_validity_cache[option]
 
-    cmd = '%s -c /tmp/empty.c %s %s' % (get_compiler(), level, option)
+    cmd = '%s -c %s %s %s' % (get_compiler(), empty, level, option)
     r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     result = r.returncode == 0
     if not result:
