@@ -32,7 +32,11 @@ known_bugs = {
         'in insert_vi_for_tree, at tree-ssa-structalias.c:2807': 'PR79766',
         'in print_operand, at config/rs6000/rs6000.c': 'PPC invalid assembly',
         'canonical types differ for identical types __vector(4) int and V4i {aka __vector(4) int}': 'PR79905',
-        'in s390_compare_and_branch_condition_mask, at config/s390/s390.c': 's390x strange assembly from a different target'
+        'in s390_compare_and_branch_condition_mask, at config/s390/s390.c': 's390x strange assembly from a different target',
+        'in linemap_macro_map_lookup, at libcpp/line-map.c': 'invalid C++ code',
+        'in lazily_declare_fn, at cp/method.c': 'invalid code',
+        'in tsubst_pack_expansion, at cp/pt.c': 'invalid C++ code',
+        'in pop_local_binding, at cp/name-lookup.c': 'invalid C++ code'
         }
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
