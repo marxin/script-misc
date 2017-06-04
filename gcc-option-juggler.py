@@ -99,11 +99,9 @@ source_files += glob.glob('/home/marxin/BIG/Programming/llvm-project/**/test/**/
 source_files = list(filter(lambda x: get_compiler_by_extension(x) != None and not any([i in x for i in ignored_tests]), source_files))
 
 # Prepare csmith tests
-cdir = '/tmp/csmith'
 if args.csmith:
-    shutil.rmtree(cdir)
-    os.mkdir(cdir)
-
+    cdir = tempfile.mkdtemp()
+    print('Using temporary cdir: %s' % cdir)
     n = 200
     for i in range(n):
         f = tempfile.NamedTemporaryFile(mode = 'w+', dir = cdir, suffix = '.cpp', delete = False)
