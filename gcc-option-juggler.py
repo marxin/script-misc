@@ -17,6 +17,7 @@ from time import time
 from os import path
 import tempfile
 import logging
+import shutil
 
 known_bugs = {
         'in lambda_expr_this_capture, at cp/lambda.c:720': 'PR79651',
@@ -49,6 +50,7 @@ parser.add_argument('--cflags', default = '', help = 'Additional compile flags')
 parser.add_argument('--timeout', type = int, default = 10, help = 'Default timeout for GCC command')
 parser.add_argument('-v', '--verbose', action = 'store_true', help = 'Verbose messages')
 parser.add_argument('-l', '--logging', action = 'store_true', help = 'Log error output')
+parser.add_argument('-c', '--csmith', action = 'store_true', help = 'Utilize csmith random tests')
 parser.add_argument('-t', '--target', default = 'x86_64', help = 'Default target', choices = ['x86_64', 'ppc64', 'ppc64le', 's390x', 'aarch64', 'arm'])
 args = parser.parse_args()
 
@@ -95,6 +97,24 @@ ignored_tests = set(['instantiate-typeof.cpp', 'multi-level-substitution.cpp', '
 source_files = glob.glob('/home/marxin/Programming/gcc/gcc/testsuite/**/*', recursive = True)
 source_files += glob.glob('/home/marxin/BIG/Programming/llvm-project/**/test/**/*', recursive = True)
 source_files = list(filter(lambda x: get_compiler_by_extension(x) != None and not any([i in x for i in ignored_tests]), source_files))
+
+# Prepare csmith tests
+cdir = '/tmp/csmith'
+if args.csmith:
+    shutil.rmtree(cdir)
+    os.mkdir(cdir)
+
+    n = 200
+    for i in range(n):
+        f = tempfile.NamedTemporaryFile(mode = 'w+', dir = cdir, suffix = '.cpp', delete = False)
+        subprocess.check_output('csmith --lang-cpp -o %s' % f.name, shell = True)
+
+    for i in range(n):
+        f = tempfile.NamedTemporaryFile(mode = 'w+', dir = cdir, suffix = '.c', delete = False)
+        subprocess.check_output('csmith -o %s' % f.name, shell = True)
+
+    source_files = glob.glob('%s/*' % cdir, recursive = True)
+    args.cflags += ' -Wno-narrowing'
 
 # remove RTL test-cases
 source_files = list(filter(lambda x: not '/rtl/' in x, source_files))
