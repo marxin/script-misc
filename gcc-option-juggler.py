@@ -544,7 +544,7 @@ exit 0"""
         os.chmod(reduce_script.name, 0o766)
 
         start = time()
-        r = subprocess.run('nice creduce --n 10 %s %s' % (reduce_script.name, source_filename), shell = True, stdout = subprocess.PIPE)
+        r = subprocess.run('timeout 600 nice creduce --n 10 %s %s' % (reduce_script.name, source_filename), shell = True, stdout = subprocess.PIPE)
         assert r.returncode == 0
         lines = r.stdout.decode('utf-8').split('\n')
         lines = list(dropwhile(lambda x: not '*******' in x, lines))
