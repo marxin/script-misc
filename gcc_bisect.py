@@ -192,7 +192,8 @@ class GitRevision:
 
             my_env = os.environ.copy()
             my_env['PATH'] = os.path.join(self.get_folder_path(), 'bin') + ':' + my_env['PATH']
-            my_env['LD_LIBRARY_PATH'] = os.path.join(self.get_folder_path(), 'lib64') + ':' + my_env['LD_LIBRARY_PATH']
+            ld_library_path = my_env['LD_LIBRARY_PATH'] if 'LD_LIBRARY_PATH' in my_env else ''
+            my_env['LD_LIBRARY_PATH'] = os.path.join(self.get_folder_path(), 'lib64') + ':' + ld_library_path
             with open(log, 'w') as out:
                 r = subprocess.call(args.command, shell = True, stdout = out, stderr = out, env = my_env)
 
