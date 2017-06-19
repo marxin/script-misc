@@ -497,7 +497,8 @@ class OptimizationLevel:
         assert r.returncode == 0
         reduced_command = r.stdout.decode('utf-8').strip()
         print('Reduced command: ' + reduced_command)
-        self.reduce_testcase(reduced_command)
+        # TODO: fix me please
+        # self.reduce_testcase(reduced_command)
 
     def reduce_testcase(self, cmd):
         parts = cmd.split(' ')
