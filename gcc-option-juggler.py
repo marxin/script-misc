@@ -37,7 +37,7 @@ known_bugs = {
         'in linemap_macro_map_lookup, at libcpp/line-map.c': 'invalid C++ code',
         'in lazily_declare_fn, at cp/method.c': 'invalid code',
         'in tsubst_pack_expansion, at cp/pt.c': 'invalid C++ code',
-        'in pop_local_binding, at cp/name-lookup.c': 'invalid C++ code'
+        'in pop_local_binding, at cp/name-lookup.c': 'invalid C++ code',
         'ix86_expand_prologue, at config/i386/i386.c': 'PR80969',
         'output_operand: invalid use of register': 'invalid target'
         }
