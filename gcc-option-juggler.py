@@ -579,4 +579,4 @@ print('=== SUMMARY ===')
 for i in ice_locations:
     print('ICE: %s' % i)
 
-exit(len(ice_locations) == 0)
+exit(len(ice_locations) != 0)
