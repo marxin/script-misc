@@ -38,6 +38,8 @@ known_bugs = {
         'in lazily_declare_fn, at cp/method.c': 'invalid code',
         'in tsubst_pack_expansion, at cp/pt.c': 'invalid C++ code',
         'in pop_local_binding, at cp/name-lookup.c': 'invalid C++ code'
+        'ix86_expand_prologue, at config/i386/i386.c': 'PR80969',
+        'output_operand: invalid use of register': 'invalid target'
         }
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -576,3 +578,5 @@ with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
 print('=== SUMMARY ===')
 for i in ice_locations:
     print('ICE: %s' % i)
+
+exit(len(ice_locations) == 0)
