@@ -26,7 +26,7 @@ args = parser.parse_args()
 os.chdir(args.gitlocation)
 repo = Repo('.')
 
-revisions = sorted(args.revisions.split(','))
+revisions = sorted([x for x in args.revisions.split(',') if x != ''])
 assert len(revisions) == len(set(revisions))
 
 commits = []
