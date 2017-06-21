@@ -39,7 +39,8 @@ known_bugs = {
         'in tsubst_pack_expansion, at cp/pt.c': 'invalid C++ code',
         'in pop_local_binding, at cp/name-lookup.c': 'invalid C++ code',
         'ix86_expand_prologue, at config/i386/i386.c': 'PR80969',
-        'output_operand: invalid use of register': 'invalid target'
+        'output_operand: invalid use of register': 'invalid target',
+        'in df_compact_blocks, at df-core.c': 'PR81126'
         }
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
