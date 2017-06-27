@@ -201,7 +201,7 @@ class GitRevision:
             output = open(log).read()
             success = r == 0
             if args.ice:
-                messages = ['internal compiler error', 'Fatal Error', 'Internal compiler error']
+                messages = ['internal compiler error', 'Fatal Error', 'Internal compiler error', 'Please submit a full bug report']
                 success = any(map(lambda m: m in output, messages))
 
             if args.negate:
