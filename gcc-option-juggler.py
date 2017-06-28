@@ -103,16 +103,25 @@ source_files = list(filter(lambda x: get_compiler_by_extension(x) != None and no
 
 # Prepare csmith tests
 if args.csmith:
-    cdir = tempfile.mkdtemp()
-    print('Using temporary cdir: %s' % cdir)
+    cdir = '/tmp/csmith-tmp'
+    if os.path.exists(cdir):
+        shutil.rmtree(cdir)
+    os.mkdir(cdir)
     n = 200
+    print('Using temporary cdir: %s, generating 2x%d tests' % (cdir, n))
     for i in range(n):
         f = tempfile.NamedTemporaryFile(mode = 'w+', dir = cdir, suffix = '.cpp', delete = False)
         subprocess.check_output('csmith --lang-cpp -o %s' % f.name, shell = True)
+        print('.', end = '')
+        sys.stdout.flush()
 
     for i in range(n):
         f = tempfile.NamedTemporaryFile(mode = 'w+', dir = cdir, suffix = '.c', delete = False)
         subprocess.check_output('csmith -o %s' % f.name, shell = True)
+        print('.', end = '')
+        sys.stdout.flush()
+
+    print()
 
     source_files = glob.glob('%s/*' % cdir, recursive = True)
     args.cflags += ' -Wno-narrowing'
