@@ -275,7 +275,7 @@ class IntegerRangeFlag:
         self.max = max
 
     def check_option(self, level):
-        r = [self.min, self.max] if self.max > 100 else range(self.min, self.max + 1)
+        r = [self.min, self.max] if self.max > 100 else range(self.min, self.max)
 
         for o in r:
             s = self.name + str(o)
@@ -286,7 +286,7 @@ class IntegerRangeFlag:
         return True
 
     def select_nondefault(self):
-        choice = random.randint(self.min, self.max + 1)
+        choice = random.randint(self.min, self.max)
 
         s = self.name + str(choice)
         return s
@@ -485,6 +485,7 @@ class OptimizationLevel:
                         self.reduce(cmd)
                         sys.stdout.flush()
                     elif args.logging:
+                        logging.debug(cmd)
                         logging.debug(stderr)
                 except UnicodeDecodeError as e:
                     print('ERROR: !!!cannot decode stderr!!!')
