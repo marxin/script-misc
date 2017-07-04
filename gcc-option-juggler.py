@@ -555,13 +555,16 @@ exit 0"""
         os.chmod(reduce_script.name, 0o766)
 
         start = time()
-        r = subprocess.run('timeout 500 creduce --n 10 %s %s' % (reduce_script.name, source_filename), shell = True, stdout = subprocess.PIPE)
-        assert r.returncode == 0
-        lines = r.stdout.decode('utf-8').split('\n')
-        lines = list(dropwhile(lambda x: not '*******' in x, lines))
-        print('\n'.join(lines))
-        print(colored('CREDUCE ', 'cyan'), end = '')
-        print('took %s s, to test:\n%s %s' % (str(time() - start), c, source.name))
+        try:
+            r = subprocess.run('creduce --n 10 %s %s' % (reduce_script.name, source_filename), shell = True, stdout = subprocess.PIPE, timeout = 500)
+            assert r.returncode == 0
+            lines = r.stdout.decode('utf-8').split('\n')
+            lines = list(dropwhile(lambda x: not '*******' in x, lines))
+            print('\n'.join(lines))
+            print(colored('CREDUCE ', 'cyan'), end = '')
+            print('took %s s, to test:\n%s %s' % (str(time() - start), c, source.name))
+        except TimeoutExpired as e:
+            print('CREDUCE timed out!')
 
 os.chdir('/tmp/')
 levels = [OptimizationLevel(x) for x in ['', '-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os', '-Og']]
