@@ -510,8 +510,7 @@ class OptimizationLevel:
         assert r.returncode == 0
         reduced_command = r.stdout.decode('utf-8').strip()
         print('Reduced command: ' + reduced_command)
-        # TODO: fix me please
-        # self.reduce_testcase(reduced_command)
+        self.reduce_testcase(reduced_command)
 
     def reduce_testcase(self, cmd):
         parts = cmd.split(' ')
@@ -556,7 +555,7 @@ exit 0"""
         os.chmod(reduce_script.name, 0o766)
 
         start = time()
-        r = subprocess.run('creduce --n 10 %s %s' % (reduce_script.name, source_filename), shell = True, stdout = subprocess.PIPE)
+        r = subprocess.run('timeout 500 creduce --n 10 %s %s' % (reduce_script.name, source_filename), shell = True, stdout = subprocess.PIPE)
         assert r.returncode == 0
         lines = r.stdout.decode('utf-8').split('\n')
         lines = list(dropwhile(lambda x: not '*******' in x, lines))
