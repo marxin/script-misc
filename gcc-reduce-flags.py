@@ -8,7 +8,7 @@ import glob
 
 assert len(sys.argv) >= 2
 
-pattern = 'internal compiler error'
+pattern = 'nternal compiler error'
 
 if len(sys.argv) == 3:
     pattern = sys.argv[2]
