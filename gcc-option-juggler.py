@@ -40,7 +40,9 @@ known_bugs = {
         'in pop_local_binding, at cp/name-lookup.c': 'invalid C++ code',
         'ix86_expand_prologue, at config/i386/i386.c': 'PR80969',
         'output_operand: invalid use of register': 'invalid target',
-        'in df_compact_blocks, at df-core.c': 'PR81126'
+        'in df_compact_blocks, at df-core.c': 'PR81126',
+        'in deferred_printed_type, at cp/error.c': 'PR',
+        'in bb_top_order_cmp, at tree-loop-distribution.c': 'PR'
         }
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
