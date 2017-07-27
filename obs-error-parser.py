@@ -27,8 +27,8 @@ def grep_errors(log):
             v = ['  ' + x for x in lines[i - 1: i + 1]]
             printme('\n'.join(v))
 
-project = 'openSUSE:Factory:Staging:Gcc7'
-repository = 'standard'
+project = 'home:marxin:gcc_playground'
+repository = 'SUSE_Factory_Head'
 
 log_dir = '/tmp/obs-logs'
 shutil.rmtree(log_dir, ignore_errors = True)
@@ -36,21 +36,29 @@ shutil.rmtree(log_dir, ignore_errors = True)
 def process_arch(arch):
     arch_dir = os.path.join(log_dir, arch)
 
-    result = subprocess.check_output('osc r %s -r %s -a %s --csv' % (project, repository, arch), shell = True)
-    packages = result.decode('utf-8').split('\n')
-    failed = [x.split(';')[0] for x in packages if x.endswith(';failed')]
+    result = subprocess.check_output('osc -A https://api.suse.de r %s -r %s -a %s --csv' % (project, repository, arch), shell = True)
+    packages = result.decode('utf-8').strip().split('\n')
+    packages = [x.split(';')[0] for x in packages]
+    packages = [x for x in packages if x != '_']
+
+    print('Packages: %d' % len(packages))
 
     create_dir(arch_dir)
-    for package in sorted(failed):
-        result = subprocess.check_output('osc remotebuildlog %s %s %s %s' % (project, package, repository, arch), shell = True)
-        log = result.decode('utf-8')
-        log_file = os.path.join(arch_dir, package + '.log')
-        with open(log_file, 'w+') as w:
-            w.write(log)
-        printme(package)
-        grep_errors(log)
+    for package in sorted(packages):
+        for i in range(3):
+            try:
+                result = subprocess.check_output('osc -A https://api.suse.de remotebuildlog %s %s %s %s' % (project, package, repository, arch), shell = True)
+                log = result.decode('utf-8')
+                log_file = os.path.join(arch_dir, package + '.log')
+                with open(log_file, 'w+') as w:
+                    w.write(log)
+                printme(package)
+            except Exception as e:
+                print(e)
 
-for arch in ['x86_64', 'i586', 'ppc64le']:
+            break
+
+for arch in ['x86_64']:
     printme('== %s ==' % arch)
     process_arch(arch)
 
