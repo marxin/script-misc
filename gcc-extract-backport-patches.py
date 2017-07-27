@@ -34,15 +34,20 @@ commits = []
 log = list(repo.iter_commits('parent/master~10000..parent/master'))
 
 for revision in revisions:
-    r = repo.commit(revision)
-    if r != None:
-        commits.append(r)
-        continue
+    found = False
 
     for l in log:
         if 'trunk@' + revision in l.message:
             commits.append(l)
-            continue
+            found = True
+            break
+
+    if found:
+        continue
+
+    r = repo.commit(revision)
+    assert r != None
+    commits.append(r)
 
 assert len(revisions) == len(commits)
 patches = []

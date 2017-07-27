@@ -263,4 +263,4 @@ get_histogram(range_sizes, [1, 2, 3, 4, (5,8), (9, 16), (17, 32), (33, 64)], 'ra
 
 print()
 sparsity = [round(x) for x in [s.get_sparsity() for s in switches] if x != 1.0]
-get_histogram(sparsity, range(1, 11), 'inverted density')
+get_histogram(sparsity, range(1, 11), 'sparsity')
