@@ -2,6 +2,7 @@
 
 import os
 import sys
+import hashlib
 
 def average(values):
     return 1.0 * sum(values) / len(values)
@@ -11,6 +12,7 @@ def get_histogram(values, ranges, text):
 
     l = len(values)
     for v in values:
+        v = v[1]
         seen = False
         for i in range(len(ranges)):
             r = ranges[i]
@@ -33,7 +35,7 @@ def get_histogram(values, ranges, text):
     print('HISTOGRAM: %s' % text)
     for i, b in enumerate(buckets):
         name = str(ranges[i]) if i < len(ranges) else 'other'
-        print('%10s: %6.2f%%' % (name, 100.0 * b / l))
+        print('%10s: %6.2f%% %10d' % (name, 100.0 * b / l, b))
 
 class Case:
     def __init__(self, line):
@@ -133,6 +135,9 @@ class Switch:
         part2 = line[i + len(token):].strip()
 
         if (part1 != ''):
+            x = part1.rfind(' ')
+            if x != -1:
+                part1 = part1[x + 1:]
             location = part1.split(':')
             if len(location) == 4:
                 self.file = location[0]
@@ -206,12 +211,60 @@ class Switch:
     def get_sparsity(self):
         return 1.0 * self.get_range_size() / self.get_covered_values()
 
-    def print(self):
-        print('%s:%s:%s' % (self.file, self.line, self.column))
-        self.type.print()
+    def get_uniq_bb_count(self):
+        return len(set([c.bb for c in self.cases]))
+
+    def get_bb_density(self):
+        return 1.0 * self.get_uniq_bb_count() / len(self.cases)
+
+    def get_all_values(self):
+        for c in self.cases:
+            for i in range(c.low, c.high + 1):
+                yield i
+
+    def is_power_of_2(self):
+        for v in self.get_all_values():
+            if v == 0 or (v & (v - 1)) == 0:
+                continue
+            else:
+                return False
+
+        return True
+
+    def is_multiply_values(self):
+        start = None
+        max = None
+
+        for v in self.get_all_values():
+            max = v
+            if v == 0:
+                continue
+            elif v == 1 or v == -1:
+                return False
+
+            if start == None:
+                start = v
+
+            if v % start != 0:
+                return False
+
+            max = v
+
+        if max <= 1 or max == start:
+            return False
+
+        return True
 
     def __repr__(self):
         return ' '.join([str(c) for c in self.cases])
+
+    def get_full_name(self):
+        return '%s:%s:%s:%s' % (self.file, self.line, self.column, str(self))
+
+    def get_md5_hash(self):
+        m = hashlib.md5()
+        m.update(self.get_full_name().encode('utf-8'))
+        return m.hexdigest()
 
 if len(sys.argv) != 2:
     print('Usage: gcc_switch_parser.py [file]')
@@ -225,6 +278,9 @@ print('Processing %d files in %s' % (len(files), d))
 switches = []
 warnings = 0
 
+print('TODO: unlimit me!!!')
+files = files[:100]
+
 for f in files:
     for line in open(os.path.join(d, f)):
         line = line.strip()
@@ -232,35 +288,84 @@ for f in files:
         if not 'note: SWITCH' in line:
             continue
 
-        s = Switch(line, f)
-        if s.failed:
+        switch = Switch(line, f)
+        if switch.failed:
             warnings += 1
             continue
 
-        switches.append(s)
+        switches.append(switch)
 
-
+switches_count = len(switches)
 print('Ignored switch statements: %d' % warnings)
 
-print('Parsed switches: %d' % len(switches))
-cases_counts = [len(s.cases) for s in switches]
-print('Non-default cases count: %d' % sum(cases_counts))
+print('Parsed switches: %d' % switches_count)
+
+print('Unique parsed switches: %d' % len(set([s.get_md5_hash() for s in switches])))
+packages_with_any_switch = set([s.package for s in switches])
+
+print('# packages with a switch: %d' % len(packages_with_any_switch))
+print('Average number of switches per package: %d' % (switches_count / len(packages_with_any_switch)))
+
+cases_counts = [(s, len(s.cases)) for s in switches]
+print('Non-default cases count: %d' % sum([x[1] for x in cases_counts]))
 
 print('Average # of non-default cases: %.2f' % average([len(s.cases) for s in switches]))
 print('Average range # of non-default cases: %.2f' % average([len(s.cases) for s in switches]))
-print('Average density: %.2f' % average([s.get_sparsity() for s in switches]))
+print('Average sparsity: %.2f' % average([s.get_sparsity() for s in switches]))
+print('Average BB density: %.2f' % average([s.get_bb_density() for s in switches]))
 
 print()
 get_histogram(cases_counts, [1, 2, 3, 4, (5,8), (9, 16), (17, 32)], '# cases')
 
 print()
-bbs_counts = [len(set([c.bb for c in s.cases])) for s in switches]
+bbs_counts = [(s, s.get_uniq_bb_count()) for s in switches]
 get_histogram(bbs_counts, [1, 2, 3, 4, (5,8), (9, 16), (17, 32)], '# BBs')
 
 print()
-range_sizes = [s.get_range_size() for s in switches]
-get_histogram(range_sizes, [1, 2, 3, 4, (5,8), (9, 16), (17, 32), (33, 64)], 'range size')
+range_sizes = [(s, s.get_range_size()) for s in switches]
+get_histogram(range_sizes, [1, 2, 3, 4, (5,8), (9, 16), (17, 32), (33, 64), (65, 256)], 'range size')
 
 print()
-sparsity = [round(x) for x in [s.get_sparsity() for s in switches] if x != 1.0]
+sparsity = [(x[0], round(x[1])) for x in [(s, s.get_sparsity()) for s in switches]]
 get_histogram(sparsity, range(1, 11), 'sparsity')
+
+# calculate size saving when using double indirection
+to256 = [s for s in range_sizes if s[1] <= 256]
+PTR_SIZE = 8
+
+jt_sizes = []
+improvements = []
+for s in to256:
+    before = PTR_SIZE * s[1]
+    jt_sizes.append(before)
+    after = s[1] + PTR_SIZE * s[0].get_uniq_bb_count()
+    if after < before:
+        improvements.append(1.0 * after / before)
+
+print()
+print('For all cases with range <= 256: %d, beneficial to double transformation: %d (%.2f%%)' % (len(to256), len(improvements), 100.0 * len(improvements) / len(to256)))
+print('Average improvement: %.2f%%' % (100.0 * average(improvements)))
+print('Average jump table size before: %.2f B' % average(jt_sizes))
+
+# test if cases are power of 2
+powers_of_2_switches = []
+for s in switches:
+    if s.is_power_of_2():
+        powers_of_2_switches.append(s)
+
+print('Power of 2 switches: %d (%.2f%%)' % (len(powers_of_2_switches), 100.0 * len(powers_of_2_switches) / switches_count))
+
+cases_counts = [(s, len(s.cases)) for s in powers_of_2_switches]
+get_histogram(cases_counts, [1, 2, 3, 4, (5,8), (9, 16), (17, 32)], '# cases for 2^N cases')
+
+# test if cases multiple of first non-zero value
+multiplies = []
+for s in switches:
+    if s.is_multiply_values() and not s.is_power_of_2():
+        multiplies.append(s)
+
+print()
+print('Multiply switches: %d (%.2f%%)' % (len(multiplies), 100.0 * len(multiplies) / switches_count))
+
+cases_counts = [(s, len(s.cases)) for s in multiplies]
+get_histogram(cases_counts, [1, 2, 3, 4, (5,8), (9, 16), (17, 32)], '# cases for multiply switch cases')
