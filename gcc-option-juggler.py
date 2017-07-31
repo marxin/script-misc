@@ -99,8 +99,20 @@ ignored_tests = set(['instantiate-typeof.cpp', 'multi-level-substitution.cpp', '
         'temp_arg_nontype.cpp', 'constant-expression-cxx1y.cpp', 'cxx1z-using-declaration.cpp', 'pack-deduction.cpp', 'pr65693.c', 'const-init.cpp',
         'temp_arg_nontype_cxx1z.cpp', 'cxx1z-decomposition.cpp', 'vla-lambda-capturing.cpp', 'cxx0x-defaulted-functions.cpp', 'dllimport.cpp', 'type-traits.cpp'])
 
-source_files = glob.glob('/home/marxin/Programming/gcc/gcc/testsuite/**/*', recursive = True)
-source_files += glob.glob('/home/marxin/BIG/Programming/llvm/**/test/**/*', recursive = True)
+def find_tests(base, contains):
+    result = []
+    for root, dirs, files in os.walk(base):
+        for f in files:
+            full = os.path.join(root, f)
+            if contains in full:
+                result.append(full)
+
+    return result
+
+source_files = find_tests('/home/marxin/Programming/gcc/gcc/', '/testsuite/')
+source_files += find_tests('/home/marxin/BIG/Programming/llvm/', '/test/')
+source_files += find_tests('/home/marxin/BIG/Programming/llvm/', '/test-suite/')
+source_files = list(set(sorted(source_files)))
 source_files = list(filter(lambda x: get_compiler_by_extension(x) != None and not any([i in x for i in ignored_tests]), source_files))
 
 # Prepare csmith tests
