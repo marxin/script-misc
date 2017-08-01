@@ -27,7 +27,7 @@ def grep_errors(log):
             v = ['  ' + x for x in lines[i - 1: i + 1]]
             printme('\n'.join(v))
 
-project = 'home:marxin:gcc_playground'
+project = 'home:marxin:gcc_playground2'
 repository = 'SUSE_Factory_Head'
 
 log_dir = '/tmp/obs-logs'
@@ -37,7 +37,7 @@ def process_arch(arch):
     arch_dir = os.path.join(log_dir, arch)
 
     result = subprocess.check_output('osc -A https://api.suse.de r %s -r %s -a %s --csv' % (project, repository, arch), shell = True)
-    packages = result.decode('utf-8').strip().split('\n')
+    packages = result.decode('utf-8', 'ignore').strip().split('\n')
     packages = [x.split(';')[0] for x in packages]
     packages = [x for x in packages if x != '_']
 
@@ -48,7 +48,7 @@ def process_arch(arch):
         for i in range(3):
             try:
                 result = subprocess.check_output('osc -A https://api.suse.de remotebuildlog %s %s %s %s' % (project, package, repository, arch), shell = True)
-                log = result.decode('utf-8')
+                log = result.decode('utf-8', 'ignore')
                 log_file = os.path.join(arch_dir, package + '.log')
                 with open(log_file, 'w+') as w:
                     w.write(log)

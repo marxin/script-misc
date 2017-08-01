@@ -4,6 +4,8 @@ import os
 import sys
 import hashlib
 
+from itertools import *
+
 def average(values):
     return 1.0 * sum(values) / len(values)
 
@@ -67,7 +69,8 @@ class Case:
             self.failed = True
 
     def __repr__(self):
-        return 'case %d..%d: bb_%d' % (self.low, self.high, self.bb)
+        s = ('%d..%d' % (self.low, self.high)) if self.low != self.high else str(self.low)
+        return 'case %s: bb_%d' % (s, self.bb)
 
 class Type:
     def __init__(self, line, enum_values):
@@ -258,8 +261,11 @@ class Switch:
     def __repr__(self):
         return ' '.join([str(c) for c in self.cases])
 
+    def get_location(self):
+        return '%s:%s:%s' % (self.file, self.line, self.column)
+
     def get_full_name(self):
-        return '%s:%s:%s:%s' % (self.file, self.line, self.column, str(self))
+        return self.get_location() + ':' + str(self)
 
     def get_md5_hash(self):
         m = hashlib.md5()
@@ -278,8 +284,8 @@ print('Processing %d files in %s' % (len(files), d))
 switches = []
 warnings = 0
 
-print('TODO: unlimit me!!!')
-files = files[:100]
+# print('TODO: unlimit me!!!')
+# files = files[:1000]
 
 for f in files:
     for line in open(os.path.join(d, f)):
@@ -300,11 +306,46 @@ print('Ignored switch statements: %d' % warnings)
 
 print('Parsed switches: %d' % switches_count)
 
-print('Unique parsed switches: %d' % len(set([s.get_md5_hash() for s in switches])))
-packages_with_any_switch = set([s.package for s in switches])
+hash_switches = sorted(switches, key = lambda s: s.get_md5_hash())
+sorted_groups = []
 
-print('# packages with a switch: %d' % len(packages_with_any_switch))
-print('Average number of switches per package: %d' % (switches_count / len(packages_with_any_switch)))
+for k, v in groupby(hash_switches, key = lambda s: s.get_md5_hash()):
+    v = list(v)
+    sorted_groups.append((v[0], len(v)))
+
+sorted_groups = sorted(sorted_groups, key = lambda x: x[1], reverse = True)
+print('\nMost repeated:')
+for s in [s for s in sorted_groups if s[1] > 1][:20]:
+    print('%d %s' % (s[1], s[0].get_location()))
+print()
+
+switches = [x[0] for x in sorted_groups]
+switches_count = len(switches)
+
+print('Unique parsed switches: %d' % switches_count)
+
+packages_with_switch = []
+key = lambda x: x.package
+for (k, v) in groupby(sorted(switches, key = key), key):
+    v = list(v)
+    packages_with_switch.append((v[0], len(v)))
+
+packages_with_switch = sorted(packages_with_switch, key = lambda v: v[1], reverse = True)
+print('\nPackage with most switches:')
+
+for s in packages_with_switch[:20]:
+    print('%d %s' % (s[1], s[0].package))
+print()
+
+# dump packages with no report
+#print(files)
+#for f in files:
+#    package = f[:-4]
+#
+#    print(package + (': YES' if package in packages_with_any_switch else ': NO'))
+
+print('# packages with a switch: %d' % len(packages_with_switch))
+print('Average number of switches per package: %d' % (switches_count / len(packages_with_switch)))
 
 cases_counts = [(s, len(s.cases)) for s in switches]
 print('Non-default cases count: %d' % sum([x[1] for x in cases_counts]))
@@ -369,3 +410,19 @@ print('Multiply switches: %d (%.2f%%)' % (len(multiplies), 100.0 * len(multiplie
 
 cases_counts = [(s, len(s.cases)) for s in multiplies]
 get_histogram(cases_counts, [1, 2, 3, 4, (5,8), (9, 16), (17, 32)], '# cases for multiply switch cases')
+
+print()
+print('Switches with range <= 64 and a duplicate BB we can do bit tests')
+small_range = [s for s in switches if s.get_range_size() <= 64 and s.get_uniq_bb_count() < s.get_covered_values()]
+small_range_by_density = sorted([(s, s.get_bb_density()) for s in small_range], key = lambda x: x[1])
+
+print('Candidates: %d (%.2f%%)' % (len(small_range), 100.0 * len(small_range) / switches_count))
+print('Average BB density of these switches: %.2f' % average([s.get_bb_density() for s in small_range]))
+threshold = 0.5
+filtered = list(filter(lambda x: x[1] <= threshold, small_range_by_density))
+print('Candidates with density < %.2f : %d (%.2f%%)' % (threshold, len(filtered), 100.0 * len(filtered) / switches_count))
+
+print('Example: ')
+for s in small_range_by_density[:20]:
+    print('%.2f    %s' % (s[1], s[0]))
+print()
