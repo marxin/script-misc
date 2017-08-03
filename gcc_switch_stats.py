@@ -99,6 +99,9 @@ class Type:
                 else:
                     self.enum_values.append((int(t[0]), int(t[1])))
 
+            # sort enum values
+            self.enum_values = sorted(self.enum_values, key = lambda x: x[0])
+
     def verify(self):
         if self.enum_values != None:
             n = sum([x[1] - x[0] + 1 for x in self.enum_values])
@@ -109,9 +112,28 @@ class Type:
                 e = self.enum_values[i]
                 assert e[0] <= e[1]
                 if l > 1 and i < l - 1:
-                    assert e[1] < self.enum_values[i + 1][0]
+                    assert e[1] < self.enum_values[i + 1][0] and [1] + 1 != self.enum_values[i + 1]
 
         return True
+
+    def is_enum(self):
+        return self.enum_values != None
+
+    def is_contiguous(self):
+        return len(self.enum_values) == 1
+
+    def get_range(self):
+        return (self.enum_values[0][0], self.enum_values[-1][1])
+
+    def get_enum_size(self):
+        return sum([c[1]- c[0] + 1 for c in self.enum_values])
+
+    def handles_value(self, value):
+        for e in self.enum_values:
+            if e[0] <= value and value <= e[1]:
+                return True
+
+        return False
 
     def print(self):
         print('enum_values (%d): %s' % (self.enum_values_count, str(self.enum_values)))
@@ -220,6 +242,13 @@ class Switch:
     def get_bb_density(self):
         return 1.0 * self.get_uniq_bb_count() / len(self.cases)
 
+    def handles_value(self, value):
+        for c in self.cases:
+            if c.low <= value and value <= c.high:
+                return True
+
+        return False
+
     def get_all_values(self):
         for c in self.cases:
             for i in range(c.low, c.high + 1):
@@ -237,6 +266,9 @@ class Switch:
     def is_multiply_values(self):
         start = None
         max = None
+
+        if self.handles_value(0):
+            return False
 
         for v in self.get_all_values():
             max = v
@@ -256,7 +288,28 @@ class Switch:
         if max <= 1 or max == start:
             return False
 
+        if start <= 2:
+            return False
+
         return True
+
+    def has_enum_and_ranges_diff(self):
+        if self.type.enum_values == None:
+            return False
+
+        for c in self.cases:
+            if not self.type.handles_value(c.low):
+                return True
+            elif not self.type.handles_value(c.high):
+                return True
+
+#        for e in self.type.enum_values:
+#            if not self.handles_value(e[0]):
+#                return True
+#            elif not self.handles_value(e[1]):
+#                return True
+
+        return False
 
     def __repr__(self):
         return ' '.join([str(c) for c in self.cases])
@@ -272,11 +325,15 @@ class Switch:
         m.update(self.get_full_name().encode('utf-8'))
         return m.hexdigest()
 
-if len(sys.argv) != 2:
-    print('Usage: gcc_switch_parser.py [file]')
+if len(sys.argv) < 2:
+    print('Usage: gcc_switch_parser.py [file] [N]')
     exit(1)
 
 d = sys.argv[1]
+limit = 0
+if len(sys.argv) >= 3:
+    limit = int(sys.argv[2])
+
 files = os.listdir(d)
 
 print('Processing %d files in %s' % (len(files), d))
@@ -284,8 +341,8 @@ print('Processing %d files in %s' % (len(files), d))
 switches = []
 warnings = 0
 
-# print('TODO: unlimit me!!!')
-# files = files[:1000]
+print('TODO: unlimit me!!!')
+files = files[:2000]
 
 for f in files:
     for line in open(os.path.join(d, f)):
@@ -324,6 +381,23 @@ switches_count = len(switches)
 
 print('Unique parsed switches: %d' % switches_count)
 
+switches_with_enum = [s for s in switches if s.type.is_enum()]
+print('Switches on an enum type: %d (%.2f%%)' % (len(switches_with_enum), 100.0 * len(switches_with_enum) / switches_count))
+switches_with_cont_enum = [s for s in switches_with_enum if s.type.is_contiguous()]
+print('Switches on an contiguous enum type: %d (%.2f%%)' % (len(switches_with_cont_enum), 100.0 * len(switches_with_cont_enum) / switches_count))
+
+switches_with_enum_out = [s for s in switches_with_enum if s.has_enum_and_ranges_diff()]
+print('Switches with out of bounds enum check: %d (%.2f%%)' % (len(switches_with_enum_out), 100.0 * len(switches_with_enum_out) / switches_count))
+
+
+switch_with_all = [s for s in switches_with_enum if s.get_covered_values() == s.type.get_enum_size()]
+print('Switches with covered of all enum values: %d (%.2f%%)' % (len(switch_with_all), 100.0 * len(switch_with_all) / switches_count))
+
+# TODO
+# for s in switches_with_enum_out:
+#    print(s)
+#    print(s.type.print())
+
 packages_with_switch = []
 key = lambda x: x.package
 for (k, v) in groupby(sorted(switches, key = key), key):
@@ -333,7 +407,7 @@ for (k, v) in groupby(sorted(switches, key = key), key):
 packages_with_switch = sorted(packages_with_switch, key = lambda v: v[1], reverse = True)
 print('\nPackage with most switches:')
 
-for s in packages_with_switch[:20]:
+for s in packages_with_switch[:limit]:
     print('%d %s' % (s[1], s[0].package))
 print()
 
@@ -351,6 +425,7 @@ cases_counts = [(s, len(s.cases)) for s in switches]
 print('Non-default cases count: %d' % sum([x[1] for x in cases_counts]))
 
 print('Average # of non-default cases: %.2f' % average([len(s.cases) for s in switches]))
+print('Average # of covered values: %.2f' % average([s.get_covered_values() for s in switches]))
 print('Average range # of non-default cases: %.2f' % average([len(s.cases) for s in switches]))
 print('Average sparsity: %.2f' % average([s.get_sparsity() for s in switches]))
 print('Average BB density: %.2f' % average([s.get_bb_density() for s in switches]))
@@ -384,29 +459,38 @@ for s in to256:
         improvements.append(1.0 * after / before)
 
 print()
-print('For all cases with range <= 256: %d, beneficial to double transformation: %d (%.2f%%)' % (len(to256), len(improvements), 100.0 * len(improvements) / len(to256)))
+print('For all cases with range <= 256: %d (%.2f%%), beneficial to double transformation: %d (%.2f%%)' % (len(to256), 100.0 * len(to256) / switches_count, len(improvements), 100.0 * len(improvements) / len(to256)))
 print('Average improvement: %.2f%%' % (100.0 * average(improvements)))
 print('Average jump table size before: %.2f B' % average(jt_sizes))
 
 # test if cases are power of 2
 powers_of_2_switches = []
 for s in switches:
-    if s.is_power_of_2():
+    if s.is_power_of_2() and s.get_covered_values() >= 4:
         powers_of_2_switches.append(s)
 
-print('Power of 2 switches: %d (%.2f%%)' % (len(powers_of_2_switches), 100.0 * len(powers_of_2_switches) / switches_count))
+print('Power of 2 switches (and covered values >= 4): %d (%.2f%%)' % (len(powers_of_2_switches), 100.0 * len(powers_of_2_switches) / switches_count))
+
+for s in powers_of_2_switches[:limit]:
+    print(s)
+print()
 
 cases_counts = [(s, len(s.cases)) for s in powers_of_2_switches]
 get_histogram(cases_counts, [1, 2, 3, 4, (5,8), (9, 16), (17, 32)], '# cases for 2^N cases')
 
 # test if cases multiple of first non-zero value
 multiplies = []
+power2_set = set(powers_of_2_switches)
 for s in switches:
-    if s.is_multiply_values() and not s.is_power_of_2():
+    if s.is_multiply_values() and not s in power2_set and len(s.cases) > 3:
         multiplies.append(s)
 
 print()
 print('Multiply switches: %d (%.2f%%)' % (len(multiplies), 100.0 * len(multiplies) / switches_count))
+
+for s in multiplies[:limit]:
+    print(s)
+print()
 
 cases_counts = [(s, len(s.cases)) for s in multiplies]
 get_histogram(cases_counts, [1, 2, 3, 4, (5,8), (9, 16), (17, 32)], '# cases for multiply switch cases')
@@ -423,6 +507,6 @@ filtered = list(filter(lambda x: x[1] <= threshold, small_range_by_density))
 print('Candidates with density < %.2f : %d (%.2f%%)' % (threshold, len(filtered), 100.0 * len(filtered) / switches_count))
 
 print('Example: ')
-for s in small_range_by_density[:20]:
+for s in small_range_by_density[:limit]:
     print('%.2f    %s' % (s[1], s[0]))
 print()
