@@ -138,6 +138,9 @@ class Type:
     def print(self):
         print('enum_values (%d): %s' % (self.enum_values_count, str(self.enum_values)))
 
+    def get_type_info(self):
+        return '%s %d' % ('unsigned' if self.unsigned else 'signed', self.precision)
+
 class Switch:
     def __init__(self, line, package):
         assert package.endswith('.log')
@@ -312,7 +315,7 @@ class Switch:
         return False
 
     def __repr__(self):
-        return ' '.join([str(c) for c in self.cases])
+        return 'default: bb_%d %s' % (self.default,' '.join([str(c) for c in self.cases]))
 
     def get_location(self):
         return '%s:%s:%s' % (self.file, self.line, self.column)
@@ -324,6 +327,16 @@ class Switch:
         m = hashlib.md5()
         m.update(self.get_full_name().encode('utf-8'))
         return m.hexdigest()
+
+    def has_case_equal_to_default(self):
+        for c in self.cases:
+            if c.bb == self.default:
+                return True
+
+        return False
+
+    def remove_cases_to_default(self):
+        self.cases = [c for c in self.cases if c.bb != self.default]
 
 if len(sys.argv) < 2:
     print('Usage: gcc_switch_parser.py [file] [N]')
@@ -341,8 +354,8 @@ print('Processing %d files in %s' % (len(files), d))
 switches = []
 warnings = 0
 
-print('TODO: unlimit me!!!')
-files = files[:2000]
+# print('TODO: unlimit me!!!')
+# files = files[:2000]
 
 for f in files:
     for line in open(os.path.join(d, f)):
@@ -380,6 +393,23 @@ switches = [x[0] for x in sorted_groups]
 switches_count = len(switches)
 
 print('Unique parsed switches: %d' % switches_count)
+
+shared_with_default = [s for s in switches if s.has_case_equal_to_default()]
+print('Switches with a shared BB with default: %d' % len(shared_with_default))
+
+for s in shared_with_default[:limit]:
+    print(s)
+    s.remove_cases_to_default()
+print()
+
+types = sorted([s.type.get_type_info() for s in switches])
+types_histogram = []
+for k, v in groupby(types):
+    types_histogram.append((k, len(list(v))))
+
+print('Switch types')
+for t in sorted(types_histogram, key = lambda x: x[1], reverse = True):
+    print('%d %s' % (t[1], t[0]))
 
 switches_with_enum = [s for s in switches if s.type.is_enum()]
 print('Switches on an enum type: %d (%.2f%%)' % (len(switches_with_enum), 100.0 * len(switches_with_enum) / switches_count))
