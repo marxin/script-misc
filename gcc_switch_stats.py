@@ -5,6 +5,7 @@ import sys
 import hashlib
 
 from itertools import *
+from operator import itemgetter
 
 def average(values):
     return 1.0 * sum(values) / len(values)
@@ -334,6 +335,8 @@ class Switch:
         s = 'default: bb_%d %s' % (self.default,' '.join([str(c) for c in self.cases]))
         if self.histogram:
             s += ' {%s}' % (','.join([str(x) for x in self.histogram]))
+            if self.histogram_sum > 0:
+                s += ' top_frequency: %.2f%%' % (100 * self.get_topn_histogram_frequency(1))
 
         return s
 
@@ -341,7 +344,7 @@ class Switch:
         return '%s:%s:%s' % (self.file, self.line, self.column)
 
     def get_full_name(self):
-        return self.get_location() + ':' + str(self)
+        return self.get_location() + ': ' + str(self)
 
     def get_md5_hash(self):
         m = hashlib.md5()
@@ -506,9 +509,16 @@ if len(switches_with_hist) != 0:
     print()
     get_histogram(histogram_max_frequency, [(0, 10), (11, 20), (21, 30), (31, 40), (41, 50), (51, 60), (61, 70), (71, 80), (81, 90), (91, 100)], 'frequency')
 
-    print('Examples:')
-    for s in switches_with_hist[:limit]:
-        print(s)
+    print()
+    print('Examples with highes max frequency (>= 100 executions):')
+    for s in sorted(filter(lambda x: x[0].histogram_sum > 100, histogram_max_frequency), key = itemgetter(1), reverse = True)[:limit]:
+        print(s[0].get_full_name())
+    print()
+
+    print()
+    print('Examples with the biggest # of executions:')
+    for s in sorted([(s, s.histogram_sum) for s in switches_with_hist], key = itemgetter(1), reverse = True)[:limit]:
+        print('%10d: %s' % (s[1], s[0].get_full_name()))
     print()
 
 print()
