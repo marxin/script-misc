@@ -149,6 +149,9 @@ class Switch:
         self.line = None
         self.column = None
         self.failed = False
+        self.histogram = None
+        self.histogram_sorted = None
+        self.histogram_sum = None
 
         self.parse(line)
 
@@ -179,7 +182,7 @@ class Switch:
         part2 = part2.rstrip('#')
 
         tokens = part2.split('#')
-        if len(tokens) != 2:
+        if len(tokens) < 2:
             self.failed = True
             return
 
@@ -223,6 +226,19 @@ class Switch:
         if not self.type.verify():
             self.failed = True
             return
+
+        # handle histogram
+        if len(tokens) == 3:
+            h = tokens[2]
+            assert h.startswith('SWITCH_HISTOGRAM')
+            parts = h.split(' ')
+            assert len(parts) == 2
+            array = parts[1][1:-1]
+            values = [int(x) for x in array.split(',')]
+            assert len(values) == len(self.cases) + 1
+            self.histogram = values
+            self.histogram_sorted = sorted(self.histogram, reverse = True)
+            self.histogram_sum = sum(self.histogram)
 
         assert len(self.cases) > 0
 
@@ -315,7 +331,11 @@ class Switch:
         return False
 
     def __repr__(self):
-        return 'default: bb_%d %s' % (self.default,' '.join([str(c) for c in self.cases]))
+        s = 'default: bb_%d %s' % (self.default,' '.join([str(c) for c in self.cases]))
+        if self.histogram:
+            s += ' {%s}' % (','.join([str(x) for x in self.histogram]))
+
+        return s
 
     def get_location(self):
         return '%s:%s:%s' % (self.file, self.line, self.column)
@@ -337,6 +357,16 @@ class Switch:
 
     def remove_cases_to_default(self):
         self.cases = [c for c in self.cases if c.bb != self.default]
+
+    def get_histogram_max(self):
+        return max(self.histogram)
+
+    def get_topn_histogram_frequency(self, n):
+        s = sum(self.histogram_sorted[:n])
+        return 1.0 * s / self.histogram_sum
+
+    def get_default_histogram_frequency(self):
+        return 1.0 * self.histogram[0] / self.histogram_sum
 
 if len(sys.argv) < 2:
     print('Usage: gcc_switch_parser.py [file] [N]')
@@ -459,6 +489,27 @@ print('Average # of covered values: %.2f' % average([s.get_covered_values() for 
 print('Average range # of non-default cases: %.2f' % average([len(s.cases) for s in switches]))
 print('Average sparsity: %.2f' % average([s.get_sparsity() for s in switches]))
 print('Average BB density: %.2f' % average([s.get_bb_density() for s in switches]))
+
+switches_with_hist = [s for s in switches if s.histogram and s.histogram_sum != 0]
+if len(switches_with_hist) != 0:
+    print()
+    print('Switches with a non-zero histogram: %d (%.2f%%)' % (len(switches_with_hist), 100.0 * len(switches_with_hist) / switches_count))
+    print('Average # of executions: %d' % average([s.histogram_sum for s in switches_with_hist]))
+
+    histogram_default_frequency = [(s, round(100.0 * s.get_default_histogram_frequency())) for s in switches_with_hist]
+    print('Average frequency of default: %d%%' % average([x[1] for x in histogram_default_frequency]))
+    histogram_max_frequency = [(s, round(100.0 * s.get_topn_histogram_frequency(1))) for s in switches_with_hist]
+    print('Average frequency of max value: %d%%' % average([x[1] for x in histogram_max_frequency]))
+    print('Average frequency of top 2 max values: %d%%' % average([round(100.0 * s.get_topn_histogram_frequency(2)) for s in switches_with_hist]))
+    print('Average frequency of top 3 max values: %d%%' % average([round(100.0 * s.get_topn_histogram_frequency(3)) for s in switches_with_hist]))
+
+    print()
+    get_histogram(histogram_max_frequency, [(0, 10), (11, 20), (21, 30), (31, 40), (41, 50), (51, 60), (61, 70), (71, 80), (81, 90), (91, 100)], 'frequency')
+
+    print('Examples:')
+    for s in switches_with_hist[:limit]:
+        print(s)
+    print()
 
 print()
 get_histogram(cases_counts, [1, 2, 3, 4, (5,8), (9, 16), (17, 32)], '# cases')
