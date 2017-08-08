@@ -253,11 +253,22 @@ class Switch:
     def get_covered_values(self):
         return sum([c.high - c.low + 1 for c in self.cases])
 
-    def get_sparsity(self):
-        return 1.0 * self.get_range_size() / self.get_covered_values()
+    def get_density(self):
+        return 1.0 * self.get_covered_values() / self.get_range_size()
+
+    def has_range(self):
+        for c in self.cases:
+            if c.low != c.high:
+                return True
+
+        return False
 
     def get_uniq_bb_count(self):
         return len(set([c.bb for c in self.cases]))
+
+    def has_all_bbs_uniq(self):
+        bbs = [c.bb for c in self.cases] + [self.default]
+        return len(bbs) == len(set(bbs))
 
     def get_bb_density(self):
         return 1.0 * self.get_uniq_bb_count() / len(self.cases)
@@ -336,7 +347,13 @@ class Switch:
         if self.histogram:
             s += ' {%s}' % (','.join([str(x) for x in self.histogram]))
             if self.histogram_sum > 0:
-                s += ' top_frequency: %.2f%%' % (100 * self.get_topn_histogram_frequency(1))
+                top = self.get_topn_histogram_frequency(1)
+                s += ' top_frequency: %.2f%%' % (100 * top)
+                if top == self.get_default_histogram_frequency():
+                    s += ' is default BB'
+
+                if not self.has_all_bbs_uniq():
+                    s += ' (not all BB uniq)'
 
         return s
 
@@ -442,7 +459,11 @@ for k, v in groupby(types):
 
 print('Switch types')
 for t in sorted(types_histogram, key = lambda x: x[1], reverse = True):
-    print('%d %s' % (t[1], t[0]))
+    print('%10d %s' % (t[1], t[0]))
+
+print()
+switches_with_range = [s for s in switches if s.has_range()]
+print('Switches with a range in a case: %d (%.2f%%)' % (len(switches_with_range), 100.0 * len(switches_with_range) / switches_count))
 
 switches_with_enum = [s for s in switches if s.type.is_enum()]
 print('Switches on an enum type: %d (%.2f%%)' % (len(switches_with_enum), 100.0 * len(switches_with_enum) / switches_count))
@@ -490,24 +511,32 @@ print('Non-default cases count: %d' % sum([x[1] for x in cases_counts]))
 print('Average # of non-default cases: %.2f' % average([len(s.cases) for s in switches]))
 print('Average # of covered values: %.2f' % average([s.get_covered_values() for s in switches]))
 print('Average range # of non-default cases: %.2f' % average([len(s.cases) for s in switches]))
-print('Average sparsity: %.2f' % average([s.get_sparsity() for s in switches]))
+print('Average density: %.2f' % average([100.0 * s.get_density() for s in switches]))
 print('Average BB density: %.2f' % average([s.get_bb_density() for s in switches]))
+all_uniq_bbs_switches = [s for s in switches if s.has_all_bbs_uniq()]
+print('Switches with all unique BBs: %d (%.2f%%)' % (len(all_uniq_bbs_switches), 100.0 * len(all_uniq_bbs_switches) / switches_count))
+
+percentage_by_10 = [(0, 10), (11, 20), (21, 30), (31, 40), (41, 50), (51, 60), (61, 70), (71, 80), (81, 90), (91, 100)]
 
 switches_with_hist = [s for s in switches if s.histogram and s.histogram_sum != 0]
 if len(switches_with_hist) != 0:
     print()
     print('Switches with a non-zero histogram: %d (%.2f%%)' % (len(switches_with_hist), 100.0 * len(switches_with_hist) / switches_count))
-    print('Average # of executions: %d' % average([s.histogram_sum for s in switches_with_hist]))
+    print('Average # of executions: %.2E' % average([s.histogram_sum for s in switches_with_hist]))
 
     histogram_default_frequency = [(s, round(100.0 * s.get_default_histogram_frequency())) for s in switches_with_hist]
     print('Average frequency of default: %d%%' % average([x[1] for x in histogram_default_frequency]))
     histogram_max_frequency = [(s, round(100.0 * s.get_topn_histogram_frequency(1))) for s in switches_with_hist]
-    print('Average frequency of max value: %d%%' % average([x[1] for x in histogram_max_frequency]))
+    print('Average frequency of most common value: %d%%' % average([x[1] for x in histogram_max_frequency]))
     print('Average frequency of top 2 max values: %d%%' % average([round(100.0 * s.get_topn_histogram_frequency(2)) for s in switches_with_hist]))
     print('Average frequency of top 3 max values: %d%%' % average([round(100.0 * s.get_topn_histogram_frequency(3)) for s in switches_with_hist]))
 
     print()
-    get_histogram(histogram_max_frequency, [(0, 10), (11, 20), (21, 30), (31, 40), (41, 50), (51, 60), (61, 70), (71, 80), (81, 90), (91, 100)], 'frequency')
+    get_histogram(histogram_max_frequency, percentage_by_10, 'TOP frequency')
+
+    histogram_default_frequency = [(s, round(100.0 * s.get_default_histogram_frequency())) for s in switches_with_hist]
+    print()
+    get_histogram(histogram_default_frequency, percentage_by_10, 'Frequency of default BB')
 
     print()
     print('Examples with highes max frequency (>= 100 executions):')
@@ -518,7 +547,7 @@ if len(switches_with_hist) != 0:
     print()
     print('Examples with the biggest # of executions:')
     for s in sorted([(s, s.histogram_sum) for s in switches_with_hist], key = itemgetter(1), reverse = True)[:limit]:
-        print('%10d: %s' % (s[1], s[0].get_full_name()))
+        print('%.2E: %s' % (s[1], s[0].get_full_name()))
     print()
 
 print()
@@ -533,8 +562,8 @@ range_sizes = [(s, s.get_range_size()) for s in switches]
 get_histogram(range_sizes, [1, 2, 3, 4, (5,8), (9, 16), (17, 32), (33, 64), (65, 256)], 'range size')
 
 print()
-sparsity = [(x[0], round(x[1])) for x in [(s, s.get_sparsity()) for s in switches]]
-get_histogram(sparsity, range(1, 11), 'sparsity')
+density = [(x[0], round(x[1])) for x in [(s, 100 * s.get_density()) for s in switches]]
+get_histogram(density, percentage_by_10, 'density')
 
 # calculate size saving when using double indirection
 to256 = [s for s in range_sizes if s[1] <= 256]
