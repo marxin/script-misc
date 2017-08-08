@@ -10,7 +10,7 @@ targets = 'aarch64-elf aarch64-linux-gnu aarch64-rtems   alpha-linux-gnu alpha-f
 
 targets = [t for t in targets.split(' ') if t]
 source_gcc = '/home/marxin/Programming/gcc2'
-root = '/tmp/gcc-batch-builds'
+root = '/dev/shm/gcc-batch-builds'
 
 shutil.rmtree(root)
 os.makedirs(root)
@@ -58,7 +58,7 @@ def build_target(full_target, i, n):
             err.write(r.stderr.decode('utf-8'))
 
             # remove objdir if OK
-            assert d.startswith('/tmp/')
+            assert d.startswith('/dev/shm/')
             if r.returncode == 0:
                 shutil.rmtree(d)
 
