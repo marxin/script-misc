@@ -62,6 +62,7 @@ args = parser.parse_args()
 option_validity_cache = {}
 failed_tests = 0
 
+FNULL = open(os.devnull, 'w')
 
 empty = tempfile.NamedTemporaryFile(suffix = '.c', delete = False).name
 
@@ -115,25 +116,57 @@ source_files += find_tests('/home/marxin/BIG/Programming/llvm/', '/test-suite/')
 source_files = list(set(sorted(source_files)))
 source_files = list(filter(lambda x: get_compiler_by_extension(x) != None and not any([i in x for i in ignored_tests]), source_files))
 
+cdir = '/tmp/csmith-tmp'
+creference = {}
+
+def get_csmith_checksum(source_file):
+    print(source_file)
+    compiler = 'g++-7' if source_file.endswith('.cpp') else 'gcc-7'
+    try:
+        o = subprocess.check_output('%s -O2 %s %s && ./a.out' % (compiler, safe_flags, f.name), shell = True, stderr = FNULL, timeout = 3)
+        checksum = o.decode('utf8').strip()
+        return checksum
+    except subprocess.TimeoutExpired as e:
+        print('timeout')
+        return None
+
 # Prepare csmith tests
 if args.csmith:
-    cdir = '/tmp/csmith-tmp'
     if os.path.exists(cdir):
         shutil.rmtree(cdir)
     os.mkdir(cdir)
-    n = 200
+    n = 100
+
+    safe_flags = '-Wno-narrowing -fpermissive'
     print('Using temporary cdir: %s, generating 2x%d tests' % (cdir, n))
-    for i in range(n):
+    i = 0
+    while i != n:
         f = tempfile.NamedTemporaryFile(mode = 'w+', dir = cdir, suffix = '.cpp', delete = False)
         subprocess.check_output('csmith --lang-cpp -o %s' % f.name, shell = True)
-        print('.', end = '')
-        sys.stdout.flush()
+        checksum = get_csmith_checksum(f.name)
+        if checksum == None:
+            os.remove(f.name)
+            continue
+        else:
+            creference[f.name] = checksum
+            print('.', end = '')
+            sys.stdout.flush()
+            i += 1
 
-    for i in range(n):
+    i = 0
+    while i != n:
         f = tempfile.NamedTemporaryFile(mode = 'w+', dir = cdir, suffix = '.c', delete = False)
         subprocess.check_output('csmith -o %s' % f.name, shell = True)
-        print('.', end = '')
-        sys.stdout.flush()
+        checksum = get_csmith_checksum(f.name)
+        if checksum == None:
+            os.remove(f.name)
+            continue
+        else:
+            creference[f.name] = checksum
+            print(checksum)
+            print('.', end = '')
+            sys.stdout.flush()
+            i += 1
 
     print()
 
@@ -484,12 +517,22 @@ class OptimizationLevel:
 
     def test(self, option_count):
         try:
-            options = [random.choice(self.options).select_nondefault() for option in range(option_count)]
+            options = [random.choice(self.options) for option in range(option_count)]
             source_file = random.choice(source_files)
             compiler = get_compiler_by_extension(source_file)
 
+            is_csmith_test = cdir in source_file
+            if is_csmith_test:
+                object_file = tempfile.NamedTemporaryFile(suffix = '.out')
+                object_file.close()
+                options = [o for o in options if not o.name.startswith('-m')]
+
+            options = [o.select_nondefault() for o in options]
+
             # TODO: warning
-            cmd = 'timeout %d %s -c %s -I/home/marxin/BIG/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s %s %s -o/dev/null' % (args.timeout, compiler, args.cflags, self.level, source_file, ' '.join(options))
+            cmd = 'timeout %d %s %s -I/home/marxin/BIG/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s %s %s -o %s' % (args.timeout, compiler, args.cflags, self.level, source_file, ' '.join(options), object_file.name if is_csmith_test else '/dev/null')
+            if not is_csmith_test:
+                cmd += ' -c'
             r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
             if r.returncode != 0:
                 global failed_tests
@@ -515,6 +558,18 @@ class OptimizationLevel:
                 if r.returncode == 124 and args.verbose:
                     print(colored('TIMEOUT:', 'red'))
                     print(cmd)
+            elif is_csmith_test:
+                # run the test
+                os.chmod(object_file.name, 0o555)
+                r = subprocess.run(object_file.name, shell = True, stdout = subprocess.PIPE) #, stderr = FNULL)
+                if r.returncode != 0:
+                    print(colored('NEW csmith test returned non-zero error code: %s' % (cmd), 'red'))
+                else:
+                    result = r.stdout.decode('utf-8').strip()
+                    if result != creference[source_file]:
+                        print(colored('NEW csmith run failed: %s' % (cmd), 'red'))
+
+                os.remove(object_file.name)
         except Exception as e:
             print('FATAL ERROR')
             traceback.print_exc(file = sys.stdout)
