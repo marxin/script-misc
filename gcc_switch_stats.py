@@ -556,11 +556,11 @@ if len(switches_with_hist) != 0:
     print('Average frequency of top 3 max values: %d%%' % average([round(100.0 * s.get_topn_histogram_frequency(3)) for s in switches_with_hist]))
 
     print()
-    get_histogram(histogram_max_frequency, percentage_by_10, 'Frequency of most common case', 'top_frequency.png', 'frequency')
+    get_histogram(histogram_max_frequency, percentage_by_10, 'Frequency of most common case', 'top_frequency.svg', 'frequency')
 
     histogram_default_frequency = [(s, round(100.0 * s.get_default_histogram_frequency())) for s in switches_with_hist]
     print()
-    get_histogram(histogram_default_frequency, percentage_by_10, 'Frequency of default BB', 'default_frequency.png', 'frequency')
+    get_histogram(histogram_default_frequency, percentage_by_10, 'Frequency of default BB', 'default_frequency.svg', 'frequency')
 
     print()
     print('Examples with highes max frequency (>= 100 executions):')
@@ -575,19 +575,19 @@ if len(switches_with_hist) != 0:
     print()
 
 print()
-get_histogram(cases_counts, [1, 2, 3, 4, [5,8], [9, 16], [17, 32]], 'Number of non-default cases', 'cases_distribution.png', '# of non-default cases')
+get_histogram(cases_counts, [1, 2, 3, 4, [5,8], [9, 16], [17, 32]], 'Number of non-default cases', 'cases_distribution.svg', '# of non-default cases')
 
 print()
 bbs_counts = [(s, s.get_uniq_bb_count()) for s in switches]
-get_histogram(bbs_counts, [1, 2, 3, 4, [5,8], [9, 16], [17, 32]], 'Number of non-default BBs', 'bbs_distribution.png', '# of non-default BBs')
+get_histogram(bbs_counts, [1, 2, 3, 4, [5,8], [9, 16], [17, 32]], 'Number of non-default BBs', 'bbs_distribution.svg', '# of non-default BBs')
 
 print()
 range_sizes = [(s, s.get_range_size()) for s in switches]
-get_histogram(range_sizes, [1, 2, 3, 4, [5,8], [9, 16], [17, 32], [33, 64], [65, 256]], 'Switch range size', 'switch_range_size.png', 'range size')
+get_histogram(range_sizes, [1, 2, 3, 4, [5,8], [9, 16], [17, 32], [33, 64], [65, 256]], 'Switch range size', 'switch_range_size.svg', 'range size')
 
 print()
 density = [(x[0], round(x[1])) for x in [(s, 100 * s.get_density()) for s in switches]]
-get_histogram(density, percentage_by_10, 'Switch density', 'density.png', 'density')
+get_histogram(density, percentage_by_10, 'Switch density', 'density.svg', 'density')
 
 # calculate size saving when using double indirection
 to256 = [s for s in range_sizes if s[1] <= 256]
@@ -620,7 +620,7 @@ for s in powers_of_2_switches[:limit]:
 print()
 
 cases_counts = [(s, len(s.cases)) for s in powers_of_2_switches]
-get_histogram(cases_counts, [1, 2, 3, 4, [5,8], [9, 16], [17, 32]], 'Number of cases for 2^N case values', 'power_of_2.png', '# of non-default cases')
+get_histogram(cases_counts, [1, 2, 3, 4, [5,8], [9, 16], [17, 32]], 'Number of cases for 2^N case values', 'power_of_2.svg', '# of non-default cases')
 
 # test if cases multiple of first non-zero value
 multiplies = []
@@ -637,7 +637,7 @@ for s in multiplies[:limit]:
 print()
 
 cases_counts = [(s, len(s.cases)) for s in multiplies]
-get_histogram(cases_counts, [1, 2, 3, 4, [5,8], [9, 16], [17, 32]], 'Number cases being a multiply of first one', 'multiply.png', '# of non-default cases')
+get_histogram(cases_counts, [1, 2, 3, 4, [5,8], [9, 16], [17, 32]], 'Number cases being a multiply of first one', 'multiply.svg', '# of non-default cases')
 
 print()
 print('Switches with range <= 64 and a duplicate BB we can do bit tests')
