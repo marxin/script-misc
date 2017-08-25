@@ -409,6 +409,10 @@ class Switch:
         s = sum(self.histogram_sorted[:n])
         return 1.0 * s / self.histogram_sum
 
+    def get_top_non_default_histogram_frequency(self):
+        s = sum(self.histogram[1:])
+        return 1.0 * s / self.histogram_sum
+
     def get_default_histogram_frequency(self):
         return 1.0 * self.histogram[0] / self.histogram_sum
 
@@ -551,12 +555,17 @@ if len(switches_with_hist) != 0:
     histogram_default_frequency = [(s, round(100.0 * s.get_default_histogram_frequency())) for s in switches_with_hist]
     print('Average frequency of default: %d%%' % average([x[1] for x in histogram_default_frequency]))
     histogram_max_frequency = [(s, round(100.0 * s.get_topn_histogram_frequency(1))) for s in switches_with_hist]
+    histogram_max_nondefault_frequency = [(s, round(100.0 * s.get_top_non_default_histogram_frequency())) for s in switches_with_hist]
     print('Average frequency of most common value: %d%%' % average([x[1] for x in histogram_max_frequency]))
+    print('Average frequency of most common (non-default) value: %d%%' % average([x[1] for x in histogram_max_nondefault_frequency]))
     print('Average frequency of top 2 max values: %d%%' % average([round(100.0 * s.get_topn_histogram_frequency(2)) for s in switches_with_hist]))
     print('Average frequency of top 3 max values: %d%%' % average([round(100.0 * s.get_topn_histogram_frequency(3)) for s in switches_with_hist]))
 
     print()
     get_histogram(histogram_max_frequency, percentage_by_10, 'Frequency of most common case', 'top_frequency.svg', 'frequency')
+
+    print()
+    get_histogram(histogram_max_nondefault_frequency, percentage_by_10, 'Frequency of most common non-default case', 'top_non_default_frequency.svg', 'frequency')
 
     histogram_default_frequency = [(s, round(100.0 * s.get_default_histogram_frequency())) for s in switches_with_hist]
     print()
