@@ -410,7 +410,7 @@ class Switch:
         return 1.0 * s / self.histogram_sum
 
     def get_top_non_default_histogram_frequency(self):
-        s = sum(self.histogram[1:])
+        s = max(self.histogram[1:])
         return 1.0 * s / self.histogram_sum
 
     def get_default_histogram_frequency(self):
