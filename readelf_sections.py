@@ -37,7 +37,7 @@ class ElfInfo:
             elffile = ELFFile(f)
 
             for section in elffile.iter_sections():
-                name = section.name.decode('utf-8')
+                name = section.name
                 size = section['sh_size']
                 digest = hashlib.md5(section.data()).hexdigest()
                 self.sections_sum += size
