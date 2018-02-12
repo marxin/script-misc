@@ -28,14 +28,14 @@ def grep_errors(log):
             printme('\n'.join(v))
 
 url = 'https://api.opensuse.org'
+url = 'https://api.suse.de'
 project = 'home:marxin:gcc8-incubator'
-repository = 'openSUSE_Tumbleweed'
 
 log_dir = '/tmp/obs-logs'
 shutil.rmtree(log_dir, ignore_errors = True)
 
-def process_arch(arch):
-    arch_dir = os.path.join(log_dir, arch)
+def process_arch(repository, arch):
+    arch_dir = os.path.join(log_dir, repository + '_' + arch)
 
     result = subprocess.check_output('osc -A %s r %s -r %s -a %s --csv' % (url, project, repository, arch), shell = True)
     packages = result.decode('utf-8', 'ignore').strip().split('\n')
@@ -59,9 +59,17 @@ def process_arch(arch):
 
             break
 
+for arch in ['ppc64', 'ppc64le']:
+    printme('== %s ==' % arch)
+    process_arch('openSUSE_Factory_PowerPC', arch)
+
 for arch in ['x86_64', 'i586']:
     printme('== %s ==' % arch)
-    process_arch(arch)
+    process_arch('openSUSE_Tumbleweed', arch)
+
+for arch in ['aarch64', 'armv7l']:
+    printme('== %s ==' % arch)
+    process_arch('openSUSE_Factory_ARM', arch)
 
 with open(os.path.join(log_dir, 'build.log'), 'w+') as w:
     w.write(buffer)

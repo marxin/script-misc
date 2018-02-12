@@ -157,7 +157,7 @@ def main():
     else:
       assert False, "Unhandled option"
 
-  total_memory = 8
+  total_memory = 4
   # TODO: fix me
   output_file = args[-1]
   args = args[:-1]
