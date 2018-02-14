@@ -67,15 +67,15 @@ for i, l in enumerate(lines):
             targets[-1].end = timestamp
 
 print('Parsed targets: %d ' % len(targets))
-print('Skipped: ')
-for t in targets:
-    if t.end == None:
-        print('  ' + t.name)
+# print('Skipped: ')
+# for t in targets:
+#     if t.end == None:
+#         print('  ' + t.name)
 
 print()
-targets = sorted([x for x in targets if x.end != None], key = lambda x: x.duration())
+targets = sorted([x for x in targets if x.end != None], key = lambda x: x.duration(), reverse = True)
 
 for t in targets:
-    if t.duration() > 0.1:
-        s = '%.2f' % t.duration()
-        print('%30s: %6s' % (t.name, s))
+    if t.duration() > 0.1 and not t.name.startswith('configure-'):
+        s = '%.2fs' % t.duration()
+        print('%36s: %7s' % (t.name, s))
