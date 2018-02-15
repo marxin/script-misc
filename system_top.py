@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from __future__ import print_function
 from time import time
@@ -69,8 +69,12 @@ def print_cpu():
   print_flush('CPU:%f:%u' % (time.time(), min(100, int(tokens[12]) + int(tokens[13]) + int(tokens[15]))))
 
 def print_ram():
-  r = os.popen('free | head -n2 | tail -n1 | tr -s " " |cut -f3 -d" "').readlines()[0].strip()
-  print_flush('RAM:%f:%s' % (time.time(), r))
+    r = subprocess.check_output('free', shell = True, encoding = 'utf8')
+    lines = r.split('\n')
+    for l in lines:
+        if l.startswith('Mem:'):
+            parts = [x for x in l.split(' ') if x]
+            print_flush('RAM:%f:%s' % (time.time(), parts[2]))
 
 def main():
   args = sys.argv[1:]
@@ -90,20 +94,20 @@ def main():
 
       # iterate for new process
       for line in ps:
-	tokens = [x.strip() for x  in line.split(' ') if x]
-	p = Process(tokens[0], tokens[9], tokens[10:])
+        tokens = [x.strip() for x  in line.split(' ') if x]
+        p = Process(tokens[0], tokens[9], tokens[10:])
 
-	consumption[p.pid] = int(tokens[7])
-	nick = get_process_nickname_if_monitored(p)
+        consumption[p.pid] = int(tokens[7])
+        nick = get_process_nickname_if_monitored(p)
 
-	if nick != None:
-	  p.nick = nick
-	  processes.append(p)
+        if nick != None:
+            p.nick = nick
+            processes.append(p)
 
       # add memory consumption for all monitored processes
       for p in processes:
-	if p.pid in consumption:
-	  p.report_memory(t, consumption[p.pid])
+          if p.pid in consumption:
+              p.report_memory(t, consumption[p.pid])
 
       # CPU & MEM
       print_cpu()
