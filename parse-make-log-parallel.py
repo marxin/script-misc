@@ -82,21 +82,18 @@ for event in sorted_events:
 #        print('At: %f removing from booking %d: %d' % (event[0], i, event[2].pid))
 
 # write it SVG file
-
-dwg = svgwrite.Drawing(sys.argv[3], profile='tiny')
+margin = 100
+dwg = svgwrite.Drawing(sys.argv[3], size = (100 * filtered[-1].end + 2 * margin, 1000), profile = 'tiny')
 dwg.add(dwg.rect(insert=(0, 0), size = ('100%', '100%'), fill = 'white'))
 
 for t in filtered:
-    start_x = 100.0 * t.start
-    end_x = 100.0 * t.end
+    start_x = margin + 100.0 * t.start
+    end_x = margin + 100.0 * t.end
     height = 60
     start_y = height * t.booking_index
     dwg.add(dwg.rect(insert=(start_x, height * t.booking_index), size = (end_x - start_x, 0.8 * height),
         fill = 'rgb(216, 172, 51)', stroke = 'black'))
-    dwg.add(dwg.text('%s: %.1f' % (t.name, t.duration()), insert=(start_x, start_y + height / 2), font_size = 22))
-
-#dwg.add(dwg.line((0, 0), (10, 30), stroke=svgwrite.rgb(10, 10, 16, '%')))
-#dwg.add(dwg.text('Test', insert=(10, 200), fill='red'))
+    dwg.add(dwg.text('%s: %.1fs' % (t.name, t.duration()), insert=(start_x, start_y + height / 2), font_size = 22))
 
 dwg.save()
 
