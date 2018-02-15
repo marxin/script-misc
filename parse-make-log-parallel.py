@@ -22,7 +22,8 @@ if len(sys.argv) != 4:
 
 lines = [x.strip() for x in open(sys.argv[1]).readlines()]
 
-targets = {}
+targets = []
+cache = {}
 
 for i, l in enumerate(lines):
     if l.startswith('Putting child'):
@@ -30,21 +31,23 @@ for i, l in enumerate(lines):
         target = parts[3][1:-1]
         assert parts[4] == 'PID'
         pid = int(parts[5])
-        assert not pid in targets
-        targets[pid] = Target(target, pid)
+        assert not pid in cache
+        cache[pid] = Target(target, pid)
     elif l.startswith('Reaping '):
         parts = l.split(' ')
         target = parts[4]
         assert parts[5] == 'PID'
         pid = int(parts[6])
-        if pid in targets:
-            t = targets[pid]
+        if pid in cache:
+            t = cache[pid]
             start = float(parts[9]) + float(parts[10]) / 1000000
             end = float(parts[12]) + float(parts[13]) / 1000000
             t.start = start
             t.end = end
+            targets.append(t)
+            del cache[pid]
 
-filtered = sorted([t for (k, t) in targets.items() if t.duration() > float(sys.argv[2])], key = lambda x: x.start)
+filtered = sorted([t for t in targets if t.duration() > float(sys.argv[2])], key = lambda x: x.start)
 min_start = filtered[0].start
 
 for f in filtered:
@@ -84,13 +87,13 @@ dwg = svgwrite.Drawing(sys.argv[3], profile='tiny')
 dwg.add(dwg.rect(insert=(0, 0), size = ('100%', '100%'), fill = 'white'))
 
 for t in filtered:
-    start_x = 100.0 * t.start    
+    start_x = 100.0 * t.start
     end_x = 100.0 * t.end
     height = 60
     start_y = height * t.booking_index
     dwg.add(dwg.rect(insert=(start_x, height * t.booking_index), size = (end_x - start_x, 0.8 * height),
         fill = 'rgb(216, 172, 51)', stroke = 'black'))
-    dwg.add(dwg.text('%s: %.1f' % (t.name, t.duration()), insert=(start_x, start_y + height / 2), font_size = 24))
+    dwg.add(dwg.text('%s: %.1f' % (t.name, t.duration()), insert=(start_x, start_y + height / 2), font_size = 22))
 
 #dwg.add(dwg.line((0, 0), (10, 30), stroke=svgwrite.rgb(10, 10, 16, '%')))
 #dwg.add(dwg.text('Test', insert=(10, 200), fill='red'))
