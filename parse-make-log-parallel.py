@@ -16,8 +16,8 @@ class Target:
         assert self.end >= self.start
         return self.end - self.start
 
-if len(sys.argv) != 3:
-    print('Usage: <file> <threshold>')
+if len(sys.argv) != 4:
+    print('Usage: <file> <threshold> <output>')
     exit(1)
 
 lines = [x.strip() for x in open(sys.argv[1]).readlines()]
@@ -57,7 +57,6 @@ for f in filtered:
     events.append((f.end, 1, f))
 
 sorted_events = sorted(events, key = lambda x: x[0])
-print(sorted_events)
 
 booking = []
 for i in range(20):
@@ -70,18 +69,18 @@ for event in sorted_events:
             if booking[i] == None:
                 event[2].booking_index = i
                 booking[i] = event[2]
-                print('At: %f adding to booking %d: %d' % (event[0], i, event[2].pid))
+#                print('At: %f adding to booking %d: %d' % (event[0], i, event[2].pid))
                 break
     elif event[1] == 1:
         # end
         i = event[2].booking_index
         assert booking[i] == event[2]
         booking[i] = None
-        print('At: %f removing from booking %d: %d' % (event[0], i, event[2].pid))
+#        print('At: %f removing from booking %d: %d' % (event[0], i, event[2].pid))
 
 # write it SVG file
 
-dwg = svgwrite.Drawing('test.svg', profile='tiny')
+dwg = svgwrite.Drawing(sys.argv[3], profile='tiny')
 dwg.add(dwg.rect(insert=(0, 0), size = ('100%', '100%'), fill = 'white'))
 
 for t in filtered:
