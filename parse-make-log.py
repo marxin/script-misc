@@ -30,8 +30,14 @@ class Target:
         assert self.end >= self.start
         return self.end - self.start
 
-if len(sys.argv) != 2:
-    print('Usage: <file>')
+    def get_command_part(self):
+        s = self.command
+        if len(self.command) > 180:
+            s = self.command[:80] + '...' + self.command[-80:]
+        return s.replace('\n', '')
+
+if len(sys.argv) != 3:
+    print('Usage: <file> <threshold>')
     exit(1)
 
 lines = [x.strip() for x in open(sys.argv[1]).readlines()]
@@ -73,9 +79,20 @@ print('Parsed targets: %d ' % len(targets))
 #         print('  ' + t.name)
 
 print()
-targets = sorted([x for x in targets if x.end != None], key = lambda x: x.duration(), reverse = True)
+targets = [x for x in targets if x.end != None and not x.name.startswith('configure-')]
+
+group_names = ['libstdc++-v3', 'libbid', 'libgomp', 'libgcc', 'libgfortran', 'libsanitizer', '']
+groups = [[], [], [], [], [], [], []]
 
 for t in targets:
-    if t.duration() > 0.1 and not t.name.startswith('configure-'):
+    for i, g in enumerate(group_names):
+        if g in t.command.split(' ')[-1]:
+            groups[i].append(t)
+            break
+
+for i, g in enumerate(group_names):
+    l = [t for t in groups[i] if t.duration() > float(sys.argv[2]) ]
+    print('=== %s (%d) ===' % (g, len(l)))
+    for t in sorted(l, key = lambda x: x.duration(), reverse = True):
         s = '%.2fs' % t.duration()
-        print('%36s: %7s' % (t.name, s))
+        print('%36s: %7s: %s' % (t.name, s, t.get_command_part()))
