@@ -90,9 +90,13 @@ for t in targets:
             groups[i].append(t)
             break
 
+group_names = list(reversed(group_names))
+groups = list(reversed(groups))
+
 for i, g in enumerate(group_names):
     l = [t for t in groups[i] if t.duration() > float(sys.argv[2]) ]
     print('=== %s (%d) ===' % (g, len(l)))
     for t in sorted(l, key = lambda x: x.duration(), reverse = True):
         s = '%.2fs' % t.duration()
-        print('%36s: %7s: %s' % (t.name, s, t.get_command_part()))
+        print('%50s: %7s' % (t.name, s))
+#        print('%36s: %7s: %s' % (t.name, s, t.get_command_part()))

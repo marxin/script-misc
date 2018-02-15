@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from __future__ import print_function
 import matplotlib.pyplot as plt
@@ -8,11 +8,10 @@ from psutil import virtual_memory
 
 import os
 import sys
-import getopt
+import argparse
 
-cores = 8
+cores = 128
 colors = ['#1f77b4', '#aec7e8', '#ff7f0e', '#ffbb78', '#2ca02c', '#98df8a', '#ff9896', '#9467bd', '#c5b0d5', '#8c564b', '#c49c94', '#e377c2', '#f7b6d2', '#7f7f7f', '#c7c7c7', '#bcbd22', '#dbdb8d', '#17becf', '#9edae5']
-total_memory = virtual_memory().total / (1024 * 1024 * 1024)
 
 class DataLine:
   def __init__(self, name):
@@ -45,18 +44,18 @@ class DataLine:
     a = [0] * (max + 1)
     for i, v in enumerate(a):
       if i in d:
-	a[i] = d[i]
+        a[i] = d[i]
 
     self.y = a
 
     # value interpolation
     for i, v in enumerate(self.y[:-1]):
       if v == 0:
-	prev_values = filter(lambda x: x > 0, self.y[:i])
-        next_values = filter(lambda x: x > 0, self.y[i:])
+        p = next(filter(lambda x: x > 0, reversed(self.y[:i])), None)
+        n = next(filter(lambda x: x > 0, self.y[i:]), None)
 
-	if len(next_values) > 0 and len(prev_values) > 0:
-	  self.y[i] = prev_values[-1]
+        if p != None and n != None:
+          self.y[i] = p
 
   def max_x(self):
     return max(self.x)
@@ -109,7 +108,7 @@ def unify_data(datalines, global_max_time):
   for item in datalines.values():
     item.unify_y(global_max_time)
 
-def write_to_subplot(path, datalines, cpu_subplot, ram_subplot, global_max_time):
+def write_to_subplot(path, datalines, cpu_subplot, ram_subplot, global_max_time, total_memory):
   # TODO
   ram = datalines['RAM']
   cpu = datalines['CPU']
@@ -137,30 +136,15 @@ def write_to_subplot(path, datalines, cpu_subplot, ram_subplot, global_max_time)
   yticks = range(total_memory) if total_memory <= 8 else np.arange(0, total_memory, 2)
   ram_subplot.set_yticks(yticks)
 
-  ram_subplot.stackplot(stack_x, stack_y, colors = colors)
+#  ram_subplot.stackplot(stack_x, stack_y, colors = colors)
 
 def main():
-  optlist, args = getopt.getopt(sys.argv[1:], 'o:m:')
-
-  if len(args) == 0:
-    print('usage: vmstat_parser {data_files} -o pdf_file')
-    exit(-1)
-
-  output_file = None
-
-  for o, a in optlist:
-    if o == '-o':
-      output_file = a
-    elif o == '-m':
-      global total_memory
-      total_memory = int(a)
-    else:
-      assert False, "Unhandled option"
-
-  total_memory = 4
-  # TODO: fix me
-  output_file = args[-1]
-  args = args[:-1]
+  parser = argparse.ArgumentParser(description = 'Graph CPU & memory utilization')
+  parser.add_argument('log', help = 'Log file')
+  parser.add_argument('cpus', type = int, help = 'Number of CPUs')
+  parser.add_argument('ram', type = int, help = 'Maximum memory')
+  parser.add_argument('output', help = 'Output SVG file')
+  args = parser.parse_args()
 
   plt.rc('text', usetex = True)
   font = {'family' : 'serif', 'size':13}
@@ -173,8 +157,7 @@ def main():
 
   # data parsing
   file_datas = []
-
-  for i in file_names:
+  for i in [args.log]:
     file_datas.append(parse_file(i))
 
   global_max_time = int(round(max(map(lambda f: max(map(lambda x: x.max_x(), f.values())), file_datas))) + 10)
@@ -185,27 +168,23 @@ def main():
   # DATA PRESENTATION
   plt.rcParams['figure.figsize'] = 20, (5 * len(file_datas))
 
-  if len(file_names) == 1:
+  if True:
     plt.rcParams['figure.figsize'] = 10, 5
     f, axarr = plt.subplots(2, sharex = True)
-    write_to_subplot(file_names[0], file_datas[0], axarr[0], axarr[1], global_max_time)
+    write_to_subplot(args.log, file_datas[0], axarr[0], axarr[1], global_max_time, args.ram)
     axarr[0].grid(True)
     axarr[1].grid(True)
   else:
     f, axarr = plt.subplots(len(file_names), 2, sharex = True)
 
     for i, v in enumerate(file_names):
-      write_to_subplot(v, file_datas[i], axarr[i, 0], axarr[i, 1], global_max_time)
+      write_to_subplot(v, file_datas[i], axarr[i, 0], axarr[i, 1], global_max_time, args.ram)
       for j in range(0, 2):
-	axarr[i, j].set_xlabel('time (s)')
-	axarr[i, j].grid(True)
+        axarr[i, j].set_xlabel('time (s)')
+        axarr[i, j].grid(True)
 
   plt.tight_layout(pad = 0.5, w_pad = 0.5, h_pad = 0.5)
-
-  if output_file != None:
-    plt.savefig(output_file)
-  else:
-    plt.show()
+  plt.savefig(args.output)
 
 ### MAIN ###
 main()

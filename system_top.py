@@ -69,7 +69,7 @@ def print_cpu():
   print_flush('CPU:%f:%u' % (time.time(), min(100, int(tokens[12]) + int(tokens[13]) + int(tokens[15]))))
 
 def print_ram():
-  r = os.popen('free | head -n3 | tail -n1 | tr -s " " |cut -f3 -d" "').readlines()[0].strip()
+  r = os.popen('free | head -n2 | tail -n1 | tr -s " " |cut -f3 -d" "').readlines()[0].strip()
   print_flush('RAM:%f:%s' % (time.time(), r))
 
 def main():
