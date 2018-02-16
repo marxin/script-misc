@@ -3,6 +3,7 @@
 import sys
 import os
 import svgwrite
+import math
 
 class Target:
     def __init__(self, name, pid):
@@ -62,7 +63,7 @@ for f in filtered:
 sorted_events = sorted(events, key = lambda x: x[0])
 
 booking = []
-for i in range(20):
+for i in range(200):
     booking.append(None)
 
 for event in sorted_events:
@@ -82,18 +83,27 @@ for event in sorted_events:
 #        print('At: %f removing from booking %d: %d' % (event[0], i, event[2].pid))
 
 # write it SVG file
+maximum_booking_id = max([x.booking_index for x in filtered])
 margin = 100
-dwg = svgwrite.Drawing(sys.argv[3], size = (100 * filtered[-1].end + 2 * margin, 1000), profile = 'tiny')
+height = 60
+dwg = svgwrite.Drawing(sys.argv[3], size = (100 * filtered[-1].end + 2 * margin, height * (maximum_booking_id + 4)), profile = 'tiny')
 dwg.add(dwg.rect(insert=(0, 0), size = ('100%', '100%'), fill = 'white'))
+
+# draw the ruler
+Y = 50
+dwg.add(dwg.line(start = (margin, Y), end = (100 * filtered[-1].end + margin, Y), stroke = 'black'))
+for i in range(math.ceil(filtered[-1].end)):
+    dwg.add(dwg.line(start = (100 * i, Y - 10), end = (100 * i, Y + 10), stroke = 'black'))
+    if i != 0:
+        dwg.add(dwg.text(str(i), insert = (100 * (i + 1), Y - 30), font_size = 22))
 
 for t in filtered:
     start_x = margin + 100.0 * t.start
     end_x = margin + 100.0 * t.end
-    height = 60
     start_y = height * t.booking_index
-    dwg.add(dwg.rect(insert=(start_x, height * t.booking_index), size = (end_x - start_x, 0.8 * height),
+    dwg.add(dwg.rect(insert=(start_x, margin + height * t.booking_index), size = (end_x - start_x, 0.8 * height),
         fill = 'rgb(216, 172, 51)', stroke = 'black'))
-    dwg.add(dwg.text('%s: %.1fs' % (t.name, t.duration()), insert=(start_x, start_y + height / 2), font_size = 22))
+    dwg.add(dwg.text('%s: %.1fs' % (t.name, t.duration()), insert=(start_x, margin + start_y + height / 2), font_size = 22))
 
 dwg.save()
 
