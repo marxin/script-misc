@@ -21,43 +21,52 @@ def invalidate(id):
     r = requests.post(url, json = {'validatedTasks': [{'taskId': id, 'status': 'INVALIDATED', 'comment': ''}]}, headers = headers)
     assert r.status_code == requests.codes.ok
 
-url = 'https://tasks.hotosm.org/api/v1/project/%s' % args.project_id
+def print_project_statistics(id):
+    print('=== PROJECT #%s ===' % id)
 
-r = requests.get(url)
-d = r.json()
+    url = 'https://tasks.hotosm.org/api/v1/project/%s' % id
 
-tasks = d['tasks']['features']
+    r = requests.get(url)
+    d = r.json()
 
-d = {}
+    tasks = d['tasks']['features']
 
-tasks_to_do = []
+    d = {}
 
-for t in tasks:
-    properties = t['properties']
-    status = properties['taskStatus']
-    if not status in d:
-        d[status] = 0
-    d[status] += 1
-    id = properties['taskId']
+    tasks_to_do = []
 
-    if status == 'MAPPED':
-        tasks_to_do.append(id)
+    for t in tasks:
+        properties = t['properties']
+        status = properties['taskStatus']
+        if not status in d:
+            d[status] = 0
+        d[status] += 1
+        id = properties['taskId']
 
-print('Statistics:')
-print(d)
-print('TOTAL: %d' % len(tasks))
-print('Invalidating:')
+        if status == 'MAPPED':
+            tasks_to_do.append(id)
 
-for i, t in enumerate(tasks_to_do):
-    td = requests.get(url + '/task/' + str(t)).json()
+    print('Statistics:')
 
-    actions = []
-    for th in td['taskHistory']:
-        actions.append({'by': th['actionBy'], 'time': dateutil.parser.parse(th['actionDate']), 'action': th['action'], 'actionText': th['actionText'], 'taskId': t})
+    for k in d:
+        print('%20s: %.2f%% (%d)' % (k, 100.0 * d[k] / len(tasks), d[k]))
+    print('TOTAL: %d' % len(tasks))
 
-    if len(actions) > 0:
-        latest = sorted(actions, key = lambda x: x['time'], reverse = True)[0]
-        if latest['actionText'] == 'INVALIDATED':
-            print('%d/%d: %s' % (i, len(tasks_to_do), str(latest)))
-            id = latest['taskId'] 
-            invalidate(id)
+for id in args.project_id.split(','):
+    print_project_statistics(id)
+
+#print('Invalidating:')
+#
+#for i, t in enumerate(tasks_to_do):
+#    td = requests.get(url + '/task/' + str(t)).json()
+#
+#    actions = []
+#    for th in td['taskHistory']:
+#        actions.append({'by': th['actionBy'], 'time': dateutil.parser.parse(th['actionDate']), 'action': th['action'], 'actionText': th['actionText'], 'taskId': t})
+#
+#    if len(actions) > 0:
+#        latest = sorted(actions, key = lambda x: x['time'], reverse = True)[0]
+#        if latest['actionText'] == 'INVALIDATED':
+#            print('%d/%d: %s' % (i, len(tasks_to_do), str(latest)))
+#            id = latest['taskId']
+#            invalidate(id)
