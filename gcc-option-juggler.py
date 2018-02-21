@@ -420,7 +420,13 @@ class OptimizationLevel:
             for i, v in enumerate(lines):
                 m = re.match('.* (-m.*=).*', v)
                 if m != None:
-                    d[m.group(1)] = lines[i + 1].split(' ')
+                    v = m.group(1)
+                    # handle: -mindirect-branch=/-mfunction-return=
+                    if '/' in v:
+                        for p in v.split('/'):
+                            d[p] = lines[i + 1].split(' ')
+                    else:
+                        d[v] = lines[i + 1].split(' ')
 
         else:
             # run without -Q
