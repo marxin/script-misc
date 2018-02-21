@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import argparse
 import subprocess
 import shutil
 import os
@@ -27,15 +28,9 @@ def grep_errors(log):
             v = ['  ' + x for x in lines[i - 1: i + 1]]
             printme('\n'.join(v))
 
-url = 'https://api.opensuse.org'
-url = 'https://api.suse.de'
-project = 'home:marxin:gcc8-incubator'
-
-log_dir = '/tmp/obs-logs'
-shutil.rmtree(log_dir, ignore_errors = True)
-
-def process_arch(repository, arch):
-    arch_dir = os.path.join(log_dir, repository + '_' + arch)
+def process_arch(url, folder, project, repository, arch):
+    create_dir(os.path.join(folder, repository))
+    arch_dir = os.path.join(folder, repository, arch)
 
     result = subprocess.check_output('osc -A %s r %s -r %s -a %s --csv' % (url, project, repository, arch), shell = True)
     packages = result.decode('utf-8', 'ignore').strip().split('\n')
@@ -59,17 +54,19 @@ def process_arch(repository, arch):
 
             break
 
-for arch in ['ppc64', 'ppc64le']:
-    printme('== %s ==' % arch)
-    process_arch('openSUSE_Factory_PowerPC', arch)
+parser = argparse.ArgumentParser(description = 'Download OBS log files for failed packages')
+parser.add_argument('url', help = 'OBS API url')
+parser.add_argument('folder', help = 'Destination folder')
+parser.add_argument('project', help = 'OBS project name')
+parser.add_argument('repository', help = 'Repository name')
+parser.add_argument('archs', nargs = '+', help = 'Architectures')
+args = parser.parse_args()
 
-for arch in ['x86_64', 'i586']:
-    printme('== %s ==' % arch)
-    process_arch('openSUSE_Tumbleweed', arch)
+shutil.rmtree(args.folder, ignore_errors = True)
 
-for arch in ['aarch64', 'armv7l']:
+for arch in args.archs:
     printme('== %s ==' % arch)
-    process_arch('openSUSE_Factory_ARM', arch)
+    process_arch(args.url, args.folder, args.project, args.repository, arch)
 
-with open(os.path.join(log_dir, 'build.log'), 'w+') as w:
+with open(os.path.join(args.folder, 'build.log'), 'w+') as w:
     w.write(buffer)
