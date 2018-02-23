@@ -48,12 +48,17 @@ for i, l in enumerate(lines):
             targets.append(t)
             del cache[pid]
 
-filtered = sorted([t for t in targets if t.duration() > float(sys.argv[2])], key = lambda x: x.start)
-min_start = filtered[0].start
+sorted_items = sorted([t for t in targets], key = lambda x: x.start)
+min_start = sorted_items[0].start
 
-for f in filtered:
+for f in sorted_items:
     f.start -= min_start
     f.end -= min_start
+
+#for f in sorted_items:
+#    print('%-35s:%.2f -> %.2f' % (f.name, f.start, f.end))
+
+filtered = [t for t in sorted_items if t.duration() > float(sys.argv[2])]
 
 events = []
 for f in filtered:
@@ -106,6 +111,3 @@ for t in filtered:
     dwg.add(dwg.text('%s: %.1fs' % (t.name, t.duration()), insert=(start_x, margin + start_y + height / 2), font_size = 22))
 
 dwg.save()
-
-#for t in filtered:
-#    print('%d: %s: %f -> %f: %f' % (t.pid, t.name, t.start, t.end, t.duration()))
