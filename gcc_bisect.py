@@ -47,6 +47,7 @@ parser.add_argument('--all', action = 'store_true', help = 'Run all revisions in
 parser.add_argument('--smart-sequence', action = 'store_true', help = 'Run all revisions in a smart sequence')
 parser.add_argument('-n', help = 'Number of revisions to build')
 parser.add_argument('-i', '--ice', action = 'store_true', help = 'Grep stderr for ICE')
+parser.add_argument('-a', '--ask', action = 'store_true', help = 'Ask about return code')
 
 args = parser.parse_args()
 
@@ -200,7 +201,9 @@ class GitRevision:
             # handle ICE
             output = open(log).read()
             success = r == 0
-            if args.ice:
+            if success and args.ask:
+                success = input("Retcode: ") == '0'
+            elif args.ice:
                 messages = ['internal compiler error', 'Fatal Error', 'Internal compiler error', 'Please submit a full bug report']
                 success = any(map(lambda m: m in output, messages))
 
