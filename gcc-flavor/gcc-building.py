@@ -14,16 +14,18 @@ parser.add_argument('tmp', help = 'TMP folder')
 
 args = parser.parse_args()
 
-configurations = (('system-O2-generic', 'bootstrap-debug', '--disable-bootstrap', ''),
+configurations = (
+    ('system-O2-generic', 'bootstrap-debug', '--disable-bootstrap', ''),
+    ('system-O2-generic-no-plugin', 'bootstrap-debug', '--disable-bootstrap --disable-plugin', ''),
     ('system-O2-native', 'bootstrap-debug-native', '--disable-bootstrap', ''),
     ('bootstrap-O2-generic', 'bootstrap-debug', '', ''),
-    ('bootstrap-O2-native', 'bootstrap-debug-native', '', ''),
     ('lto-bootstrap-O2-generic', 'bootstrap-lto', '', ''),
-    ('lto-bootstrap-O2-native', 'bootstrap-lto-native', '', ''),
+    ('lto-bootstrap-O2-generic-no-plugin', 'bootstrap-lto', '--disable-plugin', ''),
     ('pgo-bootstrap-O2-generic', 'bootstrap-debug', '', 'profiledbootstrap'),
-    ('pgo-bootstrap-O2-native', 'bootstrap-debug-native', '', 'profiledbootstrap'),
     ('pgo-lto-bootstrap-O2-generic', 'bootstrap-lto', '', 'profiledbootstrap'),
-    ('pgo-lto-bootstrap-O2-native', 'bootstrap-lto-native', '', 'profiledbootstrap')
+    ('pgo-lto-bootstrap-O2-generic-no-plugin', 'bootstrap-lto', '--disable-plugin', 'profiledbootstrap'),
+    ('pgo-lto-bootstrap-O2-native', 'bootstrap-lto-native', '', 'profiledbootstrap'),
+    ('pgo-lto-bootstrap-O2-native-no-plugin', 'bootstrap-lto-native', '--disable-plugin', 'profiledbootstrap'),
     )
 
 shutil.rmtree(args.install, ignore_errors = True)
