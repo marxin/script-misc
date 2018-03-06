@@ -42,7 +42,7 @@ for t in tests:
         times = []
         for x in range(t[1]):
             start = datetime.now()
-            subprocess.check_output('taskset 0x1 ' + os.path.join(args.install, c, 'bin/gcc') + ' -c ~/Documents/gcc-data-input/' + t[0], shell = True)
+            subprocess.check_output('taskset 0x1 ' + os.path.join(args.install, c, 'bin/gcc') + ' -c ~/Documents/gcc-data-input/' + t[0] + ' -o /dev/null', shell = True)
             duration = datetime.now() - start
             times.append(duration.total_seconds())
         avg = average(times)
