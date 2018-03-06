@@ -16,15 +16,16 @@ parser.add_argument('tmp', help = 'TMP folder')
 
 args = parser.parse_args()
 
+N = 5
 tests = [('empty.c', 100),
         ('empty.C', 100),
-        ('tramp3d-v4.ii -O2 -g', 1),
-        ('i386.ii', 1),
-        ('i386.ii -O2', 1),
-        ('i386.ii -O2 -g', 1),
-        ('insn-emit.ii -O2', 1),
-        ('generic-match.ii -O2', 1),
-        ('gimple-match.ii -O2', 1)]
+        ('tramp3d-v4.ii -O2 -g', N),
+        ('i386.ii', N),
+        ('i386.ii -O2', N),
+        ('i386.ii -O2 -g', N),
+        ('insn-emit.ii -O2', N),
+        ('generic-match.ii -O2', N),
+        ('gimple-match.ii -O2', N)]
 
 configurations = sorted([f for f in os.listdir(args.install) if os.path.isdir(os.path.join(args.install, f))])
 
