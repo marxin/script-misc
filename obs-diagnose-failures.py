@@ -73,7 +73,7 @@ Please build the project as follows to reproduce the issue:
 osc build --alternative-project=openSUSE:Factory:Staging:Gcc7
 """.strip()
 
-if args.curl != None:
+if args.curl:
     for (k,v) in d.items():
         for p in v:
             if p[1] != None:
