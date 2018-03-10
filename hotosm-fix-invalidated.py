@@ -49,8 +49,8 @@ def print_project_statistics(id):
     print('Statistics:')
 
     for k in d:
-        print('%20s: %.2f%% (%d)' % (k, 100.0 * d[k] / len(tasks), d[k]))
-    print('TOTAL: %d' % len(tasks))
+        print('%28s: %.2f%% (%d)' % (k, 100.0 * d[k] / len(tasks), d[k]))
+    print('%28s: %d' % ('TOTAL', len(tasks)))
 
 for id in args.project_id.split(','):
     print_project_statistics(id)
