@@ -29,7 +29,7 @@ def copy_files(source, target, files):
         destination = os.path.join(target, f)
         d = os.path.dirname(destination)
         if not os.path.exists(d):
-            os.mkdir(d)
+            os.makedirs(d)
 
         shutil.copy(os.path.join(source, f), destination)
 
