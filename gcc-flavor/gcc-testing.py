@@ -25,7 +25,8 @@ tests = [('empty.c', 100),
         ('i386.ii -O2 -g', N),
         ('insn-emit.ii -O2', N),
         ('generic-match.ii -O2', N),
-        ('gimple-match.ii -O2', N)]
+        ('gimple-match.ii -O2', N),
+        ('kdecore.cc -O2 -g', N)]
 
 configurations = sorted([f for f in os.listdir(args.install) if os.path.isdir(os.path.join(args.install, f))])
 
