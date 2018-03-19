@@ -56,6 +56,9 @@ parser.add_argument('--timeout', type = int, default = 10, help = 'Default timeo
 parser.add_argument('-v', '--verbose', action = 'store_true', help = 'Verbose messages')
 parser.add_argument('-l', '--logging', action = 'store_true', help = 'Log error output')
 parser.add_argument('-c', '--csmith', action = 'store_true', help = 'Utilize csmith random tests')
+parser.add_argument('-r', '--reduce', action = 'store_true', help = 'Creduce a failing test-case')
+parser.add_argument('-u', '--ubsan', action = 'store_true', help = 'Fail also for an UBSAN error')
+parser.add_argument('-m', '--maxparam', help = 'Maximum param value')
 parser.add_argument('-t', '--target', default = 'x86_64', help = 'Default target', choices = ['x86_64', 'ppc64', 'ppc64le', 's390x', 'aarch64', 'arm'])
 args = parser.parse_args()
 
@@ -213,6 +216,7 @@ def find_ice(stderr):
     lines = stderr.split('\n')
     subject = None
     ice = 'internal compiler error: '
+    re = 'runtime error: '
 
     bt = []
 
@@ -221,13 +225,16 @@ def find_ice(stderr):
         if ice in l:
             subject = l[l.find(ice) + len(ice):]
             found_ice = True
+        elif args.ubsan and re in l:
+            subject = l[l.find(re) + len(re):]
+            return (subject, l)
         elif 'in ' in l and ' at ' in l:
             subject = l
             found_ice = True
         elif l.startswith('0x') and subject == None:
             subject = ''
             bt.append(l)
-        elif 'Please submit a full bug report' in l:
+        elif 'Please submit a full bug report' in l or l.strip() == 0:
             # unify stack addresses
             bt = ['0xdeadbeef' + x[x.find(' '):] if x.startswith('0x') else x for x in bt]
 
@@ -372,6 +379,9 @@ class Param:
         # TODO: likewise
         if self.name == 'min-nondebug-insn-uid':
             self.max = 1000
+
+        if args.maxparam != None:
+            self.max = int(args.maxparam)
 
     def check_option(self, level):
         return check_option(level, '--param %s=%d' % (self.name, self.default))
@@ -541,7 +551,11 @@ class OptimizationLevel:
             cmd = 'timeout %d %s %s -I/home/marxin/BIG/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s %s %s -o %s' % (args.timeout, compiler, args.cflags, self.level, source_file, ' '.join(options), object_file.name if is_csmith_test else '/dev/null')
             if not is_csmith_test:
                 cmd += ' -c'
-            r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+            my_env = os.environ.copy()
+
+            if args.ubsan:
+                my_env['UBSAN_OPTIONS'] = 'color=never halt_on_error=1'
+            r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE, env = my_env)
             if r.returncode != 0:
                 global failed_tests
                 failed_tests += 1
@@ -587,7 +601,9 @@ class OptimizationLevel:
         assert r.returncode == 0
         reduced_command = r.stdout.decode('utf-8').strip()
         print('Reduced command: ' + reduced_command)
-        self.reduce_testcase(reduced_command)
+
+        if args.reduce:
+            self.reduce_testcase(reduced_command)
 
     def reduce_testcase(self, cmd):
         parts = cmd.split(' ')
