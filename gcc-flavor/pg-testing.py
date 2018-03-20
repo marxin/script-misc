@@ -5,6 +5,7 @@ import shutil
 import subprocess
 import os
 import time
+import sys
 
 from datetime import datetime
 
@@ -27,6 +28,10 @@ def get_tps(n):
 def build(flags, my_env):
     print(' - building with flags: ' + flags)
     shutil.rmtree(args.install, ignore_errors = True)
+
+    my_env['CFLAGS'] = flags
+    my_env['CXXFLAGS'] = flags
+    my_env['LDFLAGS'] = flags
 
     os.chdir(args.source)
 
@@ -81,9 +86,6 @@ def build_and_test(flags, pgo = False, train_full = False, compiler = None, libs
         name = 'GCC 8:' + name
 
     my_env = os.environ.copy()
-    my_env['CFLAGS'] = flags
-    my_env['CXXFLAGS'] = flags
-    my_env['LDFLAGS'] = flags
 
     if compiler != None:
         my_env['PATH'] = compiler + ':' + my_env['PATH']
@@ -100,6 +102,8 @@ def build_and_test(flags, pgo = False, train_full = False, compiler = None, libs
     else:
         build(flags, my_env)
         install_and_test(name)
+
+    sys.stdout.flush()
 
 build_and_test('-O2')
 build_and_test('-O2 -march=native')
