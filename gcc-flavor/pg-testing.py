@@ -24,20 +24,15 @@ def get_tps(n):
         if l.startswith('tps'):
             return float(l.split(' ')[2])
 
-def build(flags):
+def build(flags, my_env):
     print(' - building with flags: ' + flags)
     shutil.rmtree(args.install, ignore_errors = True)
-
-    my_env = os.environ.copy()
-    my_env['CFLAGS'] = flags
-    my_env['CXXFLAGS'] = flags
-    my_env['LDFLAGS'] = flags
 
     os.chdir(args.source)
 
     subprocess.check_output('./configure', shell = True, env = my_env)
-    subprocess.check_output('make clean', shell = True, stderr = DEVNULL)
-    subprocess.check_output('make -j8', shell = True, stderr = DEVNULL)
+    subprocess.check_output('make clean', shell = True, stderr = DEVNULL, env = my_env)
+    subprocess.check_output('make -j8', shell = True, stderr = DEVNULL, env = my_env)
 
 def install_and_test(name, only_make_check = False, print_it = True):
     if only_make_check:
@@ -75,28 +70,51 @@ def install_and_test(name, only_make_check = False, print_it = True):
         print('Killing server')
     server.kill()
 
-def build_and_test(flags, pgo = False, train_full = False):
+def build_and_test(flags, pgo = False, train_full = False, compiler = None, libs = None):
     name = flags
     if pgo:
         name += ' PGO'
     if train_full:
         name += ' reference TRAIN'
 
+    if compiler != None:
+        name = 'GCC 8:' + name
+
+    my_env = os.environ.copy()
+    my_env['CFLAGS'] = flags
+    my_env['CXXFLAGS'] = flags
+    my_env['LDFLAGS'] = flags
+
+    if compiler != None:
+        my_env['PATH'] = compiler + ':' + my_env['PATH']
+    if libs != None:
+        my_env['LD_LIBRARY_PATH'] = libs
+
     print('=== TESTING: %s, PGO: %d, TRAIN_FULL: %d ===' % (flags, pgo, train_full))
     if pgo:
         subprocess.check_output('git clean -f', shell = True)
-        build(flags + ' -fprofile-generate')
+        build(flags + ' -fprofile-generate', my_env)
         install_and_test(name, not train_full, False)
-        build(flags + ' -fprofile-use')
+        build(flags + ' -fprofile-use', my_env)
         install_and_test(name)
     else:
-        build(flags)
+        build(flags, my_env)
         install_and_test(name)
 
 build_and_test('-O2')
 build_and_test('-O2 -march=native')
 build_and_test('-O2 -flto=9')
 build_and_test('-O2', True, False)
+build_and_test('-O2 -flto=9')
 build_and_test('-O2', True, True)
 build_and_test('-O2 -flto=9', True, False)
 build_and_test('-O2 -flto=9', True, True)
+
+build_and_test('-O2', compiler = '/home/marxin/bin/gcc/bin/', libs = '/home/marxin/bin/gcc/lib64/')
+build_and_test('-O2 -march=native', compiler = '/home/marxin/bin/gcc/bin/', libs = '/home/marxin/bin/gcc/lib64/')
+build_and_test('-O2 -flto=9', compiler = '/home/marxin/bin/gcc/bin/', libs = '/home/marxin/bin/gcc/lib64/')
+build_and_test('-O2', True, False, compiler = '/home/marxin/bin/gcc/bin/', libs = '/home/marxin/bin/gcc/lib64/')
+build_and_test('-O2 -flto=9', compiler = '/home/marxin/bin/gcc/bin/', libs = '/home/marxin/bin/gcc/lib64/')
+build_and_test('-O2', True, True, compiler = '/home/marxin/bin/gcc/bin/', libs = '/home/marxin/bin/gcc/lib64/')
+build_and_test('-O2 -flto=9', True, False, compiler = '/home/marxin/bin/gcc/bin/', libs = '/home/marxin/bin/gcc/lib64/')
+build_and_test('-O2 -flto=9', True, True, compiler = '/home/marxin/bin/gcc/bin/', libs = '/home/marxin/bin/gcc/lib64/')
