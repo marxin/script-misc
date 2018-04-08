@@ -353,6 +353,7 @@ class OptimizationLevel:
         self.add_interesting_options()
 
         self.options = self.filter_options(self.options)
+        # self.print_options()
 
     def print_options(self):
         for o in self.options:
@@ -465,6 +466,9 @@ class OptimizationLevel:
         filtered = []
 
         for option in self.options:
+            if option.name in set(['-fselective-scheduling', '-fselective-scheduling2']):
+                continue
+
             r = option.check_option(self.level)
             if not r:
                 print('failed: ' + option.name)
