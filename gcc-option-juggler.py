@@ -135,7 +135,6 @@ def split_by_space(line):
     return [x for x in line.replace('\t', ' ').split(' ') if x != '']
 
 def output_for_command(command):
-    print(command)
     r = subprocess.run(command, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     assert r.returncode == 0
     lines = [x.strip() for x in r.stdout.decode('utf-8').split('\n')]
@@ -149,8 +148,6 @@ def check_option(level, option):
     cmd = '%s -c %s %s %s' % (get_compiler(), empty, level, option)
     r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     result = r.returncode == 0
-    if not result:
-        print(cmd)
     option_validity_cache[option] = result
     return result
 
@@ -353,7 +350,7 @@ class OptimizationLevel:
         self.add_interesting_options()
 
         self.options = self.filter_options(self.options)
-        # self.print_options()
+        print('Options for %s: %d' % (self.level, len(self.options)))
 
     def print_options(self):
         for o in self.options:
@@ -440,7 +437,6 @@ class OptimizationLevel:
                     min = int(parts[0])
                     max = int(parts[1])
                 else:
-                    print(original)
                     assert original.endswith('<number>')
 
                 self.options.append(IntegerRangeFlag(key, min, max))
@@ -470,9 +466,7 @@ class OptimizationLevel:
                 continue
 
             r = option.check_option(self.level)
-            if not r:
-                print('failed: ' + option.name)
-            else:
+            if r:
                 filtered.append(option)
 
         return filtered
