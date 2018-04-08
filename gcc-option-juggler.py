@@ -84,6 +84,25 @@ def get_compiler_prefix():
     else:
         assert False
 
+def is_valid_test_case_for_target(name):
+    if not 'gcc.target/' in name:
+        return True
+
+    if args.target == 'x86_64':
+        return 'i386' in name or 'x86_64' in name
+    elif args.target == 'ppc64':
+        return 'powerpc' in name
+    elif args.target == 'ppc64le':
+        return 'powerpc' in name
+    elif args.target == 's390x':
+        return 's390' in name
+    elif args.target == 'arm':
+        return 'arm' in name
+    elif args.target == 'aarch64':
+        return 'aarch64' in name
+    else:
+        assert False
+
 def get_compiler():
     return get_compiler_prefix() + 'gcc'
 
@@ -122,6 +141,9 @@ source_files = list(filter(lambda x: get_compiler_by_extension(x) != None and no
 
 # remove RTL test-cases
 source_files = list(filter(lambda x: not '/rtl/' in x, source_files))
+
+# filter out different target tests
+source_files = list(filter(is_valid_test_case_for_target, source_files))
 
 ice_cache = set()
 ice_locations = set()
@@ -479,7 +501,7 @@ class OptimizationLevel:
             options = [o.select_nondefault() for o in options]
 
             # TODO: warning
-            cmd = 'timeout %d %s %s -I/home/marxin/BIG/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s %s %s -o/dev/null -c' % (args.timeout, compiler, args.cflags, self.level, source_file, ' '.join(options))
+            cmd = 'timeout %d %s %s -fmax-errors=1 -I/home/marxin/BIG/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s %s %s -o/dev/null -c' % (args.timeout, compiler, args.cflags, self.level, source_file, ' '.join(options))
             my_env = os.environ.copy()
 
             if args.ubsan:
