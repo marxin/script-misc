@@ -463,7 +463,7 @@ class OptimizationLevel:
 
                 self.options.append(IntegerRangeFlag(key, min, max))
             else:
-                print('WARNING: parsing error: ' + l)
+                print('Parsing error of option: ' + l)
                 # TODO
                 pass
 
@@ -517,7 +517,7 @@ class OptimizationLevel:
                     if ice != None and not ice[1] in ice_cache and not any([x in ice[0] for x in known_bugs.keys()]):
                         ice_locations.add(ice[0])
                         ice_cache.add(ice[1])
-                        print(colored('NEW ICE #%d: %s' % (len(ice_cache), ice[0]), 'red'))
+                        print(colored('warning: NEW ICE #%d: %s' % (len(ice_cache), ice[0]), 'red'))
                         print(cmd)
                         print(ice[1])
                         print()
