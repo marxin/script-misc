@@ -23,7 +23,7 @@ print('Failed packages: %d: %s' % (len(packages), str(packages)))
 for p in packages:
     print('Branching: %s' % p)
     try:
-        subprocess.check_output('osc branch openSUSE:Factory %s %s' % (p, args.project), shell = True)
+        subprocess.check_output('osc branch --nodevel openSUSE:Factory %s %s' % (p, args.project), shell = True)
     except subprocess.CalledProcessError as e:
         print(str(e))
 
