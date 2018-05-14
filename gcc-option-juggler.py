@@ -485,6 +485,8 @@ class OptimizationLevel:
         skipped_options = set(['-fselective-scheduling', '-fselective-scheduling2', '-mlra'])
         if args.target == 'x86_64':
             skipped_options.add('-mforce-indirect-call')
+        elif args.target == 'ppc64' or args.target == 'ppc64le':
+            skipped_options.add('-m32')
 
         for option in self.options:
             if option.name in skipped_options:
