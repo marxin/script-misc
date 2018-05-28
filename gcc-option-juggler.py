@@ -262,6 +262,7 @@ class MarchFlag:
         self.options['arm'] = 'arm2,arm250,arm3,arm6,arm60,arm600,arm610,arm620,arm7,arm7m,arm7d,arm7dm,arm7di,arm7dmi,arm70,arm700,arm700i,arm710,arm710c,arm7100,arm720,arm7500,arm7500fe,arm7tdmi,arm7tdmi-s,arm710t,arm720t,arm740t,strongarm,strongarm110,strongarm1100,strongarm1110,arm8,arm810,arm9,arm9e,arm920,arm920t,arm922t,arm946e-s,arm966e-s,arm968e-s,arm926ej-s,arm940t,arm9tdmi,arm10tdmi,arm1020t,arm1026ej-s,arm10e,arm1020e,arm1022e,arm1136j-s,arm1136jf-s,mpcore,mpcorenovfp,arm1156t2-s,arm1156t2f-s,arm1176jz-s,arm1176jzf-s,generic-armv7-a,cortex-a5,cortex-a7,cortex-a8,cortex-a9,cortex-a12,cortex-a15,cortex-a17,cortex-a32,cortex-a35,cortex-a53,cortex-a57,cortex-a72,cortex-r4,cortex-r4f,cortex-r5,cortex-r7,cortex-r8,cortex-m7,cortex-m4,cortex-m3,cortex-m1,cortex-m0,cortex-m0plus,cortex-m1.small-multiply,cortex-m0.small-multiply,cortex-m0plus.small-multiply,exynos-m1,qdf24xx,marvell-pj4,xscale,iwmmxt,iwmmxt2,ep9312,fa526,fa626,fa606te,fa626te,fmp626,fa726te,xgene1'.split(',')
 
         self.tuples = []
+        self.ignore_m32 = False
 
     def build(self, value):
         f = None
@@ -282,7 +283,8 @@ class MarchFlag:
                     continue
                 needs_m32 = True
 
-            self.tuples.append((o, needs_m32))
+            if not needs_m32 or not self.ignore_m32:
+                self.tuples.append((o, needs_m32))
 
         return True
 
@@ -492,6 +494,11 @@ class OptimizationLevel:
         for option in self.options:
             if option.name in skipped_options:
                 continue
+
+            # skip all -march option values that need -m32
+            if args.target == 'ppc64' or args.target == 'ppc64le':
+                if type(option) is MarchFlag:
+                    option.ignore_m32 = True
 
             r = option.check_option(self.level)
             if r:
