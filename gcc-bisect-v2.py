@@ -57,6 +57,8 @@ to_build = 10**10 if args.n == None else int(args.n)
 repo = Repo(git_location)
 head = repo.commit('parent/master')
 
+build_times = []
+
 def single_or_default(fn, items):
     r = list(filter(fn, items))
     if len(r) == 1:
@@ -248,11 +250,13 @@ class GitRevision:
         with (open(os.path.join(extract_location, 'git-revision.txt'), 'w+')) as note:
             note.write(self.commit.hexsha)
         self.compress()
-        flush_print('Build has taken: %s' % str(datetime.now() - start))
+        took = datetime.now() - start
+        build_times.append(took)
+        flush_print('Build has taken: %s, avg: %s' % (str(took), str(sum(build_times, timedelta(0)) / len(build_times))))
         log(self.commit.hexsha, 'OK')
 
     def build(self):
-        build_command = 'nice make -j8 CFLAGS="-O2 -g0 -std=c++98" CXXFLAGS="-O2 -g0 -std=c++98"'
+        build_command = 'nice make -j8 CFLAGS="-O2 -g0" CXXFLAGS="-O2 -g0 -std=c++98"'
         if os.path.exists(self.get_archive_path()):
             flush_print('Revision %s already exists' % (str(self)))
             return False
