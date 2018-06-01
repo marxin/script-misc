@@ -35,6 +35,9 @@ install_location = '/home/marxin/DATA/gcc-binaries-v2/'
 log_file = '/home/marxin/Programming/script-misc/gcc-build-v2.log'
 extract_location = '/dev/shm/gcc-bisect-bin/'
 
+patches_folder = os.path.join(script_dirname, 'gcc-bisect-patches')
+patches = ['0001-Use-ucontext_t-not-struct-ucontext-in-linux-unwind.h.patch']
+
 parser = argparse.ArgumentParser(description='Build GCC binaries.')
 parser.add_argument('action', nargs = '?', metavar = 'action', help = 'Action', default = 'print', choices = ['print', 'build', 'bisect', 'gc'])
 parser.add_argument('command', nargs = '?', metavar = 'command', help = 'GCC command')
@@ -256,7 +259,7 @@ class GitRevision:
         log(self.commit.hexsha, 'OK')
 
     def build(self):
-        build_command = 'nice make -j8 CFLAGS="-O2 -g0" CXXFLAGS="-O2 -g0 -std=c++98"'
+        build_command = 'nice make -j8 CFLAGS="-O2 -g0" CXXFLAGS="-O2 -g0"'
         if os.path.exists(self.get_archive_path()):
             flush_print('Revision %s already exists' % (str(self)))
             return False
@@ -271,6 +274,14 @@ class GitRevision:
             if os.path.exists(tmp_folder):
                 # try to reuse current build folder, should be very fast then
                 repo.git.checkout(self.commit, force = True)
+
+                os.chdir(git_location)
+                # apply all patches
+                for p in patches:
+                    r = subprocess.run('patch -p1 < ' + os.path.join(patches_folder, p),
+                            shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE, encoding = 'utf8')
+                    flush_print('applying patch %s with result: %d' % (p, r.returncode))
+
                 os.chdir(tmp_folder)
                 r = run_cmd(build_command)
                 if r[0]:
