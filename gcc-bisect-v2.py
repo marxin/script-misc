@@ -376,6 +376,8 @@ class GitRepository:
         self.branch_bases = []
         self.latest = []
 
+        self.all = [self.latest, self.releases, self.branch_bases, self.branches]
+
         if args.pull:
             attempts = 10
             for i in range(attempts):
@@ -451,18 +453,9 @@ class GitRepository:
             r.print_status()
 
     def build(self):
-        # TODO: move back
-        for r in self.latest:
-            r.build_with_limit()
-
-        for r in self.releases:
-            r.build_with_limit()
-
-        for r in self.branch_bases:
-            r.build_with_limit()
-
-        for r in self.branches:
-            r.build_with_limit()
+        for l in self.all:
+            for r in l:
+                r.build_with_limit()
 
     def initialize_binaries(self):
         files = os.listdir(install_location)
@@ -471,21 +464,10 @@ class GitRepository:
             if f.endswith('.7z'):
                 existing.add(f.split('.')[0])
 
-        for r in self.releases:
-            if r.commit.hexsha in existing:
-                r.has_binary = True
-
-        for r in self.branches:
-            if r.commit.hexsha in existing:
-                r.has_binary = True
-
-        for r in self.branch_bases:
-            if r.commit.hexsha in existing:
-                r.has_binary = True
-
-        for r in self.latest:
-            if r.commit.hexsha in existing:
-                r.has_binary = True
+        for l in self.all:
+            for r in l:
+                if r.commit.hexsha in existing:
+                    r.has_binary = True
 
     def bisect(self):
         if not args.only_latest:
