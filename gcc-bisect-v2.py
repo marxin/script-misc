@@ -247,16 +247,17 @@ class GitRevision:
                 to_build -= 1
 
     def install(self, start):
-        if os.path.exists(extract_location):
-            shutil.rmtree(extract_location)
-        run_cmd('make install DESTDIR=' + extract_location)
-        with (open(os.path.join(extract_location, 'git-revision.txt'), 'w+')) as note:
-            note.write(self.commit.hexsha)
-        self.compress()
-        took = datetime.now() - start
-        build_times.append(took)
-        flush_print('Build has taken: %s, avg: %s' % (str(took), str(sum(build_times, timedelta(0)) / len(build_times))))
-        log(self.commit.hexsha, 'OK')
+        with lock:
+            if os.path.exists(extract_location):
+                shutil.rmtree(extract_location)
+            run_cmd('make install DESTDIR=' + extract_location)
+            with (open(os.path.join(extract_location, 'git-revision.txt'), 'w+')) as note:
+                note.write(self.commit.hexsha)
+            self.compress()
+            took = datetime.now() - start
+            build_times.append(took)
+            flush_print('Build has taken: %s, avg: %s' % (str(took), str(sum(build_times, timedelta(0)) / len(build_times))))
+            log(self.commit.hexsha, 'OK')
 
     def build(self):
         build_command = 'nice make -j8 CFLAGS="-O2 -g0" CXXFLAGS="-O2 -g0"'
@@ -312,10 +313,9 @@ class GitRevision:
             run_cmd('find %s -exec strip --strip-debug {} \;' % extract_location)
 
     def compress(self):
-        with lock:
-            archive = self.get_archive_path()
-            self.strip()
-            subprocess.check_output('7z a %s %s/*' % (archive, extract_location), shell = True)
+        archive = self.get_archive_path()
+        self.strip()
+        subprocess.check_output('7z a %s %s/*' % (archive, extract_location), shell = True)
 
     def decompress(self):
         archive = self.get_archive_path()
