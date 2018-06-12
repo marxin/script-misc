@@ -27,7 +27,7 @@ last_revision = 'ec86f0be138e2f976eb8f249bbcc82246586e6a0' # base of trunk and 4
 description_color = 'blue'
 title_color = 'cyan'
 
-oldest_release = '4.5'
+oldest_release = '4.8'
 # TODO
 lock = filelock.FileLock('/tmp/gcc_build_binary_v2.lock')
 git_location = '/home/marxin/BIG/Programming/gcc-gcc-bisect/'
@@ -322,7 +322,7 @@ class GitRevision:
         if not os.path.exists(archive):
             return False
 
-        shutil.rmtree(extract_location)
+        shutil.rmtree(extract_location, ignore_errors = True)
         cmd = '7z x %s -o%s -aoa' % (archive, extract_location)
         subprocess.check_output(cmd, shell = True)
         return True
@@ -376,8 +376,6 @@ class GitRepository:
         self.branch_bases = []
         self.latest = []
 
-        self.all = [self.latest, self.releases, self.branch_bases, self.branches]
-
         if args.pull:
             attempts = 10
             for i in range(attempts):
@@ -390,6 +388,8 @@ class GitRepository:
         self.parse_releases()
         self.parse_branches()
         self.parse_latest_revisions()
+
+        self.all = [self.releases, self.latest, self.branch_bases, self.branches]
         self.initialize_binaries()
 
     def pull(self):
