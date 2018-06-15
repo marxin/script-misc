@@ -295,7 +295,10 @@ class GitRevision:
             if not os.path.exists(tmp_folder):
                 os.mkdir(tmp_folder)
             os.chdir(tmp_folder)
-            cmd = [os.path.join(git_location, 'configure'), '--disable-bootstrap', '--enable-checking=yes', '--disable-libsanitizer', '--enable-languages=c,c++,fortran', '--without-isl', '--disable-cet']
+            cmd = [os.path.join(git_location, 'configure'), '--disable-bootstrap', '--enable-checking=yes',
+                    '--disable-libsanitizer', '--enable-languages=c,c++,fortran',
+                    '--without-isl', '--disable-cet',
+                    '--disable-libstdcxx-pch', '--disable-static']
             run_cmd(cmd, True)
             run_cmd('echo "MAKEINFO = :" >> Makefile')
             r = run_cmd(build_command)
