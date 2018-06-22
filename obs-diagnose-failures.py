@@ -54,9 +54,9 @@ for (k,v) in d.items():
     print('%16s: %5d' % (k, len(v)))
 
 if args.verbose:
-    for (k,v) in sorted(d.items(), key = lambda x: x[0]):
+    for (k,v) in d.items():
         print('=== %s ===' % k)
-        for p in v:
+        for p in sorted(v):
             if p[1] != None:
                 print('%s:%s' % (p[0], p[1]))
             else:
