@@ -28,6 +28,8 @@ description_color = 'blue'
 title_color = 'cyan'
 
 oldest_release = '4.8'
+oldest_active_branch = 6
+
 # TODO
 lock = filelock.FileLock('/tmp/gcc_build_binary_v2.lock')
 git_location = '/home/marxin/BIG/Programming/gcc-gcc-bisect/'
@@ -52,6 +54,7 @@ parser.add_argument('--smart-sequence', action = 'store_true', help = 'Run all r
 parser.add_argument('-n', help = 'Number of revisions to build')
 parser.add_argument('-i', '--ice', action = 'store_true', help = 'Grep stderr for ICE')
 parser.add_argument('-a', '--ask', action = 'store_true', help = 'Ask about return code')
+parser.add_argument('-o', '--old', action = 'store_true', help = 'Test also old releases')
 
 args = parser.parse_args()
 
@@ -418,7 +421,7 @@ class GitRepository:
         for b in branches:
             name = strip_suffix(strip_prefix(b.name, 'parent/gcc-'), '-branch').replace('_', '.')
             branch_commit = repo.commit(b.name)
-            if name >= '5':
+            if name >= str(oldest_active_branch):
                 b = Branch(name, branch_commit)
                 self.branches.append(b)
             if name >= oldest_release:
@@ -473,6 +476,9 @@ class GitRepository:
                     r.has_binary = True
 
     def bisect(self):
+        if not args.old:
+            self.releases = list(filter(lambda x: Version(x.name).major >= oldest_active_branch, self.releases))
+
         if not args.only_latest:
             flush_print(colored('Releases', title_color))
             results = {True: [], False: []}
