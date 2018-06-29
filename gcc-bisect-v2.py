@@ -22,7 +22,8 @@ from semantic_version import Version
 script_dirname = os.path.abspath(os.path.dirname(__file__))
 
 # WARNING: older commits include wide-int branch merged commits
-last_revision = 'ec86f0be138e2f976eb8f249bbcc82246586e6a0' # base of trunk and 4.9
+# close to base of trunk and 4.9, there is then some libgfortran relink issue
+last_revision = '1b4aaefc8c1a1662e1623cd48157c344c7fa98fe'
 
 description_color = 'blue'
 title_color = 'cyan'
@@ -38,7 +39,7 @@ log_file = '/home/marxin/Programming/script-misc/gcc-build-v2.log'
 extract_location = '/dev/shm/gcc-bisect-bin/'
 
 patches_folder = os.path.join(script_dirname, 'gcc-bisect-patches')
-patches = ['0001-Use-ucontext_t-not-struct-ucontext-in-linux-unwind.h.patch', 'gnu-inline.patch', 'ubsan.patch']
+patches = ['0001-Use-ucontext_t-not-struct-ucontext-in-linux-unwind.h.patch', 'gnu-inline.patch', 'ubsan.patch', '0001-Call-release_input_file-only-if-file-is-claimed.patch', '0001-Fix-Solaris-bootstrap.patch']
 
 parser = argparse.ArgumentParser(description='Build GCC binaries.')
 parser.add_argument('action', nargs = '?', metavar = 'action', help = 'Action', default = 'print', choices = ['print', 'build', 'bisect', 'gc'])
