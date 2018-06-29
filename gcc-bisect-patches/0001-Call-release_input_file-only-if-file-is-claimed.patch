@@ -13,19 +13,6 @@ git-svn-id: svn+ssh://gcc.gnu.org/svn/gcc/trunk@220455 138bc75d-0d04-0410-961f-8
  lto-plugin/lto-plugin.c | 6 +++---
  2 files changed, 8 insertions(+), 3 deletions(-)
 
-diff --git a/lto-plugin/ChangeLog b/lto-plugin/ChangeLog
-index 81752e73716..510e7385884 100644
---- a/lto-plugin/ChangeLog
-+++ b/lto-plugin/ChangeLog
-@@ -1,3 +1,8 @@
-+2015-02-05  H.J. Lu  <hongjiu.lu@intel.com>
-+
-+	* lto-plugin.c (claim_file_handler): Call release_input_file only
-+	if file is claimed.
-+
- 2015-01-28  H.J. Lu  <hongjiu.lu@intel.com>
- 
- 	* lto-plugin.c (claim_file_handler): Call release_input_file only
 diff --git a/lto-plugin/lto-plugin.c b/lto-plugin/lto-plugin.c
 index add83f2c5c5..e25bbf9c44e 100644
 --- a/lto-plugin/lto-plugin.c
