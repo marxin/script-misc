@@ -442,8 +442,7 @@ class GitRepository:
 
         existing_revisions = len(list(filter(lambda x: x.has_binary, self.latest)))
         missing = len(self.latest) - existing_revisions
-        flush_print(colored('\nLatest %d revisions (have: %d)' % (len(self.latest), existing_revisions), title_color))
-        flush_print('Missing: %d (time to build: %s)\n' % (missing, str(timedelta(minutes = missing))))
+        flush_print(colored('\nLatest %d revisions (have: %d, missing: %d):' % (len(self.latest), existing_revisions, missing), title_color))
         for r in self.latest:
             r.print_status()
 
