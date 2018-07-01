@@ -254,10 +254,10 @@ class GitRevision:
     def build(self):
         build_command = 'nice make -j8 CFLAGS="-O2 -g0" CXXFLAGS="-O2 -g0"'
         if os.path.exists(self.get_archive_path()):
-            flush_print('Revision %s already exists' % (str(self)))
+            # flush_print('Revision %s already exists' % (str(self)))
             return False
         elif build_failed_for_revision(self.commit.hexsha):
-            flush_print('Revision %s already failed' % (str(self)))
+            # flush_print('Revision %s already failed' % (str(self)))
             return False
         else:
             flush_print('Building %s' % (str(self)))
@@ -378,7 +378,7 @@ class GitRepository:
                 if r:
                     break
                 else:
-                    sleep(30)
+                    time.sleep(30)
 
         self.parse_releases()
         self.parse_branches()
@@ -392,7 +392,7 @@ class GitRepository:
         try:
             repo.remotes['parent'].fetch()
             return True
-        except Error as e:
+        except Exception as e:
             flush_print(str(e))
             return False
 
