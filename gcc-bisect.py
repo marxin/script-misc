@@ -31,11 +31,10 @@ title_color = 'cyan'
 oldest_release = '4.8'
 oldest_active_branch = 6
 
-# TODO
-lock = filelock.FileLock('/tmp/gcc_build_binary_v2.lock')
+lock = filelock.FileLock('/tmp/gcc_build_binary.lock')
 git_location = '/home/marxin/BIG/Programming/gcc-gcc-bisect/'
-install_location = '/home/marxin/DATA/gcc-binaries-v2/'
-log_file = '/home/marxin/Programming/script-misc/gcc-build-v2.log'
+install_location = '/home/marxin/DATA/gcc-binaries/'
+log_file = '/home/marxin/Programming/script-misc/gcc-build.log'
 extract_location = '/dev/shm/gcc-bisect-bin/'
 
 patches_folder = os.path.join(script_dirname, 'gcc-bisect-patches')
