@@ -41,7 +41,7 @@ patches_folder = os.path.join(script_dirname, 'gcc-bisect-patches')
 patches = ['0001-Use-ucontext_t-not-struct-ucontext-in-linux-unwind.h.patch', 'gnu-inline.patch', 'ubsan.patch']
 
 parser = argparse.ArgumentParser(description='Build GCC binaries.')
-parser.add_argument('action', nargs = '?', metavar = 'action', help = 'Action', default = 'print', choices = ['print', 'build', 'bisect', 'gc'])
+parser.add_argument('action', nargs = '?', metavar = 'action', help = 'Action', default = 'print', choices = ['print', 'build', 'bisect'])
 parser.add_argument('command', nargs = '?', metavar = 'command', help = 'GCC command')
 parser.add_argument('-s', '--silent', action = 'store_true', help = 'Silent logging')
 parser.add_argument('-x', '--negate', action = 'store_true', help = 'FAIL if result code is equal to zero')
