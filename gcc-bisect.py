@@ -51,15 +51,11 @@ parser.add_argument('--bisect-start', help = 'Bisection start revision')
 parser.add_argument('--bisect-end', help = 'Bisection end revision')
 parser.add_argument('--all', action = 'store_true', help = 'Run all revisions in a range')
 parser.add_argument('--smart-sequence', action = 'store_true', help = 'Run all revisions in a smart sequence')
-parser.add_argument('-n', help = 'Number of revisions to build')
 parser.add_argument('-i', '--ice', action = 'store_true', help = 'Grep stderr for ICE')
 parser.add_argument('-a', '--ask', action = 'store_true', help = 'Ask about return code')
 parser.add_argument('-o', '--old', action = 'store_true', help = 'Test also old releases')
 
 args = parser.parse_args()
-
-to_build = 10**10 if args.n == None else int(args.n)
-
 repo = Repo(git_location)
 head = repo.commit('parent/master')
 
@@ -241,13 +237,6 @@ class GitRevision:
 
     def get_folder_path(self):
         return os.path.join(install_location, self.commit.hexsha)
-
-    def build_with_limit(self):
-        global to_build
-        if to_build > 0:
-            result = self.build()
-            if result:
-                to_build -= 1
 
     def install(self, start):
         with lock:
@@ -461,7 +450,7 @@ class GitRepository:
     def build(self):
         for l in self.all:
             for r in l:
-                r.build_with_limit()
+                r.build()
 
     def initialize_binaries(self):
         files = os.listdir(install_location)
