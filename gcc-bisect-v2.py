@@ -39,9 +39,7 @@ log_file = '/home/marxin/Programming/script-misc/gcc-build-v2.log'
 extract_location = '/dev/shm/gcc-bisect-bin/'
 
 patches_folder = os.path.join(script_dirname, 'gcc-bisect-patches')
-patches = ['0001-Use-ucontext_t-not-struct-ucontext-in-linux-unwind.h.patch', 'gnu-inline.patch', 'ubsan.patch',
-        '0001-Call-release_input_file-in-claim_file_handler.patch',
-        '0001-Call-release_input_file-only-if-file-is-claimed.patch', '0001-Fix-Solaris-bootstrap.patch']
+patches = ['0001-Use-ucontext_t-not-struct-ucontext-in-linux-unwind.h.patch', 'gnu-inline.patch', 'ubsan.patch']
 
 parser = argparse.ArgumentParser(description='Build GCC binaries.')
 parser.add_argument('action', nargs = '?', metavar = 'action', help = 'Action', default = 'print', choices = ['print', 'build', 'bisect', 'gc'])
@@ -398,7 +396,7 @@ class GitRepository:
         self.parse_branches()
         self.parse_latest_revisions()
 
-        self.all = [self.releases, self.latest, self.branch_bases, self.branches]
+        self.all = [self.releases, self.branch_bases, self.branches, self.latest]
         self.initialize_binaries()
 
     def pull(self):
