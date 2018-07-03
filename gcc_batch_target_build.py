@@ -36,7 +36,7 @@ def build_target(full_target, i, n):
             os.chdir(d)
 
             # 1) configure
-            cmd = '%s --target=%s --disable-bootstrap --enable-languages=c,c++ --disable-multilib %s' % (os.path.join(source_gcc, 'configure'), target, opts)
+            cmd = '%s --target=%s --disable-bootstrap --enable-languages=c,c++ --disable-multilib %s --enable-obsolete' % (os.path.join(source_gcc, 'configure'), target, opts)
             cmd = cmd.strip()
             print('Configure: %s' % cmd)
             r = subprocess.run(cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE, shell = True)
