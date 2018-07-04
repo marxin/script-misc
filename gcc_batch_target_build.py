@@ -49,7 +49,7 @@ def build_target(full_target, i, n):
 
             # 2) build
             start = time.time()
-            cmd = 'nice make -j8 all-host CXXFLAGS="-O0" CFLAGS="-O0"'
+            cmd = 'nice make -j8 all-host CXXFLAGS="-O0 -g" CFLAGS="-O0 -g"'
             print('Building: %s' % cmd)
             r = subprocess.run(cmd, stdout = subprocess.PIPE, stderr = subprocess.PIPE, shell = True)
             print('Took %s: %s' % (str(time.time() - start), 'OK' if r.returncode == 0 else 'FAILED'))
