@@ -54,6 +54,7 @@ parser.add_argument('--smart-sequence', action = 'store_true', help = 'Run all r
 parser.add_argument('-i', '--ice', action = 'store_true', help = 'Grep stderr for ICE')
 parser.add_argument('-a', '--ask', action = 'store_true', help = 'Ask about return code')
 parser.add_argument('-o', '--old', action = 'store_true', help = 'Test also old releases')
+parser.add_argument('-v', '--verbose', action = 'store_true', help = 'Verbose output')
 
 args = parser.parse_args()
 repo = Repo(git_location)
@@ -254,10 +255,12 @@ class GitRevision:
     def build(self):
         build_command = 'nice make -j8 CFLAGS="-O2 -g0" CXXFLAGS="-O2 -g0"'
         if os.path.exists(self.get_archive_path()):
-            # flush_print('Revision %s already exists' % (str(self)))
+            if args.verbose:
+                flush_print('Revision %s already exists' % (str(self)))
             return False
         elif build_failed_for_revision(self.commit.hexsha):
-            # flush_print('Revision %s already failed' % (str(self)))
+            if args.verbose:
+                flush_print('Revision %s already failed' % (str(self)))
             return False
         else:
             flush_print('Building %s' % (str(self)))
