@@ -514,7 +514,7 @@ class OptimizationLevel:
             options = [o.select_nondefault() for o in options]
 
             # TODO: warning
-            cmd = 'timeout %d %s %s -fmax-errors=1 -I/home/marxin/BIG/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s %s %s -o/dev/null -c' % (args.timeout, compiler, args.cflags, self.level, source_file, ' '.join(options))
+            cmd = 'timeout %d %s %s -fmax-errors=1 -I/home/marxin/BIG/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s %s %s -o/dev/null -S' % (args.timeout, compiler, args.cflags, self.level, source_file, ' '.join(options))
             my_env = os.environ.copy()
 
             if args.ubsan:
