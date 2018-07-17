@@ -636,5 +636,3 @@ with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
 print('=== SUMMARY ===')
 for i in ice_locations:
     print('ICE: %s' % i)
-
-exit(len(ice_locations) != 0)
