@@ -461,7 +461,7 @@ class OptimizationLevel:
                     min = int(parts[0])
                     max = int(parts[1])
                 else:
-                    assert original.endswith('<number>')
+                    assert original.endswith('<number>') or original.endswith('<byte-size>')
 
                 self.options.append(IntegerRangeFlag(key, min, max))
             else:

@@ -19,6 +19,7 @@ class Option:
             if m != None:
                 s = s[m.span(0)[1]:].strip()
                 self.options[m.group(1)] = m.group(2)
+                print(m.group(0))
             else:
                 m2 = re.search('^[^\ ]*', s)
                 s = s[m2.span(0)[1]:].strip()
@@ -140,7 +141,7 @@ delimiter = u'\x1c'
 printer = Printer()
 
 # parse content of optionlist
-lines = [line.strip() for line in open('/home/marxin/Programming/gcc/objdir/gcc/optionlist').readlines()]
+lines = [line.strip() for line in open('/dev/shm/objdir/gcc/optionlist').readlines()]
 flags = []
 for l in lines:
     parts = l.split(delimiter)
