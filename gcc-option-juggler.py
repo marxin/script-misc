@@ -167,7 +167,7 @@ def check_option(level, option):
     if option in option_validity_cache:
         return option_validity_cache[option]
 
-    cmd = '%s -c %s %s %s' % (get_compiler(), empty, level, option)
+    cmd = '%s -S -c %s %s %s' % (get_compiler(), empty, level, option)
     r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     result = r.returncode == 0
     option_validity_cache[option] = result
@@ -385,7 +385,7 @@ class OptimizationLevel:
 
         if name == 'target':
             # enums are listed at the end
-            lines = output_for_command('%s -Q --help=%s %s' % (get_compiler(), name, self.level))
+            lines = output_for_command('%s -S -Q --help=%s %s' % (get_compiler(), name, self.level))
             start = takewhile(lambda x: x != '', lines)
             lines = lines[len(list(start)):]
 
@@ -402,7 +402,7 @@ class OptimizationLevel:
 
         else:
             # run without -Q
-            lines = output_for_command('%s --help=%s %s' % (get_compiler(), name, self.level))
+            lines = output_for_command('%s -S --help=%s %s' % (get_compiler(), name, self.level))
 
             for l in lines:
                 parts = split_by_space(l)
@@ -419,7 +419,7 @@ class OptimizationLevel:
     def parse_options(self, name):
         enum_values = self.parse_enum_values(name)
 
-        for l in output_for_command('%s -Q --help=%s %s' % (get_compiler(), name, self.level)):
+        for l in output_for_command('%s -S -Q --help=%s %s' % (get_compiler(), name, self.level)):
             if l == '':
                break
             parts = split_by_space(l)
@@ -470,7 +470,7 @@ class OptimizationLevel:
                 pass
 
     def parse_params(self):
-        for l in output_for_command('%s -Q --help=params %s' % (get_compiler(), self.level)):
+        for l in output_for_command('%s -S -Q --help=params %s' % (get_compiler(), self.level)):
             if l == '':
                 continue
             parts = split_by_space(l)
@@ -507,46 +507,42 @@ class OptimizationLevel:
         return filtered
 
     def test(self, option_count):
-        try:
-            options = [random.choice(self.options) for option in range(option_count)]
-            source_file = random.choice(source_files)
-            compiler = get_compiler_by_extension(source_file)
-            options = [o.select_nondefault() for o in options]
+        options = [random.choice(self.options) for option in range(option_count)]
+        source_file = random.choice(source_files)
+        compiler = get_compiler_by_extension(source_file)
+        options = [o.select_nondefault() for o in options]
 
-            # TODO: warning
-            cmd = 'timeout %d %s %s -fmax-errors=1 -I/home/marxin/BIG/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s %s %s -o/dev/null -S' % (args.timeout, compiler, args.cflags, self.level, source_file, ' '.join(options))
-            my_env = os.environ.copy()
+        # TODO: warning
+        cmd = 'timeout %d %s %s -fmax-errors=1 -I/home/marxin/BIG/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s %s %s -o/dev/null -S' % (args.timeout, compiler, args.cflags, self.level, source_file, ' '.join(options))
+        my_env = os.environ.copy()
 
-            if args.ubsan:
-                my_env['UBSAN_OPTIONS'] = 'color=never halt_on_error=1'
-            r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE, env = my_env)
-            if r.returncode != 0:
-                global failed_tests
-                failed_tests += 1
-                try:
-                    stderr = r.stderr.decode('utf-8')
-                    ice = find_ice(stderr)
-                    # TODO: remove
-                    if ice != None and not ice[1] in ice_cache and not any([x in ice[0] for x in known_bugs.keys()]):
-                        ice_locations.add(ice[0])
-                        ice_cache.add(ice[1])
-                        print(colored('warning: NEW ICE #%d: %s' % (len(ice_cache), ice[0]), 'red'))
-                        print(cmd)
-                        print(ice[1])
-                        print()
-                        self.reduce(cmd)
-                        sys.stdout.flush()
-                    elif args.logging:
-                        logging.debug(cmd)
-                        logging.debug(stderr)
-                except UnicodeDecodeError as e:
-                    pass
-                if r.returncode == 124 and args.verbose:
-                    print(colored('TIMEOUT:', 'red'))
+        if args.ubsan:
+            my_env['UBSAN_OPTIONS'] = 'color=never halt_on_error=1'
+        r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE, env = my_env)
+        if r.returncode != 0:
+            global failed_tests
+            failed_tests += 1
+            try:
+                stderr = r.stderr.decode('utf-8')
+                ice = find_ice(stderr)
+                # TODO: remove
+                if ice != None and not ice[1] in ice_cache and not any([x in ice[0] for x in known_bugs.keys()]):
+                    ice_locations.add(ice[0])
+                    ice_cache.add(ice[1])
+                    print(colored('warning: NEW ICE #%d: %s' % (len(ice_cache), ice[0]), 'red'))
                     print(cmd)
-        except Exception as e:
-            print('FATAL ERROR')
-            traceback.print_exc(file = sys.stdout)
+                    print(ice[1])
+                    print()
+                    self.reduce(cmd)
+                    sys.stdout.flush()
+                elif args.logging:
+                    logging.debug(cmd)
+                    logging.debug(stderr)
+            except UnicodeDecodeError as e:
+                pass
+            if r.returncode == 124 and args.verbose:
+                print(colored('TIMEOUT:', 'red'))
+                print(cmd)
 
     def reduce(self, cmd):
         r = subprocess.run(os.path.join(script_dir, "gcc-reduce-flags.py") + " '" + cmd + "'", shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
