@@ -167,7 +167,7 @@ def check_option(level, option):
     if option in option_validity_cache:
         return option_validity_cache[option]
 
-    cmd = '%s -S -c %s %s %s' % (get_compiler(), empty, level, option)
+    cmd = '%s -c -c %s %s %s' % (get_compiler(), empty, level, option)
     r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     result = r.returncode == 0
     option_validity_cache[option] = result
@@ -385,7 +385,7 @@ class OptimizationLevel:
 
         if name == 'target':
             # enums are listed at the end
-            lines = output_for_command('%s -S -Q --help=%s %s' % (get_compiler(), name, self.level))
+            lines = output_for_command('%s -c -Q --help=%s %s' % (get_compiler(), name, self.level))
             start = takewhile(lambda x: x != '', lines)
             lines = lines[len(list(start)):]
 
@@ -402,7 +402,7 @@ class OptimizationLevel:
 
         else:
             # run without -Q
-            lines = output_for_command('%s -S --help=%s %s' % (get_compiler(), name, self.level))
+            lines = output_for_command('%s -c --help=%s %s' % (get_compiler(), name, self.level))
 
             for l in lines:
                 parts = split_by_space(l)
@@ -419,7 +419,7 @@ class OptimizationLevel:
     def parse_options(self, name):
         enum_values = self.parse_enum_values(name)
 
-        for l in output_for_command('%s -S -Q --help=%s %s' % (get_compiler(), name, self.level)):
+        for l in output_for_command('%s -c -Q --help=%s %s' % (get_compiler(), name, self.level)):
             if l == '':
                break
             parts = split_by_space(l)
@@ -470,7 +470,7 @@ class OptimizationLevel:
                 pass
 
     def parse_params(self):
-        for l in output_for_command('%s -S -Q --help=params %s' % (get_compiler(), self.level)):
+        for l in output_for_command('%s -c -Q --help=params %s' % (get_compiler(), self.level)):
             if l == '':
                 continue
             parts = split_by_space(l)
