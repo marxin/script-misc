@@ -58,6 +58,7 @@ parser.add_argument('-v', '--verbose', action = 'store_true', help = 'Verbose me
 parser.add_argument('-l', '--logging', action = 'store_true', help = 'Log error output')
 parser.add_argument('-r', '--reduce', action = 'store_true', help = 'Creduce a failing test-case')
 parser.add_argument('-u', '--ubsan', action = 'store_true', help = 'Fail also for an UBSAN error')
+parser.add_argument('-f', '--filter', action = 'store_true', help = 'First filter valid source files')
 parser.add_argument('-m', '--maxparam', help = 'Maximum param value')
 parser.add_argument('-t', '--target', default = 'x86_64', help = 'Default target', choices = ['x86_64', 'ppc64', 'ppc64le', 's390x', 'aarch64', 'arm'])
 args = parser.parse_args()
@@ -641,16 +642,17 @@ def filter_source_files():
         if r.returncode == 0:
             filtered_source_files.add(source)
 
-start = time()
-with concurrent.futures.ThreadPoolExecutor(max_workers = threads) as executor:
-    futures = {executor.submit(filter_source_files): x for x in range(threads)}
-    for future in concurrent.futures.as_completed(futures):
-        data = future.result()
-        pass
+if args.filter:
+    start = time()
+    with concurrent.futures.ThreadPoolExecutor(max_workers = threads) as executor:
+        futures = {executor.submit(filter_source_files): x for x in range(threads)}
+        for future in concurrent.futures.as_completed(futures):
+            data = future.result()
+            pass
 
-print('Filtering took: %s' % str(time() - start))
-source_files = filtered_source_files
-print('Filtered source files: %d.' % len(source_files))
+    print('Filtering took: %s' % str(time() - start))
+    source_files = filtered_source_files
+    print('Filtered source files: %d.' % len(source_files))
 
 with concurrent.futures.ThreadPoolExecutor(max_workers = threads) as executor:
     futures = {executor.submit(test): x for x in range(threads)}
