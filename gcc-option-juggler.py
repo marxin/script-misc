@@ -649,7 +649,7 @@ with concurrent.futures.ThreadPoolExecutor(max_workers = threads) as executor:
         pass
 
 print('Filtering took: %s' % str(time() - start))
-source_files = filter_source_files
+source_files = filtered_source_files
 print('Filtered source files: %d.' % len(source_files))
 
 with concurrent.futures.ThreadPoolExecutor(max_workers = threads) as executor:
