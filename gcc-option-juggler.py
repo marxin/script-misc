@@ -11,6 +11,7 @@ import traceback
 import os
 
 from itertools import *
+from threading import Lock
 from datetime import datetime, timedelta
 from termcolor import colored
 from time import time
@@ -62,7 +63,6 @@ parser.add_argument('-t', '--target', default = 'x86_64', help = 'Default target
 args = parser.parse_args()
 
 option_validity_cache = {}
-failed_tests = 0
 
 FNULL = open(os.devnull, 'w')
 
@@ -148,8 +148,7 @@ source_files = list(filter(is_valid_test_case_for_target, source_files))
 ice_cache = set()
 ice_locations = set()
 
-for f in source_files:
-    get_compiler_by_extension(f)
+source_files = set(source_files)
 
 print('Found %d files.' % len(source_files))
 
@@ -484,7 +483,7 @@ class OptimizationLevel:
 
     def filter_options(self, l):
         filtered = []
-        skipped_options = set(['-fselective-scheduling', '-fselective-scheduling2', '-mlra', '-fsave-optimization-record'])
+        skipped_options = set(['-fselective-scheduling', '-fselective-scheduling2', '-mlra', '-fsave-optimization-record', '-Werror'])
         if args.target == 'x86_64':
             skipped_options.add('-mforce-indirect-call')
         elif args.target == 'ppc64' or args.target == 'ppc64le':
@@ -508,7 +507,7 @@ class OptimizationLevel:
 
     def test(self, option_count):
         options = [random.choice(self.options) for option in range(option_count)]
-        source_file = random.choice(source_files)
+        source_file = random.sample(source_files, 1)[0]
         compiler = get_compiler_by_extension(source_file)
         options = [o.select_nondefault() for o in options]
 
@@ -520,8 +519,6 @@ class OptimizationLevel:
             my_env['UBSAN_OPTIONS'] = 'color=never halt_on_error=1'
         r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE, env = my_env)
         if r.returncode != 0:
-            global failed_tests
-            failed_tests += 1
             try:
                 stderr = r.stderr.decode('utf-8')
                 ice = find_ice(stderr)
@@ -610,24 +607,56 @@ exit 0"""
 os.chdir('/tmp/')
 levels = [OptimizationLevel(x) for x in ['', '-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os', '-Og']]
 
+threads = 8
+counter = 1000 * args.iterations
+lock = Lock()
+
 def test():
-    level = random.choice(levels)
-    level.test(random.randint(1, 20))
+    while True:
+        global counter
+        with lock:
+            if counter == 0:
+                return
+            else:
+                counter -= 1
+
+        level = random.choice(levels)
+        level.test(random.randint(1, 20))
+
+filtered_source_files = set()
+
+def filter_source_files():
+    while True:
+        global source_files
+        global filtered_source_files
+        source = None
+        with lock:
+            if not source_files:
+                return
+            source = source_files.pop()
+
+        compiler = get_compiler_by_extension(source)
+        cmd = 'timeout %d %s %s -fmax-errors=1 -I/home/marxin/BIG/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s -o/dev/null -S' % (args.timeout, args.cflags, compiler, source)
+        r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        if r.returncode == 0:
+            filtered_source_files.add(source)
 
 start = time()
-N = 1000
+with concurrent.futures.ThreadPoolExecutor(max_workers = threads) as executor:
+    futures = {executor.submit(filter_source_files): x for x in range(threads)}
+    for future in concurrent.futures.as_completed(futures):
+        data = future.result()
+        pass
 
-with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
-    for i in range(1, args.iterations):
-        futures = {executor.submit(test): x for x in range(N)}
-        for future in concurrent.futures.as_completed(futures):
-            pass
-        if args.verbose:
-            c = i * N
-            speed = c / (time() - start)
-            remaining = args.iterations * N - c
-            print('progress: %d/%d, failed: %.2f%%, %.2f tests/s, remaining: %d, ETA: %s' % (c, args.iterations * N, 100.0 * failed_tests / c, speed, remaining, str(timedelta(seconds = round(remaining / speed )))))
-            sys.stdout.flush()
+print('Filtering took: %s' % str(time() - start))
+source_files = filter_source_files
+print('Filtered source files: %d.' % len(source_files))
+
+with concurrent.futures.ThreadPoolExecutor(max_workers = threads) as executor:
+    futures = {executor.submit(test): x for x in range(threads)}
+    for future in concurrent.futures.as_completed(futures):
+        data = future.result()
+        pass
 
 print('=== SUMMARY ===')
 for i in ice_locations:
