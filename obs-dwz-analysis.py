@@ -14,7 +14,14 @@ def get_time(l):
     return int(l.strip())
 
 def print_package(p):
-    print('%30s%6d / %6ds%10.2f%%' % (p[0], p[1], p[3], p[4]))
+    size_comparison = 100.0 * p[6] / p[5] if p[5] else 0
+    print('%30s%6d / %6ds%10.2f%% %10s / %10s %10.2f%%' % (p[0], p[1], p[3], p[4], sizeof_fmt(p[5]), sizeof_fmt(p[6]), size_comparison))
+
+def sizeof_fmt(num):
+    for x in ['B','KB','MB','GB','TB']:
+        if num < 1024.0:
+            return "%3.1f %s" % (num, x)
+        num /= 1024.0
 
 d = sys.argv[1]
 files = os.listdir(d)
@@ -22,9 +29,15 @@ files = os.listdir(d)
 for f in files:
     lines = [l.strip() for l in open(os.path.join(d, f)).readlines()]
     r = None
+    size = [0, 0]
     for i, l in enumerate(lines):
         if 'dwz: ' in l and not 'is not a shared library' in l and not 'too much work for irq' in l:
             print('WARNING:%s:%s' % (f, l))
+        t = 'original debug info size'
+        if t in l:
+            tokens = l[len(t):].split(' ')
+            # TODO
+            size = [1024 * int(tokens[2].strip(',')), 1024 * int(tokens[6])]
         if 'sepdebugcrcfix' in l:
             start = get_time(lines[i - 1])
             end = get_time(l)
@@ -44,6 +57,7 @@ for f in files:
                 r.append(get_time(l))
                 r.append(round(100.0 * r[1] / r[3], 2))
                 break
+        r += size
         results.append(r)
 
 s = sum([x[1] for x in results])
@@ -61,7 +75,17 @@ print('Top %d by percentage of package build time:' % N)
 for r in sorted(results, key = lambda x: x[4], reverse = True)[:N]:
     print_package(r)
 
+print()
+print('Top %d by percentage of package debug info size:' % N)
+for r in sorted(results, key = lambda x: x[5], reverse = True)[:N]:
+    print_package(r)
+
 total_time = sum([x[3] for x in results])
 print()
 print('Total time: %ds (%.2f %%) of %d packages (of %d), average: %.2fs, total package build time: %ds' % (s, 100.0 * s / total_time, l, len(files), 1.0 * s / l, total_time))
 print()
+
+total_size_before = sum([x[5] for x in results])
+total_size_after = sum([x[6] for x in results])
+
+print('Total size before: %s, after: %s (%.2f%%)' % (sizeof_fmt(total_size_before), sizeof_fmt(total_size_after), 100.0 * total_size_after / total_size_before))
