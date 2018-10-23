@@ -26,6 +26,7 @@ def sizeof_fmt(num):
 d = sys.argv[1]
 files = os.listdir(d)
 
+have_dwz_size = 0
 for f in files:
     lines = [l.strip() for l in open(os.path.join(d, f)).readlines()]
     r = None
@@ -37,7 +38,14 @@ for f in files:
         if t in l:
             tokens = l[len(t):].split(' ')
             # TODO
-            size = [1024 * int(tokens[2].strip(',')), 1024 * int(tokens[6])]
+            a = tokens[2][:-1]
+            b = tokens[6]
+            if a.endswith('kB'):
+                a = a[:-2]
+            if b.endswith('kB'):
+                b = b[:-2]
+            size = [1024 * int(a), 1024 * int(b)]
+            have_dwz_size += 1
         if 'sepdebugcrcfix' in l:
             start = get_time(lines[i - 1])
             end = get_time(l)
@@ -76,7 +84,7 @@ for r in sorted(results, key = lambda x: x[4], reverse = True)[:N]:
     print_package(r)
 
 print()
-print('Top %d by percentage of package debug info size:' % N)
+print('Top %d by size of package debug info size:' % N)
 for r in sorted(results, key = lambda x: x[5], reverse = True)[:N]:
     print_package(r)
 
@@ -88,4 +96,4 @@ print()
 total_size_before = sum([x[5] for x in results])
 total_size_after = sum([x[6] for x in results])
 
-print('Total size before: %s, after: %s (%.2f%%)' % (sizeof_fmt(total_size_before), sizeof_fmt(total_size_after), 100.0 * total_size_after / total_size_before))
+print('Total size before: %s, after: %s (%.2f%%), have dwz stats for %d packages' % (sizeof_fmt(total_size_before), sizeof_fmt(total_size_after), 100.0 * total_size_after / total_size_before, have_dwz_size))
