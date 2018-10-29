@@ -74,8 +74,9 @@ osc build --alternative-project=openSUSE:Factory:Staging:Gcc7
 """.strip()
 
 if args.curl:
-    for (k,v) in d.items():
-        for p in v:
+    keys = sorted(d.keys())
+    for k in keys:
+        for p in d[k]:
             if p[1] != None:
                 print(header.replace('XXX', p[0].rstrip('.log')))
                 print(body.replace('XXX', p[1]))
