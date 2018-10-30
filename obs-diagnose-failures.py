@@ -32,8 +32,8 @@ def is_post_build_error(line):
     return False
 
 def find_diagnostics(lines):
-    for l in lines:
-        for d in [('segfault', is_segfault), ('Werror', is_werror), ('error', is_error), ('post-build-check', is_post_build_error)]:
+    for d in [('segfault', is_segfault), ('Werror', is_werror), ('error', is_error), ('post-build-check', is_post_build_error)]:
+        for l in lines:
             if d[1](l):
                 return (d[0], l)
 
