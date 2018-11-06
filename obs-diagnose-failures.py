@@ -12,7 +12,7 @@ parser.add_argument('--curl', '-c', help = 'Generate CURL bugzilla requests', ac
 args = parser.parse_args()
 
 def is_segfault(line):
-    if 'Segmentation fault' in line or 'internal compiler error' in line:
+    if 'Segmentation fault' in line or 'internal compiler error' in line or 'Killed signal' in line:
         return True
     return False
 

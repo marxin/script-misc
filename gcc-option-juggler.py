@@ -490,6 +490,7 @@ class OptimizationLevel:
         elif args.target == 'ppc64' or args.target == 'ppc64le':
             skipped_options.add('-m32')
             skipped_options.add('-mavoid-indexed-addresses')
+            skipped_options.add('-mpopcntd')
 
         for option in self.options:
             if option.name in skipped_options:
