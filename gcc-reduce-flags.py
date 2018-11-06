@@ -16,7 +16,7 @@ if len(sys.argv) == 3:
 def does_ice(command):
     r = subprocess.run(command, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     stderr = r.stderr.decode('utf-8')
-    return r.returncode == 124 or pattern in stderr or 'Segmentation fault' in stderr
+    return r.returncode == 124 or pattern in stderr or 'Segmentation fault' in stderr or 'runtime error:' in stderr
 
 def do_cmd(base, flags):
     return 'timeout 10 %s %s' % (' '.join(base), ' '.join(flags))
