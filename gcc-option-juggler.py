@@ -630,7 +630,7 @@ def test():
                 counter -= 1
 
         level = random.choice(levels)
-        level.test(random.randint(1, 20))
+        level.test(200)
 
 filtered_source_files = set()
 
