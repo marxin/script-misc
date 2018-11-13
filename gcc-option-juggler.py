@@ -489,13 +489,17 @@ class OptimizationLevel:
 
     def filter_options(self, l):
         filtered = []
-        skipped_options = set(['-fselective-scheduling', '-fselective-scheduling2', '-mlra', '-fsave-optimization-record', '-Werror'])
+        skipped_options = set(['-fselective-scheduling', '-fselective-scheduling2', '-mlra', '-fsave-optimization-record', '-Werror', '-fmodulo-sched'])
         if args.target == 'x86_64':
             skipped_options.add('-mforce-indirect-call')
         elif args.target == 'ppc64' or args.target == 'ppc64le':
             skipped_options.add('-m32')
             skipped_options.add('-mavoid-indexed-addresses')
             skipped_options.add('-mpopcntd')
+            skipped_options.add('-maltivec')
+
+        if args.target != 'x86_64':
+            skipped_options.add('-freorder-blocks-and-partition')
 
         for option in self.options:
             if option.name in skipped_options:
