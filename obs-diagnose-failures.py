@@ -33,8 +33,13 @@ def is_post_build_error(line):
 def is_test_failure(line):
     return 'test-suite.log] Error' in line or 'test] Error' in line or 'The following tests FAILED' in line
 
+def is_broken_build_system(line):
+    return 'No buildstatus set, either the base system is broken' in line
+
 def find_diagnostics(lines):
-    for d in [('segfault', is_segfault), ('Werror', is_werror), ('error', is_error), ('post-build-check', is_post_build_error), ('test failure', is_test_failure)]:
+    for d in [('segfault', is_segfault), ('Werror', is_werror), ('error', is_error),
+            ('post-build-check', is_post_build_error), ('test failure', is_test_failure),
+            ('broken build system', is_broken_build_system)]:
         for l in lines:
             if d[1](l):
                 return (d[0], l)
@@ -53,7 +58,7 @@ for root, dirs, files in os.walk(args.location):
         d[r[0]].append((f, r[1]))
 
 for (k,v) in d.items():
-    print('%16s: %5d' % (k, len(v)))
+    print('%25s: %5d' % (k, len(v)))
 
 if args.verbose:
     for (k,v) in d.items():
