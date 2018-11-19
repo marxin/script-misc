@@ -497,6 +497,7 @@ class OptimizationLevel:
             skipped_options.add('-mavoid-indexed-addresses')
             skipped_options.add('-mpopcntd')
             skipped_options.add('-maltivec')
+            skipped_options.add('-mfprnd')
 
         if args.target != 'x86_64':
             skipped_options.add('-freorder-blocks-and-partition')
