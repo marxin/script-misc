@@ -8,7 +8,6 @@ import termcolor
 
 parser = argparse.ArgumentParser(description = 'Analyze OBS log files')
 parser.add_argument('location', help = 'Folder with logs')
-parser.add_argument('--verbose', help = 'Verbose', action='store_true')
 args = parser.parse_args()
 
 def find_in_line(haystack, line):
@@ -46,12 +45,11 @@ for root, dirs, files in os.walk(args.location):
 for (k,v) in d.items():
     print('%25s: %5d' % (k, len(v)))
 
-if args.verbose:
-    for c in categories:
-        v = d[c[0]]
-        print('=== %s (%d) ===' % (c[0], len(v)))
-        for p in sorted(v):
-            if p[1] != None:
-                print('%s:%s' % (p[0], p[1]))
-            else:
-                print(p[0])
+for c in categories:
+    v = d[c[0]]
+    print('=== %s (%d) ===' % (c[0], len(v)))
+    for p in sorted(v):
+        if p[1] != None:
+            print('%s:%s' % (p[0], p[1]))
+        else:
+            print(p[0])
