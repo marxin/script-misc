@@ -46,8 +46,11 @@ for (k,v) in d.items():
     print('%25s: %5d' % (k, len(v)))
 
 for c in categories:
-    v = d[c[0]]
-    print('=== %s (%d) ===' % (c[0], len(v)))
+    k = c[0]
+    if not k in d:
+        continue
+    v = d[k]
+    print('=== %s (%d) ===' % (k, len(v)))
     for p in sorted(v):
         if p[1] != None:
             print('%s:%s' % (p[0], p[1]))
