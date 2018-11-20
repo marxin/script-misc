@@ -18,7 +18,7 @@ def find_in_line(haystack, line):
             return line[:i] + termcolor.colored(needle, 'red', attrs = ['bold']) + line[i + len(needle):]
 
 categories = [('segfault', ['Segmentation fault', 'internal compiler error', 'Killed signal']),
-        ('Werror', ['-Werror=']),
+        ('Werror', ['[-Werror=']),
         ('error', ['error:']),
         ('test-failure', ['test-suite.log] Error', 'test] Error', 'The following tests FAILED']),
         ('broken-build-system', ['No buildstatus set, either the base system is broken'])]
@@ -41,7 +41,7 @@ for root, dirs, files in os.walk(args.location):
         if not r[0] in d:
             d[r[0]] = []
 
-        d[r[0]].append((f, r[1]))
+        d[r[0]].append((f + '/' + root.split('/')[-1], r[1]))
 
 for (k,v) in d.items():
     print('%25s: %5d' % (k, len(v)))
