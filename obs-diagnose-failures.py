@@ -23,8 +23,8 @@ categories = [('segfault', ['Segmentation fault', 'internal compiler error', 'Ki
         ('broken-build-system', ['No buildstatus set, either the base system is broken'])]
 
 def find_diagnostics(lines):
-    for l in lines:
-        for c in categories:
+    for c in categories:
+        for l in lines:
             r = find_in_line(c[1], l)
             if r != None:
                 return (c[0], r)

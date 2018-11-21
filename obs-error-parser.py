@@ -40,7 +40,7 @@ def process_arch(url, folder, project, repository, arch):
     print('Packages: %d' % len(packages))
 
     create_dir(arch_dir)
-    for package in sorted(packages):
+    for index, package in enumerate(sorted(packages)):
         for i in range(3):
             try:
                 result = subprocess.check_output('osc -A %s remotebuildlog %s %s %s %s' % (url, project, package, repository, arch), shell = True)
@@ -48,7 +48,7 @@ def process_arch(url, folder, project, repository, arch):
                 log_file = os.path.join(arch_dir, package + '.log')
                 with open(log_file, 'w+') as w:
                     w.write(log)
-                printme(package)
+                printme('%d/%d: %s' % (index, len(packages), package))
             except Exception as e:
                 print(e)
 
