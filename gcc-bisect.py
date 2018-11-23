@@ -530,7 +530,7 @@ class GitRepository:
             print(candidates[1].commit.message)
             revisions = revisions_in_range(candidates[1].commit, candidates[0].commit)
             l = len(revisions) - 1
-            flush_print('Revisions in between: %d' % (l - 1))
+            flush_print(colored('Revisions in between: %d' % (l - 1), 'red', attrs = ['bold']))
         else:
             steps = math.ceil(math.log2(len(candidates))) - 1
             flush_print('  bisecting: %d revisions (~%d steps)' % (len(candidates), steps))
