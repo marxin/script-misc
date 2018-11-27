@@ -16,7 +16,7 @@ def find_in_line(haystack, line):
         if i != -1:
             return line[:i] + termcolor.colored(needle, 'red', attrs = ['bold']) + line[i + len(needle):]
 
-categories = [('segfault', ['Segmentation fault', 'internal compiler error', 'Killed signal']),
+categories = [('segfault', ['Segmentation fault', 'internal compiler error', 'Killed signal', 'lto1: fatal error']),
         ('Werror', ['[-Werror=']),
         ('error', ['error:']),
         ('test-failure', ['test-suite.log] Error', 'test] Error', 'The following tests FAILED']),
