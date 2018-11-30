@@ -8,13 +8,17 @@ import termcolor
 
 parser = argparse.ArgumentParser(description = 'Analyze OBS log files')
 parser.add_argument('location', help = 'Folder with logs')
+parser.add_argument('--nocolor', action='store_true', help = 'Do not use colored output')
 args = parser.parse_args()
 
 def find_in_line(haystack, line):
     for needle in haystack:
         i = line.find(needle)
         if i != -1:
-            return line[:i] + termcolor.colored(needle, 'red', attrs = ['bold']) + line[i + len(needle):]
+            p = termcolor.colored(needle, 'red', attrs = ['bold'])
+            if args.nocolor:
+                p = needle
+            return line[:i] + p + line[i + len(needle):]
 
 categories = [('segfault', ['Segmentation fault', 'internal compiler error', 'Killed signal', 'lto1: fatal error']),
         ('Werror', ['[-Werror=']),
