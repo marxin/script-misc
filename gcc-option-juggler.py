@@ -494,6 +494,7 @@ class OptimizationLevel:
         # TODO: remove me then
         skipped_options.add('uninlined-function-time')
         skipped_options.add('uninlined-function-insns')
+        skipped_options.add('uninlined-thunk-insns')
 
         if args.target == 'x86_64':
             skipped_options.add('-mforce-indirect-call')
