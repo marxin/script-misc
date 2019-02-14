@@ -491,11 +491,6 @@ class OptimizationLevel:
         filtered = []
         skipped_options = set(['-fselective-scheduling', '-fselective-scheduling2', '-mlra', '-fsave-optimization-record', '-Werror', '-fmodulo-sched'])
 
-        # TODO: remove me then
-        skipped_options.add('uninlined-function-time')
-        skipped_options.add('uninlined-function-insns')
-        skipped_options.add('uninlined-thunk-insns')
-
         if args.target == 'x86_64':
             skipped_options.add('-mforce-indirect-call')
         elif args.target == 'ppc64' or args.target == 'ppc64le':
