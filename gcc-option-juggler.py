@@ -123,7 +123,8 @@ ignored_tests = set(['instantiate-typeof.cpp', 'multi-level-substitution.cpp', '
         'temp_arg_nontype.cpp', 'constant-expression-cxx1y.cpp', 'cxx1z-using-declaration.cpp', 'pack-deduction.cpp', 'pr65693.c', 'const-init.cpp',
         'temp_arg_nontype_cxx1z.cpp', 'cxx1z-decomposition.cpp', 'vla-lambda-capturing.cpp', 'cxx0x-defaulted-functions.cpp', 'dllimport.cpp', 'type-traits.cpp',
         'for-range-examples.cpp', 'lambda-expressions.cpp', 'mangle-lambdas.cpp', 'cxx1y-generic-lambdas.cpp', 'macro_vaopt_expand.cpp', 'dllimport-members.cpp',
-        'dllexport.cpp', 'lambda-mangle4.C', 'dllexport-members.cpp', 'arm-asm.c', 'cxx0x-cursory-default-delete.cpp'])
+        'dllexport.cpp', 'lambda-mangle4.C', 'dllexport-members.cpp', 'arm-asm.c', 'cxx0x-cursory-default-delete.cpp',
+        'pr89037.c'])
 
 def find_tests(base, contains):
     result = []
