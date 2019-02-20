@@ -9,6 +9,9 @@ import re
 import concurrent.futures
 import traceback
 import os
+import tempfile
+import logging
+import shutil
 
 from itertools import *
 from threading import Lock
@@ -16,9 +19,7 @@ from datetime import datetime, timedelta
 from termcolor import colored
 from time import time
 from os import path
-import tempfile
-import logging
-import shutil
+from multiprocessing import Pool
 
 known_bugs = {
         'in lambda_expr_this_capture, at cp/lambda.c:720': 'PR79651',
@@ -623,21 +624,13 @@ exit 0"""
 os.chdir('/tmp/')
 levels = [OptimizationLevel(x) for x in ['', '-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os', '-Og']]
 
-threads = 8
+threads = 12
 counter = 1000 * args.iterations
 lock = Lock()
 
-def test():
-    while True:
-        global counter
-        with lock:
-            if counter == 0:
-                return
-            else:
-                counter -= 1
-
-        level = random.choice(levels)
-        level.test(200)
+def test(i):
+    level = random.choice(levels)
+    level.test(200)
 
 filtered_source_files = set()
 
@@ -669,11 +662,8 @@ if args.filter:
     source_files = filtered_source_files
     print('Filtered source files: %d.' % len(source_files))
 
-with concurrent.futures.ThreadPoolExecutor(max_workers = threads) as executor:
-    futures = {executor.submit(test): x for x in range(threads)}
-    for future in concurrent.futures.as_completed(futures):
-        data = future.result()
-        pass
+with Pool(threads) as p:
+    p.map(test, range(counter))
 
 print('=== SUMMARY ===')
 for i in ice_locations:
