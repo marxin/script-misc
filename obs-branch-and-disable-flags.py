@@ -44,6 +44,6 @@ for p in packages:
         data = original.read()
 
     with open(spec, 'w') as modified:
-        modified.write("%global optflags -fmessage-length=0 -grecord-gcc-switches -O2 -Wall -D_FORTIFY_SOURCE=2 -fstack-protector-strong -funwind-tables -fasynchronous-unwind-tables -fstack-clash-protection -g\n" + data)
+        modified.write("%define _lto_cflags %{nil}\n" + data)
 
     subprocess.check_output('osc commit -m "Disable LTO" --noservice', shell = True)
