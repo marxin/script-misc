@@ -39,7 +39,7 @@ def cleanroot():
 def get_category(rpm):
     if '-devel-' in rpm:
         return 'devel'
-    elif '-debuginfo-' in rpm:
+    elif '-debuginfo-' in rpm or '-debug-' in rpm:
         return 'debug'
     else:
         return 'normal'
@@ -48,13 +48,12 @@ def process_rpm(full):
     cleanroot()
     vm = {'name': full, 'size': os.path.getsize(full), 'files': []} 
 
+    subprocess.check_output('rpm2cpio %s | cpio -idmv -D %s' % (full, root), shell = True, stderr = subprocess.PIPE)
 
     r = subprocess.check_output('du -bs %s' % root, shell = True, encoding = 'utf8')
     value = int(r.strip().split('\t')[0])
     vm['extracted_size'] = value
-
     print('  extracting: %s: %d' % (full, value))
-    subprocess.check_output('rpm2cpio %s | cpio -idmv -D %s' % (full, root), shell = True, stderr = subprocess.PIPE)            
 
     # process all files
     candidates = set()
