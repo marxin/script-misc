@@ -14,6 +14,19 @@ parser.add_argument('source', help = 'Folder with source JSON files')
 parser.add_argument('target', help = 'Folder with target JSON files')
 args = parser.parse_args()
 
+all_sections = ['normal', 'devel', 'debug']
+
+branched = set('000product,000release-packages,00aggregates,alsa,ant,apparmor,argyllcms,augeas,bootstrap-copy,btrfsprogs,cdrdao,ceph,ceph-test,clutter,cmocka,cppunit,cross-aarch64-gcc7,cross-arm-gcc7,cross-arm-none-gcc7,cross-arm-none-gcc7-bootstrap,cross-avr-gcc7,cross-avr-gcc7-bootstrap,cross-epiphany-gcc7,cross-epiphany-gcc7-bootstrap,cross-hppa-gcc7,cross-i386-gcc7,cross-m68k-gcc7,cross-mips-gcc7,cross-nvptx-gcc7,cross-ppc64-gcc7,cross-ppc64le-gcc7,cross-rx-gcc7,cross-rx-gcc7-bootstrap,cross-s390x-gcc7,cross-sparc-gcc7,cross-sparc64-gcc7,cross-x86_64-gcc7,device-mapper,fabtests,ffmpeg-4,flatpak,fuse,fwupd,gcc,gcc7,gcc7-AGGR,gcc7-testresults,gcc9,gdb,glib2,glusterfs,gnome-settings-daemon,gperftools,grub2,gtk3,infinipath-psm,java-11-openjdk,java-1_8_0-openjdk,java-cup-bootstrap,javacc,jemalloc,kdepim-runtime,kjsembed,kross,leveldb,libaio,libapparmor,libbsd,libfabric,libimagequant,liboil,libostree,libqt4,libqt4-sql-plugins,libqt5-qtbase,libqt5-qtscript,libqt5-qttools,libqt5-qtwebkit,libreiserfs,libreoffice,libselinux-bindings,libsigsegv,libvirt,libvpx,lksctp-tools,llvm6,llvm7,ltrace,lvm2,lvm2-clvm,lzo,malaga-suomi,mariadb,Mesa,Mesa-drivers,mono-core,MozillaThunderbird,multipath-tools,mutter,numactl,ocaml-ocamlbuild,open-isns,open-lldp,openucx,papi,pcp,pcre2,php7,pmdk,protobuf,protobuf-c,pulseaudio,python-base,python-doc,python-numpy,python-semanage,python3-libmount,qemu,qemu-linux-user,qemu-testsuite,rdma-core,reiserfs,rpmlint-mini,rpmlint-mini-AGGR,rust,sanlock,shim,squashfs,strace,texlive,util-linux,util-linux-systemd,valgrind,vim,virtualbox,vlc,webkit2gtk3,xen,xerces-j2,xf86-video-intel,xorg-x11-server,xterm,xtrabackup,yast2-theme-SLE,zstd,projectM'.split(','))
+branched = set()
+
+def get_section_name(rpm):
+    if '-debuginfo-' in rpm or '-debug-' in rpm:
+        return 'debug'
+    elif '-devel-' in rpm:
+        return 'devel'
+    else:
+        return 'normal'
+
 def get_canon_name(name):
     i = name.rfind('-')
     return name[:i]
@@ -40,9 +53,13 @@ class Package:
     def __init__(self, data):
         self.name = data['name']
         self.sections = {}
+        for s in all_sections:
+            self.sections[s] = []
 
         for k, v in data['sections'].items():
-            self.sections[k] = [Rpm(x) for x in v]
+            for rpm in v:
+                section = get_section_name(rpm['name'])
+                self.sections[section].append(Rpm(rpm))
 
     def get_rpm_by_name(self, section_name, name):
         for rpm in self.sections[section_name]:
@@ -84,9 +101,15 @@ target_files = parse_files(args.target)
 
 print('Total: %s' % (len(source_files)))
 
-for type in ['normal', 'devel', 'debug']:
+for type in all_sections:
     todo = []
     for s, s2 in source_files.items():
+        name = strip_json(s)
+        if name in branched:
+#            print('Ignoring branched: %s' % name)
+            continue
+        if s.startswith('kernel-'):
+            continue
         if not s in target_files:
             print('Missing in LTO: ' + s)
         else:
