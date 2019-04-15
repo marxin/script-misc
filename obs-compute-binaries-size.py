@@ -9,14 +9,12 @@ import json
 
 from termcolor import colored
 
-binfolder = '/dev/shm/bins'
-root = os.path.join(binfolder, 'root')
-
 parser = argparse.ArgumentParser(description = 'OBS hacking')
 parser.add_argument('project', help = 'OBS project name')
 parser.add_argument('project2', help = 'OBS project name')
 parser.add_argument('repository', help = 'OBS repository')
-parser.add_argument('data', help = 'data')
+parser.add_argument('tmp', help = 'TMP folder where to extract RPM packages')
+parser.add_argument('output_folder', help = 'Output folder where to save. json files')
 args = parser.parse_args()
 
 result = subprocess.check_output('osc r %s -r %s -a %s --csv' % (args.project, args.repository, 'x86_64'), shell = True)
@@ -26,7 +24,12 @@ packages = [x for x in packages if x != '_' and not 'gcc' in x]
 
 branched = set('000product,000release-packages,00aggregates,alsa,ant,apparmor,argyllcms,augeas,bootstrap-copy,btrfsprogs,cdrdao,ceph,ceph-test,clutter,cmocka,cppunit,cross-aarch64-gcc7,cross-arm-gcc7,cross-arm-none-gcc7,cross-arm-none-gcc7-bootstrap,cross-avr-gcc7,cross-avr-gcc7-bootstrap,cross-epiphany-gcc7,cross-epiphany-gcc7-bootstrap,cross-hppa-gcc7,cross-i386-gcc7,cross-m68k-gcc7,cross-mips-gcc7,cross-nvptx-gcc7,cross-ppc64-gcc7,cross-ppc64le-gcc7,cross-rx-gcc7,cross-rx-gcc7-bootstrap,cross-s390x-gcc7,cross-sparc-gcc7,cross-sparc64-gcc7,cross-x86_64-gcc7,device-mapper,fabtests,ffmpeg-4,flatpak,fuse,fwupd,gcc,gcc7,gcc7-AGGR,gcc7-testresults,gcc9,gdb,glib2,glusterfs,gnome-settings-daemon,gperftools,grub2,gtk3,infinipath-psm,java-11-openjdk,java-1_8_0-openjdk,java-cup-bootstrap,javacc,jemalloc,kdepim-runtime,kjsembed,kross,leveldb,libaio,libapparmor,libbsd,libfabric,libimagequant,liboil,libostree,libqt4,libqt4-sql-plugins,libqt5-qtbase,libqt5-qtscript,libqt5-qttools,libqt5-qtwebkit,libreiserfs,libreoffice,libselinux-bindings,libsigsegv,libvirt,libvpx,lksctp-tools,llvm6,llvm7,ltrace,lvm2,lvm2-clvm,lzo,malaga-suomi,mariadb,Mesa,Mesa-drivers,mono-core,MozillaThunderbird,multipath-tools,mutter,numactl,ocaml-ocamlbuild,open-isns,open-lldp,openucx,papi,pcp,pcre2,php7,pmdk,protobuf,protobuf-c,pulseaudio,python-base,python-doc,python-numpy,python-semanage,python3-libmount,qemu,qemu-linux-user,qemu-testsuite,rdma-core,reiserfs,rpmlint-mini,rpmlint-mini-AGGR,rust,sanlock,shim,squashfs,strace,texlive,util-linux,util-linux-systemd,valgrind,vim,virtualbox,vlc,webkit2gtk3,xen,xerces-j2,xf86-video-intel,xorg-x11-server,xterm,xtrabackup,yast2-theme-SLE,zstd,projectM'.split(','))
 
+branched = set('projectM'.split(','))
 print('Successfull packages: %d: %s' % (len(packages), str(packages)))
+
+binfolder = args.tmp
+assert '/dev/shm' in binfolder
+root = os.path.join(binfolder, 'root')
 
 def clean():
     shutil.rmtree(binfolder, ignore_errors = True)
@@ -91,7 +94,7 @@ for i, p in enumerate(packages):
         continue
 
     print('Downloading: %s (%d/%d)' % (p, i, len(packages)))
-    jsonfile = os.path.join(args.data, p + '.json')
+    jsonfile = os.path.join(args.output_folder, p + '.json')
     if os.path.exists(jsonfile):
         continue
 

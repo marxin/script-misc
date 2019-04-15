@@ -36,7 +36,7 @@ for t in tests:
         duration = datetime.now() - start
         times.append(duration.total_seconds())
     avg = average(times)
-    print('%s - %sx:%f' % (t[0], t[1], avg))
+    print('%s-%sx:%f' % (t[0], t[1], avg))
     results.append(avg)
 
 print('\nResults:')
