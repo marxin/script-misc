@@ -29,7 +29,7 @@ def get_section_name(rpm):
 
 def get_canon_name(name):
     i = name.rfind('-')
-    return name[:i]
+    return name[:i].replace('/bins2/', '/bins/')
 
 def strip_path(path):
     token = 'bins'
@@ -43,7 +43,7 @@ def strip_json(path):
 class Rpm:
     def __init__(self, data):
         self.name = data['name']
-        self.canoname = get_canon_name(data['name'])
+        self.canoname = get_canon_name(self.name.replace('/bins2/', '/bins/'))
         self.size = data['size']
         self.extracted_size = data['extracted_size']
         self.files = dict(data['files'])
@@ -100,6 +100,7 @@ source_files = parse_files(args.source)
 target_files = parse_files(args.target)
 
 print('Total: %s' % (len(source_files)))
+print('Branched packages to skip: %d' % len(branched))
 
 for type in all_sections:
     todo = []
@@ -111,12 +112,12 @@ for type in all_sections:
         if s.startswith('kernel-'):
             continue
         if not s in target_files:
-            print('Missing in LTO: ' + s)
+            print('Missing in target: ' + s)
         else:
             c = s2.compare_sections(type, target_files[s])
             if c != True:
                 pass
-                # print('Different RPM names: %s: %d' % (s, c))
+                print('Different RPM names: %s: %d' % (s, c))
             else:
                 todo.append(s)
 
