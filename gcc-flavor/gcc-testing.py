@@ -15,7 +15,7 @@ parser.add_argument('compiler', help = 'Path to compiler')
 
 args = parser.parse_args()
 
-N = 5
+N = 1
 tests = [('empty.c', 100),
         ('empty.C', 100),
         ('tramp3d-v4.ii -O2 -g', N),
@@ -25,14 +25,14 @@ tests = [('empty.c', 100),
         ('insn-emit.ii -O2', N),
         ('generic-match.ii -O2', N),
         ('gimple-match.ii -O2', N),
-        ('kdecore.cc -O2 -g', N)]
+        ('kdecore.ii -O2 -g', N)]
 
 results = []
 for t in tests:
     times = []
     for x in range(t[1]):
         start = datetime.now()
-        subprocess.check_output('taskset 0x1 ' + args.compiler + ' -c ./gcc-data-input/' + t[0] + ' -o /dev/null', shell = True)
+        subprocess.check_output('taskset 0x1 %s --param inline-unit-growth=20 -c ./gcc-data-input/%s -o /dev/null' % (args.compiler, t[0]), shell = True)
         duration = datetime.now() - start
         times.append(duration.total_seconds())
     avg = average(times)
