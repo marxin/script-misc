@@ -27,9 +27,14 @@ def get_section_name(rpm):
     else:
         return 'normal'
 
-def get_canon_name(name):
-    i = name.rfind('-')
-    return name[:i].replace('/bins2/', '/bins/')
+def get_canon_rpm_name(name):
+    name = name[:name.rfind('-')]
+    return name.replace('/bins2/', '/bins/')
+
+def get_canon_filename(name):
+    if name.endswith('i386.debug') or name.endswith('x86_64.debug'):
+       name = name[:name.rfind('-')]
+    return name.replace('/bins2/', '/bins/')
 
 def strip_path(path):
     token = 'bins'
@@ -43,11 +48,12 @@ def strip_json(path):
 class Rpm:
     def __init__(self, data):
         self.name = data['name']
-        self.canoname = get_canon_name(self.name.replace('/bins2/', '/bins/'))
+        self.canoname = get_canon_rpm_name(self.name)
         self.size = data['size']
         self.extracted_size = data['extracted_size']
         self.files = dict(data['files'])
-        self.canonfiles = dict((get_canon_name(x[0]), x[1]) for x in data['files'])
+        self.canonfiles = dict((get_canon_filename(x[0]), x[1]) for x in data['files'])
+        assert len(self.files.keys()) == len(self.canonfiles.keys())
 
 class Package:
     def __init__(self, data):
@@ -80,9 +86,12 @@ class Package:
             other_rpm = other.get_rpm_by_name(section_name, rpm.canoname)
             if other_rpm != None:
                 for f in rpm.files.keys():
-                    cn = get_canon_name(f)
+                    cn = get_canon_filename(f)
                     if cn in other_rpm.canonfiles:
                         report.append((strip_path(f), strip_path(rpm.name), strip_json(package), rpm.files[f], other_rpm.canonfiles[cn]))
+                    else:
+                        pass
+                        #print(cn)
 
     def get_rpm_total_size(self, section_name):
         return sum([r.size for r in self.sections[section_name]])
@@ -109,14 +118,13 @@ for type in all_sections:
         if name in branched:
 #            print('Ignoring branched: %s' % name)
             continue
-        if s.startswith('kernel-'):
+        if 'kernel' in s:
             continue
         if not s in target_files:
             print('Missing in target: ' + s)
         else:
             c = s2.compare_sections(type, target_files[s])
             if c != True:
-                pass
                 print('Different RPM names: %s: %d' % (s, c))
             else:
                 todo.append(s)
@@ -132,8 +140,6 @@ for type in all_sections:
         s4 = target_files[s].get_rpm_total_extracted_size(type)
         item = (strip_json(s), s1, s2, s3, s4)
         package_diff.append(item)
-
-    package_diff.append(item)
 
     with open('report/packages-%s.csv' % type, 'w+') as of:
         of.write('Package,RPM size before,RPM size after,Extracted size before,Extracted size after\n')
