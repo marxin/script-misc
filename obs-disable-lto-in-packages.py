@@ -47,7 +47,7 @@ with open(newspec, 'w+') as w:
             w.write('%define _lto_cflags %{nil}\n')
 
 shutil.copyfile(newspec, spec)
-subprocess.check_output('osc vc -m "Disable LTO (boo#%s)."' % (args.bugid), shell = True)
+subprocess.check_output('osc vc -m "Disable LTO (boo#%s)." %s.changes' % (args.bugid, args.package), shell = True)
 subprocess.check_output('osc commit -m "Disable LTO (boo#%s)."' % args.bugid, shell = True)
 subprocess.check_output('osc sr -m "Disable LTO (boo#%s)."' % args.bugid, shell = True)
 
