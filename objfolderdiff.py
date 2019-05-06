@@ -12,6 +12,7 @@ from termcolor import colored
 parser = argparse.ArgumentParser(description = 'Diff object files in given foldes')
 parser.add_argument('source1', help = 'Folder 1')
 parser.add_argument('source2', help = 'Folder 2')
+parser.add_argument('-d', '--diff', action = 'store_true', help = 'Print diff for different files')
 args = parser.parse_args()
 
 def get_files(folder):
@@ -37,7 +38,7 @@ def print_diff(f, source1, source2):
     with open(f2, 'w+') as f:
         f.write(source2)
 
-    print(subprocess.run('diff -u %s %s' % (f1, f2), shell = True))
+    subprocess.run('diff -u %s %s' % (f1, f2), shell = True)
 
 source_files1 = list(sorted(get_files(args.source1)))
 source_files2 = list(sorted(get_files(args.source1)))
@@ -51,5 +52,5 @@ for i, f in enumerate(source_files1):
     if s1 != s2:
         print('%6d/%6d: %s: ' % (i, len(source_files1), f), end = '')
         print(colored('different', 'red') if s1 != s2 else 'equal')
-#    if s1 != s2:
-#        print_diff(f, s1, s2)
+        if args.diff:
+            print_diff(f, s1, s2)
