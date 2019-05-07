@@ -468,6 +468,13 @@ class GitRepository:
                 if r.commit.hexsha in existing:
                     r.has_binary = True
 
+    def find_commit(self, name, candidates):
+        if 'base' in name:
+            b = single_or_default(lambda x: x.name == name, self.branch_bases)
+            if b != None:
+                name = b.commit.hexsha
+        return single_or_default (lambda x: x.commit.hexsha.startswith(name), candidates)
+
     def bisect(self):
         if not args.old:
             self.releases = list(filter(lambda x: Version(x.name).major >= oldest_active_branch, self.releases))
@@ -495,11 +502,11 @@ class GitRepository:
         # test whether there's a change in return code
 
         if args.bisect_start != None:
-            r = single_or_default (lambda x: x.commit.hexsha.startswith(args.bisect_start), candidates)
+            r = self.find_commit(args.bisect_start, candidates)
             candidates = candidates[candidates.index(r):]
 
         if args.bisect_end != None:
-            r = single_or_default (lambda x: x.commit.hexsha.startswith(args.bisect_end), candidates)
+            r = self.find_commit(args.bisect_end, candidates)
             candidates = candidates[:candidates.index(r)+1]
 
         if args.all:
