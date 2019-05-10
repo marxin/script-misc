@@ -34,7 +34,7 @@ def process_arch(url, folder, project, repository, arch):
 
     result = subprocess.check_output('osc -A %s r %s -r %s -a %s --csv' % (url, project, repository, arch), shell = True)
     packages = result.decode('utf-8', 'ignore').strip().split('\n')
-    packages = [x.split(';')[0] for x in packages if 'failed' in x]
+    packages = [x.split(';')[0] for x in packages if 'failed' in x or (args.all and 'succeeded' in x)]
     packages = [x for x in packages if x != '_']
 
     print('Packages: %d' % len(packages))
@@ -60,6 +60,7 @@ parser.add_argument('folder', help = 'Destination folder')
 parser.add_argument('project', help = 'OBS project name')
 parser.add_argument('repository', help = 'Repository name')
 parser.add_argument('archs', nargs = '+', help = 'Architectures')
+parser.add_argument('-a', '--all', action = 'store_true', help = 'Get all, not only failing')
 args = parser.parse_args()
 
 shutil.rmtree(args.folder, ignore_errors = True)

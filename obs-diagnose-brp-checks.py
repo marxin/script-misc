@@ -37,17 +37,17 @@ d = {}
 for m in messages:
     d[m] = 0
 
-def print_check_messages(lines):
+def print_check_messages(filename, lines):
     for l in lines:
         for m in messages:
             if m in l and ('E: ' in l or 'W: ' in l):
                 d[m] += 1
-                print(l)
+                print(filename[:-4] + ': ' + l)
 
 for root, dirs, files in os.walk(args.location):
     for f in files:
         lines = [x.strip() for x in open(os.path.join(root, f)).readlines()]
-        print_check_messages(lines)
+        print_check_messages(f, lines)
 
 print('Warning summary:')
 for k, v in sorted(d.items(), key = lambda x: x[1], reverse = True):
