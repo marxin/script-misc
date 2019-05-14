@@ -138,8 +138,8 @@ def find_tests(base, contains):
     return result
 
 source_files = find_tests('/home/marxin/Programming/gcc/gcc/', '/testsuite/')
-source_files += find_tests('/home/marxin/BIG/Programming/llvm/', '/test/')
-source_files += find_tests('/home/marxin/BIG/Programming/llvm/', '/test-suite/')
+source_files += find_tests('/home/marxin/Programming/llvm/', '/test/')
+source_files += find_tests('/home/marxin/Programming/llvm/', '/test-suite/')
 source_files = list(set(sorted(source_files)))
 source_files = list(filter(lambda x: get_compiler_by_extension(x) != None and not any([i in x for i in ignored_tests]), source_files))
 
@@ -527,7 +527,7 @@ class OptimizationLevel:
         options = [o.select_nondefault() for o in options]
 
         # TODO: warning
-        cmd = 'timeout %d %s %s -fmax-errors=1 -I/home/marxin/BIG/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s %s %s -o/dev/null -S' % (args.timeout, compiler, args.cflags, self.level, source_file, ' '.join(options))
+        cmd = 'timeout %d %s %s -fmax-errors=1 -I/home/marxin/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s %s %s -o/dev/null -S' % (args.timeout, compiler, args.cflags, self.level, source_file, ' '.join(options))
         my_env = os.environ.copy()
 
         if args.ubsan:
@@ -645,7 +645,7 @@ def filter_source_files():
             source = source_files.pop()
 
         compiler = get_compiler_by_extension(source)
-        cmd = 'timeout %d %s %s -fmax-errors=1 -I/home/marxin/BIG/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s -o/dev/null -S' % (args.timeout, args.cflags, compiler, source)
+        cmd = 'timeout %d %s %s -fmax-errors=1 -I/home/marxin/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s -o/dev/null -S' % (args.timeout, args.cflags, compiler, source)
         r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
         if r.returncode == 0:
             filtered_source_files.add(source)
