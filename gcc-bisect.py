@@ -32,7 +32,7 @@ oldest_release = '4.8'
 oldest_active_branch = 6
 
 lock = filelock.FileLock('/tmp/gcc_build_binary.lock')
-git_location = '/home/marxin/BIG/Programming/gcc-gcc-bisect/'
+git_location = '/home/marxin/Programming/gcc-gcc-bisect/'
 install_location = '/home/marxin/DATA/gcc-binaries/'
 log_file = '/home/marxin/Programming/script-misc/gcc-build.log'
 extract_location = '/dev/shm/gcc-bisect-bin/'
@@ -255,7 +255,7 @@ class GitRevision:
             log(self.commit.hexsha, 'OK')
 
     def build(self):
-        build_command = 'nice make -j8 CFLAGS="-O2 -g0" CXXFLAGS="-O2 -g0"'
+        build_command = 'nice make -j16 CFLAGS="-O2 -g0" CXXFLAGS="-O2 -g0"'
         if os.path.exists(self.get_archive_path()):
             if args.verbose:
                 flush_print('Revision %s already exists' % (str(self)))
