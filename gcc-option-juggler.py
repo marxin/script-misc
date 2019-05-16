@@ -342,12 +342,10 @@ class Param:
         if self.max == 0:
             self.max = 2147483647
 
-        # TODO: write somewhere these
-        if self.name == 'max-iterations-to-track':
-            self.max = 1000
+        limitted_params = set(['max-iterations-to-track', 'min-nondebug-insn-uid', 'max-completely-peel-times', 'max-completely-peeled-insns',
+            'jump-table-max-growth-ratio-for-size', 'jump-table-max-growth-ratio-for-speed'])
 
-        # TODO: likewise
-        if self.name == 'min-nondebug-insn-uid':
+        if self.name in limitted_params:
             self.max = 1000
 
         if args.maxparam != None:
@@ -495,9 +493,10 @@ class OptimizationLevel:
 
         if args.target == 'x86_64':
             skipped_options.add('-mforce-indirect-call')
+            skipped_options.add('-mandroid')
         elif args.target == 'ppc64' or args.target == 'ppc64le':
             skipped_options.add('-m32')
-            skipped_options.add('-mavoid-indexed-addresses')
+            skipped_options.add('-mavoid-in'dexed-addresses')
             skipped_options.add('-mpopcntd')
             skipped_options.add('-maltivec')
             skipped_options.add('-mfprnd')
