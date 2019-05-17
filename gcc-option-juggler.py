@@ -496,7 +496,7 @@ class OptimizationLevel:
             skipped_options.add('-mandroid')
         elif args.target == 'ppc64' or args.target == 'ppc64le':
             skipped_options.add('-m32')
-            skipped_options.add('-mavoid-in'dexed-addresses')
+            skipped_options.add('-mavoid-indexed-addresses')
             skipped_options.add('-mpopcntd')
             skipped_options.add('-maltivec')
             skipped_options.add('-mfprnd')
