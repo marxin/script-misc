@@ -293,7 +293,7 @@ class GitRevision:
                 os.mkdir(tmp_folder)
             os.chdir(tmp_folder)
             cmd = [os.path.join(git_location, 'configure'), '--disable-bootstrap', '--enable-checking=yes',
-                    '--disable-libsanitizer', '--enable-languages=c,c++,d,fortran',
+                    '--disable-libsanitizer', '--enable-languages=c,c++,fortran',
                     '--without-isl', '--disable-cet',
                     '--disable-libstdcxx-pch', '--disable-static']
             run_cmd(cmd, True)
