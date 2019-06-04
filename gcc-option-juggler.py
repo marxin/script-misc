@@ -623,7 +623,7 @@ exit 0"""
 os.chdir('/tmp/')
 levels = [OptimizationLevel(x) for x in ['', '-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os', '-Og']]
 
-threads = 12
+threads = 20
 counter = 1000 * args.iterations
 lock = Lock()
 
