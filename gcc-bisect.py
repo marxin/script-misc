@@ -29,7 +29,7 @@ description_color = 'blue'
 title_color = 'cyan'
 
 oldest_release = '4.8'
-oldest_active_branch = 6
+oldest_active_branch = 7
 
 lock = filelock.FileLock('/tmp/gcc_build_binary.lock')
 git_location = '/home/marxin/Programming/gcc-gcc-bisect/'
