@@ -13,7 +13,7 @@ for line in lines:
 release_date = datetime.strptime(version, '%Y%m%d')
 days = (datetime.now() - release_date).days
 
-limit = int(sys.argv[1])
+limit = int(sys.argv[-1])
 if days < limit:
     print('OK', end = '')
 else:
