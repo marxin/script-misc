@@ -20,3 +20,4 @@ else:
     print('WARNING', end = '')
 
 print(': last Tumbleweed update before %d days (%s)' % (days, version))
+exit(days >= limit)
