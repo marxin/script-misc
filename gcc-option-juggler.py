@@ -9,15 +9,17 @@ import re
 import concurrent.futures
 import traceback
 import os
+import tempfile
+import logging
+import shutil
 
 from itertools import *
+from threading import Lock
 from datetime import datetime, timedelta
 from termcolor import colored
 from time import time
 from os import path
-import tempfile
-import logging
-import shutil
+from multiprocessing import Pool
 
 known_bugs = {
         'in lambda_expr_this_capture, at cp/lambda.c:720': 'PR79651',
@@ -57,12 +59,13 @@ parser.add_argument('-v', '--verbose', action = 'store_true', help = 'Verbose me
 parser.add_argument('-l', '--logging', action = 'store_true', help = 'Log error output')
 parser.add_argument('-r', '--reduce', action = 'store_true', help = 'Creduce a failing test-case')
 parser.add_argument('-u', '--ubsan', action = 'store_true', help = 'Fail also for an UBSAN error')
+parser.add_argument('-a', '--asan', action = 'store_true', help = 'Fail also for an ASAN error')
+parser.add_argument('-f', '--filter', action = 'store_true', help = 'First filter valid source files')
 parser.add_argument('-m', '--maxparam', help = 'Maximum param value')
 parser.add_argument('-t', '--target', default = 'x86_64', help = 'Default target', choices = ['x86_64', 'ppc64', 'ppc64le', 's390x', 'aarch64', 'arm'])
 args = parser.parse_args()
 
 option_validity_cache = {}
-failed_tests = 0
 
 FNULL = open(os.devnull, 'w')
 
@@ -121,7 +124,8 @@ ignored_tests = set(['instantiate-typeof.cpp', 'multi-level-substitution.cpp', '
         'temp_arg_nontype.cpp', 'constant-expression-cxx1y.cpp', 'cxx1z-using-declaration.cpp', 'pack-deduction.cpp', 'pr65693.c', 'const-init.cpp',
         'temp_arg_nontype_cxx1z.cpp', 'cxx1z-decomposition.cpp', 'vla-lambda-capturing.cpp', 'cxx0x-defaulted-functions.cpp', 'dllimport.cpp', 'type-traits.cpp',
         'for-range-examples.cpp', 'lambda-expressions.cpp', 'mangle-lambdas.cpp', 'cxx1y-generic-lambdas.cpp', 'macro_vaopt_expand.cpp', 'dllimport-members.cpp',
-        'dllexport.cpp', 'lambda-mangle4.C', 'reassoc_10.f'])
+        'dllexport.cpp', 'lambda-mangle4.C', 'dllexport-members.cpp', 'arm-asm.c', 'cxx0x-cursory-default-delete.cpp',
+        'pr89037.c', 'pr90139.c'])
 
 def find_tests(base, contains):
     result = []
@@ -134,8 +138,8 @@ def find_tests(base, contains):
     return result
 
 source_files = find_tests('/home/marxin/Programming/gcc/gcc/', '/testsuite/')
-source_files += find_tests('/home/marxin/BIG/Programming/llvm/', '/test/')
-source_files += find_tests('/home/marxin/BIG/Programming/llvm/', '/test-suite/')
+source_files += find_tests('/home/marxin/Programming/llvm/', '/test/')
+source_files += find_tests('/home/marxin/Programming/llvm/', '/test-suite/')
 source_files = list(set(sorted(source_files)))
 source_files = list(filter(lambda x: get_compiler_by_extension(x) != None and not any([i in x for i in ignored_tests]), source_files))
 
@@ -148,8 +152,7 @@ source_files = list(filter(is_valid_test_case_for_target, source_files))
 ice_cache = set()
 ice_locations = set()
 
-for f in source_files:
-    get_compiler_by_extension(f)
+source_files = set(source_files)
 
 print('Found %d files.' % len(source_files))
 
@@ -167,7 +170,7 @@ def check_option(level, option):
     if option in option_validity_cache:
         return option_validity_cache[option]
 
-    cmd = '%s -c %s %s %s' % (get_compiler(), empty, level, option)
+    cmd = '%s -c -c %s %s %s' % (get_compiler(), empty, level, option)
     r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     result = r.returncode == 0
     option_validity_cache[option] = result
@@ -177,7 +180,8 @@ def find_ice(stderr):
     lines = stderr.split('\n')
     subject = None
     ice = 'internal compiler error: '
-    re = 'runtime error: '
+    ubsan_re = 'runtime error: '
+    asan_re = 'ERROR: AddressSanitizer:'
 
     bt = []
 
@@ -186,8 +190,11 @@ def find_ice(stderr):
         if ice in l:
             subject = l[l.find(ice) + len(ice):]
             found_ice = True
-        elif args.ubsan and re in l:
-            subject = l[l.find(re) + len(re):]
+        elif args.ubsan and ubsan_re in l:
+            subject = l[l.find(ubsan_re) + len(ubsan_re):]
+            return (subject, l)
+        elif args.asan and asan_re in l:
+            subject = l[l.find(asan_re) + len(asan_re):]
             return (subject, l)
         elif 'in ' in l and ' at ' in l:
             subject = l
@@ -262,6 +269,7 @@ class MarchFlag:
         self.options['arm'] = 'arm2,arm250,arm3,arm6,arm60,arm600,arm610,arm620,arm7,arm7m,arm7d,arm7dm,arm7di,arm7dmi,arm70,arm700,arm700i,arm710,arm710c,arm7100,arm720,arm7500,arm7500fe,arm7tdmi,arm7tdmi-s,arm710t,arm720t,arm740t,strongarm,strongarm110,strongarm1100,strongarm1110,arm8,arm810,arm9,arm9e,arm920,arm920t,arm922t,arm946e-s,arm966e-s,arm968e-s,arm926ej-s,arm940t,arm9tdmi,arm10tdmi,arm1020t,arm1026ej-s,arm10e,arm1020e,arm1022e,arm1136j-s,arm1136jf-s,mpcore,mpcorenovfp,arm1156t2-s,arm1156t2f-s,arm1176jz-s,arm1176jzf-s,generic-armv7-a,cortex-a5,cortex-a7,cortex-a8,cortex-a9,cortex-a12,cortex-a15,cortex-a17,cortex-a32,cortex-a35,cortex-a53,cortex-a57,cortex-a72,cortex-r4,cortex-r4f,cortex-r5,cortex-r7,cortex-r8,cortex-m7,cortex-m4,cortex-m3,cortex-m1,cortex-m0,cortex-m0plus,cortex-m1.small-multiply,cortex-m0.small-multiply,cortex-m0plus.small-multiply,exynos-m1,qdf24xx,marvell-pj4,xscale,iwmmxt,iwmmxt2,ep9312,fa526,fa626,fa606te,fa626te,fmp626,fa726te,xgene1'.split(',')
 
         self.tuples = []
+        self.ignore_m32 = False
 
     def build(self, value):
         f = None
@@ -282,7 +290,8 @@ class MarchFlag:
                     continue
                 needs_m32 = True
 
-            self.tuples.append((o, needs_m32))
+            if not needs_m32 or not self.ignore_m32:
+                self.tuples.append((o, needs_m32))
 
         return True
 
@@ -333,12 +342,10 @@ class Param:
         if self.max == 0:
             self.max = 2147483647
 
-        # TODO: write somewhere these
-        if self.name == 'max-iterations-to-track':
-            self.max = 1000
+        limitted_params = set(['max-iterations-to-track', 'min-nondebug-insn-uid', 'max-completely-peel-times', 'max-completely-peeled-insns',
+            'jump-table-max-growth-ratio-for-size', 'jump-table-max-growth-ratio-for-speed'])
 
-        # TODO: likewise
-        if self.name == 'min-nondebug-insn-uid':
+        if self.name in limitted_params:
             self.max = 1000
 
         if args.maxparam != None:
@@ -383,7 +390,7 @@ class OptimizationLevel:
 
         if name == 'target':
             # enums are listed at the end
-            lines = output_for_command('%s -Q --help=%s %s' % (get_compiler(), name, self.level))
+            lines = output_for_command('%s -c -Q --help=%s %s' % (get_compiler(), name, self.level))
             start = takewhile(lambda x: x != '', lines)
             lines = lines[len(list(start)):]
 
@@ -400,7 +407,7 @@ class OptimizationLevel:
 
         else:
             # run without -Q
-            lines = output_for_command('%s --help=%s %s' % (get_compiler(), name, self.level))
+            lines = output_for_command('%s -c --help=%s %s' % (get_compiler(), name, self.level))
 
             for l in lines:
                 parts = split_by_space(l)
@@ -417,7 +424,7 @@ class OptimizationLevel:
     def parse_options(self, name):
         enum_values = self.parse_enum_values(name)
 
-        for l in output_for_command('%s -Q --help=%s %s' % (get_compiler(), name, self.level)):
+        for l in output_for_command('%s -c -Q --help=%s %s' % (get_compiler(), name, self.level)):
             if l == '':
                break
             parts = split_by_space(l)
@@ -459,7 +466,7 @@ class OptimizationLevel:
                     min = int(parts[0])
                     max = int(parts[1])
                 else:
-                    assert original.endswith('<number>')
+                    assert original.endswith('<number>') or original.endswith('<byte-size>')
 
                 self.options.append(IntegerRangeFlag(key, min, max))
             else:
@@ -468,7 +475,7 @@ class OptimizationLevel:
                 pass
 
     def parse_params(self):
-        for l in output_for_command('%s -Q --help=params %s' % (get_compiler(), self.level)):
+        for l in output_for_command('%s -c -Q --help=params %s' % (get_compiler(), self.level)):
             if l == '':
                 continue
             parts = split_by_space(l)
@@ -482,10 +489,29 @@ class OptimizationLevel:
 
     def filter_options(self, l):
         filtered = []
+        skipped_options = set(['-fselective-scheduling', '-fselective-scheduling2', '-mlra', '-fsave-optimization-record', '-Werror', '-fmodulo-sched'])
+
+        if args.target == 'x86_64':
+            skipped_options.add('-mforce-indirect-call')
+            skipped_options.add('-mandroid')
+        elif args.target == 'ppc64' or args.target == 'ppc64le':
+            skipped_options.add('-m32')
+            skipped_options.add('-mavoid-indexed-addresses')
+            skipped_options.add('-mpopcntd')
+            skipped_options.add('-maltivec')
+            skipped_options.add('-mfprnd')
+
+        if args.target != 'x86_64':
+            skipped_options.add('-freorder-blocks-and-partition')
 
         for option in self.options:
-            if option.name in set(['-fselective-scheduling', '-fselective-scheduling2']):
+            if option.name in skipped_options:
                 continue
+
+            # skip all -march option values that need -m32
+            if args.target == 'ppc64' or args.target == 'ppc64le':
+                if type(option) is MarchFlag:
+                    option.ignore_m32 = True
 
             r = option.check_option(self.level)
             if r:
@@ -494,46 +520,42 @@ class OptimizationLevel:
         return filtered
 
     def test(self, option_count):
-        try:
-            options = [random.choice(self.options) for option in range(option_count)]
-            source_file = random.choice(source_files)
-            compiler = get_compiler_by_extension(source_file)
-            options = [o.select_nondefault() for o in options]
+        options = [random.choice(self.options) for option in range(option_count)]
+        source_file = random.sample(source_files, 1)[0]
+        compiler = get_compiler_by_extension(source_file)
+        options = [o.select_nondefault() for o in options]
 
-            # TODO: warning
-            cmd = 'timeout %d %s %s -fmax-errors=1 -I/home/marxin/BIG/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s %s %s -o/dev/null -c' % (args.timeout, compiler, args.cflags, self.level, source_file, ' '.join(options))
-            my_env = os.environ.copy()
+        # TODO: warning
+        cmd = 'timeout %d %s %s -fmax-errors=1 -I/home/marxin/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s %s %s -o/dev/null -S' % (args.timeout, compiler, args.cflags, self.level, source_file, ' '.join(options))
+        my_env = os.environ.copy()
 
-            if args.ubsan:
-                my_env['UBSAN_OPTIONS'] = 'color=never halt_on_error=1'
-            r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE, env = my_env)
-            if r.returncode != 0:
-                global failed_tests
-                failed_tests += 1
-                try:
-                    stderr = r.stderr.decode('utf-8')
-                    ice = find_ice(stderr)
-                    # TODO: remove
-                    if ice != None and not ice[1] in ice_cache and not any([x in ice[0] for x in known_bugs.keys()]):
-                        ice_locations.add(ice[0])
-                        ice_cache.add(ice[1])
-                        print(colored('warning: NEW ICE #%d: %s' % (len(ice_cache), ice[0]), 'red'))
-                        print(cmd)
-                        print(ice[1])
-                        print()
-                        self.reduce(cmd)
-                        sys.stdout.flush()
-                    elif args.logging:
-                        logging.debug(cmd)
-                        logging.debug(stderr)
-                except UnicodeDecodeError as e:
-                    print('ERROR: !!!cannot decode stderr!!!')
-                if r.returncode == 124 and args.verbose:
-                    print(colored('TIMEOUT:', 'red'))
+        if args.ubsan:
+            my_env['UBSAN_OPTIONS'] = 'color=never halt_on_error=1'
+        elif args.asan:
+            my_env['ASAN_OPTIONS'] = 'color=never detect_leaks=0'
+        r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE, env = my_env)
+        if r.returncode != 0:
+            try:
+                stderr = r.stderr.decode('utf-8')
+                ice = find_ice(stderr)
+                # TODO: remove
+                if ice != None and not ice[1] in ice_cache and not any([x in ice[0] for x in known_bugs.keys()]):
+                    ice_locations.add(ice[0])
+                    ice_cache.add(ice[1])
+                    print(colored('warning: NEW ICE #%d: %s' % (len(ice_cache), ice[0]), 'red'))
                     print(cmd)
-        except Exception as e:
-            print('FATAL ERROR')
-            traceback.print_exc(file = sys.stdout)
+                    print(ice[1])
+                    print()
+                    self.reduce(cmd)
+                    sys.stdout.flush()
+                elif args.logging:
+                    logging.debug(cmd)
+                    logging.debug(stderr)
+            except UnicodeDecodeError as e:
+                pass
+            if r.returncode == 124 and args.verbose:
+                print(colored('TIMEOUT:', 'red'))
+                print(cmd)
 
     def reduce(self, cmd):
         r = subprocess.run(os.path.join(script_dir, "gcc-reduce-flags.py") + " '" + cmd + "'", shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
@@ -601,27 +623,47 @@ exit 0"""
 os.chdir('/tmp/')
 levels = [OptimizationLevel(x) for x in ['', '-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os', '-Og']]
 
-def test():
+threads = 20
+counter = 1000 * args.iterations
+lock = Lock()
+
+def test(i):
     level = random.choice(levels)
-    level.test(random.randint(1, 20))
+    level.test(200)
 
-start = time()
-N = 1000
+filtered_source_files = set()
 
-with concurrent.futures.ThreadPoolExecutor(max_workers = 8) as executor:
-    for i in range(1, args.iterations):
-        futures = {executor.submit(test): x for x in range(N)}
+def filter_source_files():
+    while True:
+        global source_files
+        global filtered_source_files
+        source = None
+        with lock:
+            if not source_files:
+                return
+            source = source_files.pop()
+
+        compiler = get_compiler_by_extension(source)
+        cmd = 'timeout %d %s %s -fmax-errors=1 -I/home/marxin/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s -o/dev/null -S' % (args.timeout, args.cflags, compiler, source)
+        r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        if r.returncode == 0:
+            filtered_source_files.add(source)
+
+if args.filter:
+    start = time()
+    with concurrent.futures.ThreadPoolExecutor(max_workers = threads) as executor:
+        futures = {executor.submit(filter_source_files): x for x in range(threads)}
         for future in concurrent.futures.as_completed(futures):
+            data = future.result()
             pass
-        if args.verbose:
-            c = i * N
-            speed = c / (time() - start)
-            remaining = args.iterations * N - c
-            print('progress: %d/%d, failed: %.2f%%, %.2f tests/s, remaining: %d, ETA: %s' % (c, args.iterations * N, 100.0 * failed_tests / c, speed, remaining, str(timedelta(seconds = round(remaining / speed )))))
-            sys.stdout.flush()
+
+    print('Filtering took: %s' % str(time() - start))
+    source_files = filtered_source_files
+    print('Filtered source files: %d.' % len(source_files))
+
+with Pool(threads) as p:
+    p.map(test, range(counter))
 
 print('=== SUMMARY ===')
 for i in ice_locations:
     print('ICE: %s' % i)
-
-exit(len(ice_locations) != 0)

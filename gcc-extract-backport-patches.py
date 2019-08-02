@@ -31,7 +31,7 @@ assert len(revisions) == len(set(revisions))
 
 commits = []
 # find commits
-log = list(repo.iter_commits('parent/master~10000..parent/master'))
+log = list(repo.iter_commits('parent/master~20000..parent/master'))
 
 for revision in revisions:
     found = False
