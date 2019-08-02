@@ -39,7 +39,10 @@ for root, dirs, files in os.walk(args.directory):
     for f in files:
         if f.endswith('.plist'):
             for r in parse_plist(os.path.join(root, f)):
-                seen_issues.add(r)
+                if 'generic-match.c' in r or 'gimple-match.c' in r:
+                    continue:
+                else:
+                    seen_issues.add(r)
 
 # Read reference plist file
 known_issues = set([x.strip() for x in open(args.plist).readlines()])
