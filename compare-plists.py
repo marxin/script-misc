@@ -40,7 +40,7 @@ for root, dirs, files in os.walk(args.directory):
         if f.endswith('.plist'):
             for r in parse_plist(os.path.join(root, f)):
                 if 'generic-match.c' in r or 'gimple-match.c' in r:
-                    continue:
+                    continue
                 else:
                     seen_issues.add(r)
 
