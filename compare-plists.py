@@ -39,7 +39,7 @@ for root, dirs, files in os.walk(args.directory):
     for f in files:
         if f.endswith('.plist'):
             for r in parse_plist(os.path.join(root, f)):
-                if 'generic-match.c' in r or 'gimple-match.c' in r:
+                if 'generic-match.c' in r or 'gimple-match.c' in r or 'insn-output.c' in r:
                     continue
                 else:
                     seen_issues.add(r)
