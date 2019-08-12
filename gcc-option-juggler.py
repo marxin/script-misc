@@ -62,7 +62,7 @@ parser.add_argument('-u', '--ubsan', action = 'store_true', help = 'Fail also fo
 parser.add_argument('-a', '--asan', action = 'store_true', help = 'Fail also for an ASAN error')
 parser.add_argument('-f', '--filter', action = 'store_true', help = 'First filter valid source files')
 parser.add_argument('-m', '--maxparam', help = 'Maximum param value')
-parser.add_argument('-t', '--target', default = 'x86_64', help = 'Default target', choices = ['x86_64', 'ppc64', 'ppc64le', 's390x', 'aarch64', 'arm'])
+parser.add_argument('-t', '--target', default = 'x86_64', help = 'Default target', choices = ['x86_64', 'ppc64', 'ppc64le', 's390x', 'aarch64', 'arm', 'riscv64'])
 args = parser.parse_args()
 
 option_validity_cache = {}
@@ -84,6 +84,8 @@ def get_compiler_prefix():
         return 'arm-linux-gnueabi-'
     elif args.target == 'aarch64':
         return 'aarch64-linux-gnu-'
+    elif args.target == 'riscv64':
+        return 'riscv64-linux-gnu-'
     else:
         assert False
 
@@ -103,6 +105,8 @@ def is_valid_test_case_for_target(name):
         return 'arm' in name
     elif args.target == 'aarch64':
         return 'aarch64' in name
+    elif args.target == 'riscv64':
+        return 'riscv64' in name
     else:
         assert False
 
@@ -273,10 +277,12 @@ class MarchFlag:
 
     def build(self, value):
         f = None
-        if  args.target == 'arm' or args.target == 'aarch64' or args.target == 'ppc64' or args.target == 'ppc64le':
+        if args.target == 'arm' or args.target == 'aarch64' or args.target == 'ppc64' or args.target == 'ppc64le':
             f = '-mtune=%s -mcpu=%s'
-        else:
+        elif args.target != 'risv64':
             f = '-mtune=%s -march=%s'
+        else:
+            return ''
         return f % (value, value)
 
     def check_option(self, level):
