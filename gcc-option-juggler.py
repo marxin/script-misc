@@ -278,12 +278,13 @@ class MarchFlag:
 
     def build(self, value):
         f = None
+        if args.target == 'riscv64':
+            return '-mtune=%s -mabi=lp64' % value
+
         if args.target == 'arm' or args.target == 'aarch64' or args.target == 'ppc64' or args.target == 'ppc64le':
             f = '-mtune=%s -mcpu=%s'
-        elif args.target != 'riscv64':
-            f = '-mtune=%s -mabi=lp64'
         else:
-            return ''
+            f = '-mtune=%s -march=%s'
         return f % (value, value)
 
     def check_option(self, level):
