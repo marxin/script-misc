@@ -279,7 +279,7 @@ class MarchFlag:
     def build(self, value):
         f = None
         if args.target == 'riscv64':
-            return '-mtune=%s -mabi=lp64' % value
+            return '-march=%s -mabi=lp64' % value
 
         if args.target == 'arm' or args.target == 'aarch64' or args.target == 'ppc64' or args.target == 'ppc64le':
             f = '-mtune=%s -mcpu=%s'
