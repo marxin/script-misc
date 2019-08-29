@@ -212,7 +212,8 @@ class GitRevision:
                     flush_print(output, end = '')
                 success = input("Retcode: ") == '0'
             elif args.ice:
-                messages = ['internal compiler error', 'Fatal Error', 'Internal compiler error', 'Please submit a full bug report']
+                messages = ['internal compiler error', 'Fatal Error', 'Internal compiler error', 'Please submit a full bug report',
+                        'lto-wrapper: fatal error']
                 success = any(map(lambda m: m in output, messages))
 
             if args.negate:
