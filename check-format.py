@@ -19,7 +19,7 @@ if args.inplace:
     print('applying clang-format in place')
 else:
     print('clang-format:')
-subprocess.run('git diff -U0 --no-color %s | clang-format-diff -p1 %s' % (args.revision, '-i' if args.inplace else ''),
+subprocess.run('git diff -U0 --no-color %s | clang-format-diff -p1 %s | colordiff' % (args.revision, '-i' if args.inplace else ''),
         shell = True, encoding = 'utf8')
 
 print('check_GNU_style.py:')
