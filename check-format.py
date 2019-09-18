@@ -4,7 +4,7 @@ import argparse
 import subprocess
 
 parser = argparse.ArgumentParser(description = 'Check GNU coding style with clang-format')
-parser.add_argument('revision', help = 'Git revision to compare with')
+parser.add_argument('revision', help = 'Git revision to compare with', nargs = '?', default = 'HEAD')
 parser.add_argument('-i', '--inplace', action = 'store_true', help = 'Apply patch')
 args = parser.parse_args()
 
