@@ -13,8 +13,6 @@ tmp = '/tmp/patch'
 changelog = '/tmp/changelog'
 
 subprocess.check_output('git diff %s > %s' % (args.revision, tmp), shell = True)
-print('check_GNU_style.py:')
-subprocess.run('%s/check_GNU_style.py %s' % (contrib, tmp), shell = True, encoding = 'utf8')
 subprocess.run('%s/mklog %s > %s' % (contrib, tmp, changelog), shell = True, encoding = 'utf8')
 
 if args.inplace:
@@ -23,3 +21,6 @@ else:
     print('clang-format:')
 subprocess.run('git diff -U0 --no-color %s | clang-format-diff -p1 %s' % (args.revision, '-i' if args.inplace else ''),
         shell = True, encoding = 'utf8')
+
+print('check_GNU_style.py:')
+subprocess.run('%s/check_GNU_style.py %s' % (contrib, tmp), shell = True, encoding = 'utf8')
