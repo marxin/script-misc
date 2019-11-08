@@ -502,6 +502,7 @@ class OptimizationLevel:
         if args.target == 'x86_64':
             skipped_options.add('-mforce-indirect-call')
             skipped_options.add('-mandroid')
+            skipped_options.add('-mabi')
         elif args.target == 'ppc64' or args.target == 'ppc64le':
             skipped_options.add('-m32')
             skipped_options.add('-mavoid-indexed-addresses')
