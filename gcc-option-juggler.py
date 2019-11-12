@@ -335,11 +335,19 @@ class IntegerRangeFlag:
         return s
 
 class Param:
-    def __init__(self, name, tokens):
+    def __init__(self, name, default):
         self.name = name
-        self.default = int(tokens[1])
-        self.min = int(tokens[3])
-        self.max = int(tokens[5])
+        self.default = int(default)
+
+        m = re.match(r'(?P<name>.*)=<(?P<min>[0-9]+),(?P<max>[0-9]+)>', name)
+        if m != None:
+            self.name = m.group('name')
+            self.min = int(m.group('min'))
+            self.max = int(m.group('max'))
+        else:
+            self.name = self.name.rstrip('=')
+            self.min = 0
+            self.max = 0
 
         if self.default == -1:
             self.default = 0
@@ -353,14 +361,16 @@ class Param:
         limitted_params = set(['max-iterations-to-track', 'min-nondebug-insn-uid', 'max-completely-peel-times', 'max-completely-peeled-insns',
             'jump-table-max-growth-ratio-for-size', 'jump-table-max-growth-ratio-for-speed'])
 
-        if self.name in limitted_params:
-            self.max = 1000
+        for l in limitted_params:
+            if l in self.name:
+                self.max = 1000
+                break
 
         if args.maxparam != None:
             self.max = int(args.maxparam)
 
     def check_option(self, level):
-        return check_option(level, '--param %s=%d' % (self.name, self.default))
+        return check_option(level, '%s=%d' % (self.name, self.default))
 
     def select_nondefault(self):
         value = None
@@ -372,7 +382,7 @@ class Param:
         else:
             value = random.randint(self.min, self.max)
 
-        return '--param %s=%d' % (self.name, value)
+        return '%s=%d' % (self.name, value)
 
 class OptimizationLevel:
     def __init__(self, level):
@@ -488,8 +498,9 @@ class OptimizationLevel:
                 continue
             parts = split_by_space(l)
 
-            assert len(parts) == 7
-            self.options.append(Param(parts[0], parts[1:]))
+            assert len(parts) == 2
+            if parts[1][0].isdigit():
+                self.options.append(Param(parts[0], parts[1]))
 
     def add_interesting_options(self):
         sanitize_values = 'address,kernel-address,thread,leak,undefined,vptr,shift,integer-divide-by-zero,unreachable,vla-bound,null,return,signed-integer-overflow,bounds,bounds-strict,alignment,object-size,float-divide-by-zero,float-cast-overflow,nonnull-attribute,returns-nonnull-attribute,bool,enum'.split(',')
