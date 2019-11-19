@@ -450,6 +450,8 @@ class OptimizationLevel:
             if len(parts) != 2:
                 # TODO
                 continue
+            elif '--param=' in l:
+                continue
 
             original = parts[0]
             i = parts[0].find('=')
