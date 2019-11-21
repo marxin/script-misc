@@ -69,11 +69,18 @@ def process_rpm(full):
 
     elfs = []
     for f in candidates:
-        r = subprocess.run('file %s' % f, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE, encoding = 'utf8')
-        if 'ELF' in r.stdout:
-            s = os.path.getsize(f)
-            vm['files'].append((f, s))
-            print('    file: %s: %d' % (f, s))
+        if '- ' in f:
+            print('skipping due to dash %s' % f)
+            continue
+        try:
+            r = subprocess.run('file %s' % f, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE, encoding = 'utf8', timeout = 30)
+            if 'ELF' in r.stdout:
+                s = os.path.getsize(f)
+                vm['files'].append((f, s))
+                print('    file: %s: %d' % (f, s))
+        except subprocess.TimeoutExpired:
+            print('timeout %s' % f)
+            pass
 
     return vm
 
