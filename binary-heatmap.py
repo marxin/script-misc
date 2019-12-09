@@ -38,14 +38,19 @@ first_time = x[0]
 for i in range(len(x)):
     x[i] -= first_time
 
-fig, ax = plt.subplots()
-ax.scatter(x, y, s = 0.1, c='green', alpha=0.3, edgecolors='none', marker='s')
-ax.legend()
-ax.grid(True)
+yscale = (0, 25 * 1024**2)
+fig, (ax1, ax2) = plt.subplots(1, 2, sharey='row', gridspec_kw={'hspace': 5, 'wspace': 0.05}, figsize=(10, 5))
+fig.suptitle(args.title)
 
-plt.title(args.title)
-plt.ylabel('Address')
-plt.xlabel('Time')
-plt.xlim(0, 16)
-plt.ylim(0, 25 * 1024**2)
+ax1.scatter(x, y, s = 0.1, c='green', alpha=0.3, edgecolors='none', marker='s')
+ax1.legend()
+ax1.grid(True)
+
+ax2.hist(y, 300, orientation='horizontal', color='green')
+ax2.set_title('Virtual address histogram')
+
+ax1.set_ylabel('Address')
+ax1.set_xlabel('Time')
+ax1.set_xlim(0, 16)
+ax1.set_ylim(yscale)
 plt.savefig(args.output_image, dpi = 800)
