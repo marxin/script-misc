@@ -2,7 +2,7 @@
 
 # Script vizualize heat map of a binary
 # Step to run:
-# $ perf record -F max -- ./my_binary
+# $ perf record -F 10000 -- ./my_binary
 # $ perf script -F time,ip,dso > data
 # $ ./binary-heatmap.py data gcc10-reorder-heatmap.png cc1plus --title 'GCC 10-reorder'
 
