@@ -5,6 +5,11 @@
 # $ perf record -F 10000 -- ./my_binary
 # $ perf script -F time,ip,dso > data
 # $ ./binary-heatmap.py data gcc10-reorder-heatmap.png cc1plus --title 'GCC 10-reorder'
+#
+# Sample of perf script file:
+# 2415.281677:            e18b08 (/tmp/gcc10-cc1plus)
+# 2415.281763:            e35e7f (/tmp/gcc10-cc1plus)
+# 2415.281857:            dee2fd (/tmp/gcc10-cc1plus)
 
 import argparse
 import numpy as np
