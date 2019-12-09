@@ -15,9 +15,13 @@ parser.add_argument('perf_stat_file', help = 'Output of perf stat')
 parser.add_argument('output_image', help = 'Output image')
 parser.add_argument('needle', help = 'Name of the binary in perf stat')
 parser.add_argument('--title', help = 'Title')
+parser.add_argument('--max-x', help = 'Maximum value on x axis', type = int)
+parser.add_argument('--max-y', help = 'Maximum value on y axis', type = int)
 args = parser.parse_args()
 
 values = [l.strip() for l in open(args.perf_stat_file).readlines()]
+
+print('Reading perf events for binary name: %s' % args.needle)
 
 x = []
 y = []
@@ -34,11 +38,12 @@ for value in values:
         y.append(address)
     assert len(parts) == 3
 
+print('Found %d events' % len(x))
+
 first_time = x[0]
 for i in range(len(x)):
     x[i] -= first_time
 
-yscale = (0, 25 * 1024**2)
 fig, (ax1, ax2) = plt.subplots(1, 2, sharey='row', gridspec_kw={'hspace': 5, 'wspace': 0.05}, figsize=(10, 5))
 fig.suptitle(args.title)
 
@@ -51,6 +56,11 @@ ax2.set_title('Virtual address histogram')
 
 ax1.set_ylabel('Address')
 ax1.set_xlabel('Time')
-ax1.set_xlim(0, 16)
-ax1.set_ylim(yscale)
+
+if args.max_x != None:
+    ax1.set_xlim(0, args.max_x)
+
+if args.max_y != None:
+    ax1.set_ylim((0, args.max_y))
+
 plt.savefig(args.output_image, dpi = 800)
