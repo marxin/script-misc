@@ -1,5 +1,11 @@
 #!/usr/bin/env python3
 
+# Script vizualize heat map of a binary
+# Step to run:
+# $ perf record -F max -- ./my_binary
+# $ perf script -F time,ip,dso > data
+# $ ./binary-heatmap.py data gcc10-reorder-heatmap.png cc1plus --title 'GCC 10-reorder'
+
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
@@ -7,6 +13,7 @@ import matplotlib.pyplot as plt
 parser = argparse.ArgumentParser(description = 'Generate heat map of perf report')
 parser.add_argument('perf_stat_file', help = 'Output of perf stat')
 parser.add_argument('output_image', help = 'Output image')
+parser.add_argument('needle', help = 'Name of the binary in perf stat')
 parser.add_argument('--title', help = 'Title')
 args = parser.parse_args()
 
@@ -22,7 +29,7 @@ for value in values:
     address = int(parts[1], 16)
     binary = parts[2]
 
-    if 'cc1plus' in binary:
+    if args.needle in binary:
         x.append(time)
         y.append(address)
     assert len(parts) == 3
