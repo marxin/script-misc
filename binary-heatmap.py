@@ -54,7 +54,7 @@ fig.suptitle(args.title)
 
 ax1.scatter(x, y, s = 0.1, c='green', alpha=0.3, edgecolors='none', marker='s')
 ax1.legend()
-ax1.grid(True)
+ax1.grid(True, linewidth = 0.5, alpha = 0.3)
 
 ax2.hist(y, 300, orientation='horizontal', color='green')
 ax2.set_title('Virtual address histogram')
