@@ -55,14 +55,28 @@ SECTIONS
 .plt.sec        : { *(.plt.sec) }
   .text           :
   {
+    PROVIDE_HIDDEN(__text_unlikely_start = .);
     *(.text.unlikely .text.*_unlikely .text.unlikely.*)
+    PROVIDE_HIDDEN(__text_unlikely_end = .);
+    PROVIDE_HIDDEN(__text_exit_start = .);
     *(.text.exit .text.exit.*)
+    PROVIDE_HIDDEN(__text_exit_end = .);
+    PROVIDE_HIDDEN(__text_startup_start = .);
     *(.text.startup .text.startup.*)
+    PROVIDE_HIDDEN(__text_startup_end = .);
+    PROVIDE_HIDDEN(__text_hot_start = .);
     *(.text.hot .text.hot.*)
+    PROVIDE_HIDDEN(__text_hot_end = .);
+    PROVIDE_HIDDEN(__text_sorted_start = .);
     *(SORT(.text.sorted.*))
+    PROVIDE_HIDDEN(__text_sorted_end = .);
+    PROVIDE_HIDDEN(__text_normal_start = .);
     *(.text .stub .text.* .gnu.linkonce.t.*)
+    PROVIDE_HIDDEN(__text_normal_end = .);
+    PROVIDE_HIDDEN(__text_warning_start = .);
     /* .gnu.warning sections are handled specially by elf.em.  */
     *(.gnu.warning)
+    PROVIDE_HIDDEN(__text_warning_end = .);
   }
   .fini           :
   {
