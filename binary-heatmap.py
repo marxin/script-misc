@@ -19,6 +19,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
 import subprocess
+import re
 from itertools import chain
 from matplotlib.lines import Line2D
 from itertools import dropwhile, takewhile
@@ -57,7 +58,21 @@ class MapComponent:
         else:
             return None
 
-def parse_mapfile(filename):
+def get_symbol_for_sample(symbols, address):
+    mid = round(len(symbols) / 2)
+    item = symbols[mid]
+    a = item['address']
+    s = item['size']
+    if (a <= address and address < (a + s)):
+        return item
+    elif len(symbols) == 1:
+        return None
+    elif address < a:
+        return get_symbol_for_sample(symbols[:mid], address)
+    else:
+        return get_symbol_for_sample(symbols[mid:], address)
+
+def parse_mapfile(filename, sample_addresses):
     components = []
     map_components = [
         (' *(.text.unlikely .text.*_unlikely .text.unlikely.*)', '.text.unlikely'),
@@ -89,6 +104,38 @@ def parse_mapfile(filename):
         if len(components[i].addresses):
             components[i].start = components[i].addresses[0]
             end = components[i].start
+
+    unlikely_symbols = []
+    pattern = re.compile(r'\ {16}(0x\w+)\ {16}(.+)')
+    for l in components[0].lines:
+        m = pattern.match(l)
+        if m:
+            unlikely_symbols.append({'name': m.group(2), 'address': int(m.group(1), 16)})
+
+    start = 0
+    for i, s in enumerate(unlikely_symbols):
+        assert s['address'] >= start
+        start = s['address']
+        if i != len(unlikely_symbols) - 1:
+            s['size'] = unlikely_symbols[i + 1]['address'] - s['address']
+        else:
+            s['size'] = 0
+
+    print('Found %d symbols in .text.unlikely subsection' % len(unlikely_symbols))
+    unlikely_accesses = 0
+    unlikely_dict = {}
+    for address in sample_addresses:
+        symbol = get_symbol_for_sample(unlikely_symbols, address)
+        if symbol != None:
+            if not symbol['name'] in unlikely_dict:
+                unlikely_dict[symbol['name']] = 0
+            unlikely_dict[symbol['name']] += 1
+            unlikely_accesses += 1
+
+    N = 20
+    print('Top %d accessses in .text.unlikely section:' % N)
+    for k, v in list(reversed(sorted(unlikely_dict.items(), key = lambda x: x[1])))[:N]:
+        print('  %s: %d' % (k, v))
 
     return [c.get_address_range() for c in components if c.get_address_range()]
 
@@ -158,7 +205,7 @@ if args.max_y:
     ax1.set_ylim((0, args.max_y))
 
 if args.mapfile:
-    ranges = parse_mapfile(args.mapfile)
+    ranges = parse_mapfile(args.mapfile, y)
 
     colors = 'cmrkby'
     custom_lines = []
@@ -168,7 +215,7 @@ if args.mapfile:
         samples = len([a for a in y if r[1] <= a and a <= r[2]])
         fraction = (100.0 * samples / len(x))
         size = 1.0 * (r[2] - r[1]) / (1024**2)
-        custom_lines.append(Line2D([0], [0], color=colors[i], alpha=0.1, lw=4, label= r[0] + ' (size: %.2f MB; samples: %.2f%%)' % (size, fraction)))
+        custom_lines.append(Line2D([0], [0], color=colors[i], alpha=0.1, lw=4, label= r[0] + ' (size: %.2f MB; samples: %d (%.2f%%))' % (size, samples, fraction)))
         ax1.axhspan(r[1], r[2], facecolor=colors[i], alpha=alpha)
         ax2.axhspan(r[1], r[2], facecolor=colors[i], alpha=alpha)
     fig.legend(handles=list(reversed(custom_lines)), loc = 'upper left', prop={'size': 6})
