@@ -133,6 +133,7 @@ def parse_mapfile(filename, sample_addresses):
             unlikely_accesses += 1
 
     N = 20
+    print('Total accessses in .text.unlikely: %d' % unlikely_accesses)
     print('Top %d accessses in .text.unlikely section:' % N)
     for k, v in list(reversed(sorted(unlikely_dict.items(), key = lambda x: x[1])))[:N]:
         print('  %s: %d' % (k, v))
