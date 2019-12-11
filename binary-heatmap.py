@@ -2,9 +2,12 @@
 
 # Script vizualize heat map of a binary
 # Step to run:
+# Link a program with -Wl,-M,-Map,mapfile.txt
+# That will create a .text subsection map file that can be later used
+# for visualization of a binary
 # $ perf record -F 10000 -- ./my_binary
 # $ perf script -F time,ip,dso > data
-# $ ./binary-heatmap.py data gcc10-reorder-heatmap.png cc1plus --title 'GCC 10-reorder'
+# $ ./binary-heatmap.py data gcc10-reorder-heatmap.png cc1plus --title 'GCC 10-reorder' --mapfile mapfile.txt
 #
 # Sample of perf script file:
 # 2415.281677:            e18b08 (/tmp/gcc10-cc1plus)
