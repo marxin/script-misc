@@ -105,7 +105,7 @@ parser.add_argument('--max-x', help = 'Maximum value on x axis', type = int)
 parser.add_argument('--max-y', help = 'Maximum value on y axis', type = int)
 parser.add_argument('--mapfile', help = 'ld mapfile')
 parser.add_argument('--pointsize', help = 'graph point size', type = float, default = 0.2)
-parser.add_argument('--pointalpha', help = 'graph point alpha', type = float, default = 0.4)
+parser.add_argument('--pointalpha', help = 'graph point alpha', type = float, default = 0.2)
 args = parser.parse_args()
 
 values = [l.strip() for l in open(args.perf_stat_file).readlines()]
