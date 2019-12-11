@@ -2,7 +2,7 @@
 
 # Script vizualize heat map of a binary
 # Step to run:
-# Link a program with -Wl,-M,-Map,mapfile.txt
+# Link a program with -Wl,-M,-Map,mapfile.txt,--no-demangle
 # That will create a .text subsection map file that can be later used
 # for visualization of a binary
 # $ perf record -F 10000 -- ./my_binary
