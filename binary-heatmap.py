@@ -59,16 +59,20 @@ class MapComponent:
 def parse_mapfile(filename):
     components = []
     map_components = [
-    (' *(.text.unlikely .text.*_unlikely .text.unlikely.*)', '.text.unlikely'),
-    (' *(.text.exit .text.exit.*)', '.text.exit'),
-    (' *(.text.startup .text.startup.*)', '.text.startup'),
-    (' *(.text.hot .text.hot.*)', '.text.hot'),
-    (' *(.text .stub .text.* .gnu.linkonce.t.*)', '.text.normal'),
-    (' *(.gnu.warning)', None),
-    ('.gnu.attributes', None)
+        (' *(.text.unlikely .text.*_unlikely .text.unlikely.*)', '.text.unlikely'),
+        (' *(.text.exit .text.exit.*)', '.text.exit'),
+        (' *(.text.startup .text.startup.*)', '.text.startup'),
+        (' *(.text.hot .text.hot.*)', '.text.hot'),
+        (' *(SORT_BY_NAME(.text.sorted.*))', '.text.sorted'),
+        (' *(.text .stub .text.* .gnu.linkonce.t.*)', '.text.normal'),
+        (' *(.gnu.warning)', None),
+        ('.gnu.attributes', None)
     ]
 
     lines = [l.rstrip() for l in open(filename)]
+
+    # filter map_components to existing one
+    map_components = [mc for mc in map_components if mc[0] in lines]
 
     lines = list(dropwhile(lambda x: x != map_components[0][0], lines))
     for i in range(0, len(map_components) - 1):
@@ -120,6 +124,9 @@ for value in values:
     assert len(parts) == 3
 
 print('Found %d events' % len(x))
+if len(x) == 0:
+    print('Error: no events')
+    exit(1)
 
 first_time = x[0]
 for i in range(len(x)):
@@ -146,7 +153,7 @@ if args.max_y:
 if args.mapfile:
     ranges = parse_mapfile(args.mapfile)
 
-    colors = 'brcmyk'
+    colors = 'cmrkby'
     custom_lines = []
     print('Found ELF .text subsections: %s' % str(ranges))
     alpha = .1
