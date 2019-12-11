@@ -145,6 +145,7 @@ ax1.set_ylabel('Address (in MB)')
 ax1.set_xlabel('Time')
 ax1.yaxis.set_major_formatter(major_formatter)
 ax1.yaxis.set_major_locator(ticker.MultipleLocator(2 * 1024**2))
+ax1.set_title('Executed instruction address')
 
 ax2.hist(y, 300, orientation='horizontal', color='green')
 ax2.set_title('Virtual address histogram')
