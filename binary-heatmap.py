@@ -137,12 +137,13 @@ fig.suptitle(args.title)
 
 ax1.scatter(x, y, s = args.pointsize, c='green', alpha=args.pointalpha, edgecolors='none', marker='s')
 ax1.grid(True, linewidth = 0.5, alpha = 0.3)
+ax1.set_ylabel('Address')
+ax1.set_xlabel('Time')
 
 ax2.hist(y, 300, orientation='horizontal', color='green')
 ax2.set_title('Virtual address histogram')
-
-ax1.set_ylabel('Address')
-ax1.set_xlabel('Time')
+ax2.set_ylabel('Address')
+ax2.set_xlabel('Sample count')
 
 if args.max_x:
     ax1.set_xlim(0, args.max_x)
@@ -163,6 +164,7 @@ if args.mapfile:
         size = 1.0 * (r[2] - r[1]) / (1024**2)
         custom_lines.append(Line2D([0], [0], color=colors[i], alpha=0.1, lw=4, label= r[0] + ' (size: %.2f MB; samples: %.2f%%)' % (size, fraction)))
         ax1.axhspan(r[1], r[2], facecolor=colors[i], alpha=alpha)
+        ax2.axhspan(r[1], r[2], facecolor=colors[i], alpha=alpha)
     fig.legend(handles=list(reversed(custom_lines)), loc = 'upper left', prop={'size': 6})
 
 plt.savefig(args.output_image, dpi = 800)
