@@ -17,6 +17,7 @@
 import argparse
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 import subprocess
 from itertools import chain
 from matplotlib.lines import Line2D
@@ -91,6 +92,9 @@ def parse_mapfile(filename):
 
     return [c.get_address_range() for c in components if c.get_address_range()]
 
+@ticker.FuncFormatter
+def major_formatter(x, pos):
+    return '%d' % (x / 1024**2)
 
 parser = argparse.ArgumentParser(description = 'Generate heat map of perf report')
 parser.add_argument('perf_stat_file', help = 'Output of perf stat')
@@ -137,12 +141,13 @@ fig.suptitle(args.title)
 
 ax1.scatter(x, y, s = args.pointsize, c='green', alpha=args.pointalpha, edgecolors='none', marker='s')
 ax1.grid(True, linewidth = 0.5, alpha = 0.3)
-ax1.set_ylabel('Address')
+ax1.set_ylabel('Address (in MB)')
 ax1.set_xlabel('Time')
+ax1.yaxis.set_major_formatter(major_formatter)
+ax1.yaxis.set_major_locator(ticker.MultipleLocator(2 * 1024**2))
 
 ax2.hist(y, 300, orientation='horizontal', color='green')
 ax2.set_title('Virtual address histogram')
-ax2.set_ylabel('Address')
 ax2.set_xlabel('Sample count')
 
 if args.max_x:
