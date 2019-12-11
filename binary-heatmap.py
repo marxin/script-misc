@@ -161,7 +161,7 @@ if args.mapfile:
         samples = len([a for a in y if r[1] <= a and a <= r[2]])
         fraction = (100.0 * samples / len(x))
         size = 1.0 * (r[2] - r[1]) / (1024**2)
-        custom_lines.append(Line2D([0], [0], color=colors[i], alpha=alpha, lw=4, label= r[0] + ' (size: %.2f MB; samples: %.2f%%)' % (size, fraction)))
+        custom_lines.append(Line2D([0], [0], color=colors[i], alpha=0.1, lw=4, label= r[0] + ' (size: %.2f MB; samples: %.2f%%)' % (size, fraction)))
         ax1.axhspan(r[1], r[2], facecolor=colors[i], alpha=alpha)
     fig.legend(handles=list(reversed(custom_lines)), loc = 'upper left', prop={'size': 6})
 
