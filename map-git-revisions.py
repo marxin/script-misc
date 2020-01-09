@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
 
+# tags changes from
+# gcc-4_7_1-release
+# to
+# releases/gcc-4.7.1
+
+# branches changes from:
+# gcc-9-branch
+# to
+# origin/releases/gcc-9
+
 from git import Repo
 
 def parse_git(location, revision, old):
