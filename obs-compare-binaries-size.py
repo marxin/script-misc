@@ -157,3 +157,4 @@ for type in all_sections:
             of.write(','.join([str(x) for x in p]))
             of.write('\n')
 
+print('CSV files saved to report folder')
