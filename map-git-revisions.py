@@ -52,7 +52,7 @@ def parse_git(location, revision, old):
     return (gittosvn, svntogit)
 
 surgeon = parse_git('/tmp/gcc-reposurgeon-8', 'cutover-git', False)
-mirror = parse_git('/home/marxin/Programming/gcc', '4682b0a53b364ede1263a9e88951f3e81443113e', True)
+mirror = parse_git('/home/marxin/Programming/gcc', 'parent/master', True)
 
 files = os.listdir('/home/marxin/DATA/gcc-binaries')
 existing = set([f.split('.')[0] for f in files])
@@ -64,5 +64,5 @@ for e in existing:
         have += 1
 
 print(have)
-print('3e7b85061947bdc7c7465743ba90734566860821' in mirror[0])
-print('e9c762ec4671d77e301492e4f9e92e1d3d667188' in mirror[0])
+#print('3e7b85061947bdc7c7465743ba90734566860821' in mirror[0])
+#print('e9c762ec4671d77e301492e4f9e92e1d3d667188' in mirror[0])
