@@ -99,6 +99,8 @@ for i, p in enumerate(packages):
         continue
 
     print('Downloading: %s (%d/%d)' % (p, i, len(packages)))
+    if not os.path.exists(args.output_folder):
+        os.mkdir(args.output_folder)
     jsonfile = os.path.join(args.output_folder, p + '.json')
     if os.path.exists(jsonfile):
         continue
