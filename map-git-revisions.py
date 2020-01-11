@@ -57,15 +57,11 @@ mirror = parse_git('/home/marxin/Programming/gccold', 'parent/master', True)
 files = os.listdir('/home/marxin/DATA/gcc-binaries')
 existing = set([f.split('.')[0] for f in files])
 
-print(len(existing))
 have = 0
 for e in existing:
-    if e in mirror[0]:
+    if e in mirror[0] and mirror[0][e] in surgeon[1]:
         have += 1
+        print('mv %s.7z %s.7z' % (e, surgeon[1][mirror[0][e]]))
 
+print(len(existing))
 print(have)
-print('3e7b85061947bdc7c7465743ba90734566860821' in mirror[0])
-print('e9c762ec4671d77e301492e4f9e92e1d3d667188' in mirror[0])
-
-start = '1b4aaefc8c1a1662e1623cd48157c344c7fa98fe'
-print(surgeon[1][mirror[0][start]])
