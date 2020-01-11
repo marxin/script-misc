@@ -51,9 +51,7 @@ def parse_git(location, revision, old):
         get_revisions(repo, bname, old, seen, gittosvn, svntogit)
     return (gittosvn, svntogit)
 
-surgeon = parse_git('/home/marxin/Programming/gcc', 'origin/master', False)
-mirror = parse_git('/home/marxin/Programming/gccold', 'parent/master', True)
-
+"""
 files = os.listdir('/home/marxin/DATA/gcc-binaries')
 existing = set([f.split('.')[0] for f in files])
 
@@ -65,3 +63,18 @@ for e in existing:
 
 print(len(existing))
 print(have)
+"""
+
+surgeon = parse_git('/home/marxin/Programming/gcc', 'origin/master', False)
+mirror = parse_git('/home/marxin/Programming/gccold', 'parent/master', True)
+
+lines = open('gcc-build.log').readlines()
+
+for l in lines:
+    l = l.strip()
+    i = l.find(':')
+    rev = l[:i]
+    status = l[i + 1:]
+    if rev in mirror[0] and mirror[0][rev] in surgeon[1]:
+        newrev = surgeon[1][mirror[0][rev]]
+        print('%s:%s' % (newrev, status))
