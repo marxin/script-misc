@@ -23,7 +23,7 @@ script_dirname = os.path.abspath(os.path.dirname(__file__))
 
 # WARNING: older commits include wide-int branch merged commits
 # close to base of trunk and 4.9, there is then some libgfortran relink issue
-last_revision = '1b4aaefc8c1a1662e1623cd48157c344c7fa98fe'
+last_revision = '58a41b43b5f02c67544569c508424efa4115ad9f'
 
 description_color = 'blue'
 title_color = 'cyan'
@@ -58,7 +58,7 @@ parser.add_argument('-v', '--verbose', action = 'store_true', help = 'Verbose ou
 
 args = parser.parse_args()
 repo = Repo(git_location)
-head = repo.commit('parent/master')
+head = repo.commit('origin/master')
 
 build_times = []
 
@@ -394,27 +394,27 @@ class GitRepository:
         self.initialize_binaries()
 
     def pull(self):
-        flush_print('Pulling parent repository')
+        flush_print('Pulling origin repository')
         try:
-            repo.remotes['parent'].fetch()
+            repo.remotes['origin'].fetch()
             return True
         except Exception as e:
             flush_print(str(e))
             return False
 
     def parse_releases(self):
-        releases = list(filter(lambda x: x.name.endswith('-release'), repo.tags))
+        releases = list(filter(lambda x: 'releases/gcc-' in x.name and not 'prerelease' in x.name, repo.tags))
         for r in releases:
-            version = strip_suffix(strip_prefix(r.name, 'gcc-'), '-release').replace('_', '-').replace('-', '.')
+            version = strip_prefix(r.name, 'releases/gcc-')
             self.releases.append(Release(version, repo.commit(r.name)))
 
         self.releases = sorted(filter(lambda x: x.name >= oldest_release, self.releases), key = lambda x: x.name)
 
     def parse_branches(self):
-        remote = repo.remotes['parent']
-        branches = list(filter(lambda x: 'parent/gcc-' in x.name, remote.refs))
+        remote = repo.remotes['origin']
+        branches = list(filter(lambda x: 'origin/releases/gcc-' in x.name, remote.refs))
         for b in branches:
-            name = strip_suffix(strip_prefix(b.name, 'parent/gcc-'), '-branch').replace('_', '.')
+            name = strip_prefix(b.name, 'origin/releases/gcc-')
             branch_commit = repo.commit(b.name)
             if name >= str(oldest_active_branch):
                 b = Branch(name, branch_commit)
@@ -424,7 +424,7 @@ class GitRepository:
                 self.branch_bases.append(Release(name + '-base', base))
 
     def parse_latest_revisions(self):
-        for c in repo.iter_commits(last_revision + '..parent/master', first_parent = True):
+        for c in repo.iter_commits(last_revision + '..origin/master', first_parent = True):
             self.latest.append(GitRevision(c))
 
     @staticmethod
