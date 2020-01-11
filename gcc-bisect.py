@@ -181,14 +181,6 @@ class GitRevision:
     def patch_name(self):
         return self.commit.hexsha + '.patch'
 
-    def print_svn_revision(self):
-        r = '.*svn/gcc/trunk@([0-9]+).*'
-        for l in self.commit.message.split('\n'):
-            m = re.match(r, l)
-            if m != None:
-                print('SVN revision: ' + m.group(1))
-        print('Author: %s' % self.commit.author)
-
     def run(self):
         start = datetime.now()
         log = '/tmp/output'
@@ -533,10 +525,8 @@ class GitRepository:
         if len(candidates) == 2:
             flush_print('\nFirst change is:')
             candidates[0].test()
-            candidates[0].print_svn_revision()
             print(candidates[0].commit.message)
             candidates[1].test()
-            candidates[1].print_svn_revision()
             print(candidates[1].commit.message)
             revisions = revisions_in_range(candidates[1].commit, candidates[0].commit)
             l = len(revisions) - 2
