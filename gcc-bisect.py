@@ -176,7 +176,7 @@ class GitRevision:
         return self.commit.hexsha[0:16]
 
     def description(self):
-        return colored(self.short_hexsha(), description_color) + '(' + self.timestamp_str() + ')'
+        return '%s(%s)(%s)' % (colored(self.short_hexsha(), description_color), self.timestamp_str(), self.commit.author.email)
 
     def patch_name(self):
         return self.commit.hexsha + '.patch'
@@ -525,9 +525,7 @@ class GitRepository:
         if len(candidates) == 2:
             flush_print('\nFirst change is:')
             candidates[0].test()
-            print(candidates[0].commit.message)
             candidates[1].test()
-            print(candidates[1].commit.message)
             revisions = revisions_in_range(candidates[1].commit, candidates[0].commit)
             l = len(revisions) - 2
             if l > 0:
