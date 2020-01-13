@@ -525,7 +525,9 @@ class GitRepository:
         if len(candidates) == 2:
             flush_print('\nFirst change is:')
             candidates[0].test()
+            print(candidates[0].commit.message)
             candidates[1].test()
+            print(candidates[1].commit.message)
             revisions = revisions_in_range(candidates[1].commit, candidates[0].commit)
             l = len(revisions) - 2
             if l > 0:
