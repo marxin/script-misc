@@ -22,7 +22,7 @@ rev=`git rev-parse $toplevel`
 # use commits since stage1 start instead
 # ??? maybe use git describe [--tags] $toplevel
 r=`git rev-list --count $rev ^HEAD`
-if [ "$1" == "master" ]; then
+if [[ "$1" == *"master" ]]; then
   r=`git rev-list --count $rev`
 fi
 v=`git show $rev:gcc/BASE-VER`
