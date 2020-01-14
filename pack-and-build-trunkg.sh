@@ -22,6 +22,9 @@ rev=`git rev-parse $toplevel`
 # use commits since stage1 start instead
 # ??? maybe use git describe [--tags] $toplevel
 r=`git rev-list --count $rev ^HEAD`
+if [ "$1" == "master" ]; then
+  r=`git rev-list --count $rev`
+fi
 v=`git show $rev:gcc/BASE-VER`
   if test "`echo $v | cut -d '.' -f 1`" -lt "5"; then
    if test "`git show $rev:gcc/DEV-PHASE`" == "prerelease"; then
