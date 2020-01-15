@@ -11,13 +11,6 @@ from itertools import *
 def strip_empty_strings(lines):
     return list(reversed(list(dropwhile(lambda x: x == '', reversed(lines)))))
 
-def get_svn_version(revision):
-    for l in revision.message.split('\n'):
-        if 'git-svn-id' in l:
-            return l.strip().split(' ')[1].split('@')[-1]
-
-    assert False
-
 parser = argparse.ArgumentParser(description='Extract SVN revisions to patches.')
 parser.add_argument('gitlocation', help = 'GIT repository location')
 parser.add_argument('revisions', help = 'SVN revisions separated by space')
@@ -31,7 +24,7 @@ assert len(revisions) == len(set(revisions))
 
 commits = []
 # find commits
-log = list(repo.iter_commits('parent/master~20000..parent/master'))
+log = list(repo.iter_commits('origin/master~20000..origin/master'))
 
 for revision in revisions:
     found = False
@@ -56,7 +49,6 @@ patches = []
 commits = sorted(commits, key = lambda x: x.committed_date)
 
 for i, c in enumerate(commits):
-    svn_revision = get_svn_version(c)
     r = subprocess.run('git format-patch  --indent-heuristic -1 %s' % c.hexsha, stdout = subprocess.PIPE, shell = True)
     assert r.returncode == 0
     f = r.stdout.decode('utf-8').strip()
@@ -99,10 +91,10 @@ for i, c in enumerate(commits):
 
         lines = lines[len(chunk):]
 
-    path = '{0:04d}-patch-'.format(i + 1) + svn_revision + '.patch'
+    path = '{0:04d}-patch-'.format(i + 1) + c.hexsha + '.patch'
     with open(path, 'w') as w:
         w.write('\n'.join(header) + '\n')
-        w.write('Subject: Backport r' + svn_revision + '\n\n')
+        w.write('Subject: Backport ' + c.hexsha + '\n\n')
         w.write('\n'.join(changelog_lines) + '\n')
         w.write('---\n')
         w.write('\n'.join(patch_lines))
