@@ -175,13 +175,17 @@ class GitRevision:
     def short_hexsha(self):
         return self.commit.hexsha[0:16]
 
-    def description(self):
-        return '%s(%s)(%s)' % (colored(self.short_hexsha(), description_color), self.timestamp_str(), self.commit.author.email)
+    def description(self, describe):
+        hash = self.short_hexsha()
+        if describe:
+            r = subprocess.check_output('git gcc-descr --full %s' % self.commit.hexsha, cwd=git_location, shell=True, encoding='utf8')
+            hash = '%s g:%s' % (hash, r.strip())
+        return '%s(%s)(%s)' % (colored(hash, description_color), self.timestamp_str(), self.commit.author.email)
 
     def patch_name(self):
         return self.commit.hexsha + '.patch'
 
-    def run(self):
+    def run(self, describe):
         start = datetime.now()
         log = '/tmp/output'
         clean = False
@@ -212,18 +216,18 @@ class GitRevision:
                 success = not success
 
             text = colored('OK', 'green') if success else colored('FAILED', 'red') + ' (%d)' % r
-            flush_print('  %s: [took: %3.3fs] result: %s' % (self.description(), (datetime.now() - start).total_seconds(), text))
+            flush_print('  %s: [took: %3.3fs] result: %s' % (self.description(describe), (datetime.now() - start).total_seconds(), text))
             if not args.silent:
                 flush_print(output, end = '')
 
         return success
 
-    def test(self):
+    def test(self, describe = False):
         if not self.has_binary:
             flush_print('  %s: missing binary' % (self.description()))
             return False
         else:
-            return self.run()
+            return self.run(describe)
 
     def get_install_path(self):
         return os.path.join(extract_location, 'usr', 'local')
@@ -524,9 +528,9 @@ class GitRepository:
     def bisect_recursive(candidates, r1, r2):
         if len(candidates) == 2:
             flush_print('\nFirst change is:')
-            candidates[0].test()
+            candidates[0].test(describe=True)
             print(candidates[0].commit.message)
-            candidates[1].test()
+            candidates[1].test(describe=True)
             print(candidates[1].commit.message)
             revisions = revisions_in_range(candidates[1].commit, candidates[0].commit)
             l = len(revisions) - 2
