@@ -43,7 +43,10 @@ if ! test -z "$3"; then
 fi
 echo $pkg
 
+mkdir -p $pkg/gcc/
+echo "[revision $rev]" > $pkg/gcc/REVISION
 git archive --format=tar --prefix=$pkg/ -o $packagedir/$pkg.tar $rev
+tar rvf $packagedir/$pkg.tar $pkg/gcc/REVISION
 xz $packagedir/$pkg.tar
 ls -l $packagedir/$pkg.tar.xz
 
