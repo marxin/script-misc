@@ -176,11 +176,11 @@ class GitRevision:
         return self.commit.hexsha[0:16]
 
     def description(self, describe):
-        hash = self.short_hexsha()
+        hash = colored(self.short_hexsha(), description_color)
         if describe:
             r = subprocess.check_output('git gcc-descr --full %s' % self.commit.hexsha, cwd=git_location, shell=True, encoding='utf8')
-            hash = '%s g:%s' % (hash, r.strip())
-        return '%s(%s)(%s)' % (colored(hash, description_color), self.timestamp_str(), self.commit.author.email)
+            hash += colored(' g:' + r.strip(), 'green')
+        return '%s(%s)(%s)' % (hash, self.timestamp_str(), self.commit.author.email)
 
     def patch_name(self):
         return self.commit.hexsha + '.patch'
