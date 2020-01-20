@@ -175,7 +175,7 @@ class GitRevision:
     def short_hexsha(self):
         return self.commit.hexsha[0:16]
 
-    def description(self, describe):
+    def description(self, describe=False):
         hash = colored(self.short_hexsha(), description_color)
         if describe:
             r = subprocess.check_output('git gcc-descr --full %s' % self.commit.hexsha, cwd=git_location, shell=True, encoding='utf8')
@@ -336,7 +336,7 @@ class Release(GitRevision):
     def __str__(self):
         return self.commit.hexsha + ':' + self.name
 
-    def description(self):
+    def description(self, describe):
         return '%s (%s)(%s)' % (colored(self.name, description_color), self.short_hexsha(), self.timestamp_str())
 
     def patch_name(self):
@@ -354,7 +354,7 @@ class Branch(GitRevision):
     def __str__(self):
         return self.commit.hexsha + ':' + self.name
 
-    def description(self):
+    def description(self, describe):
         return '%s (%s)(%s)' % (colored(self.name, description_color), self.short_hexsha(), self.timestamp_str())
 
     def print_info(self):
