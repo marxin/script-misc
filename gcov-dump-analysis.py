@@ -4,14 +4,13 @@ import os
 import subprocess
 import sys
 
-all = []
 counter = 0
-
 location = sys.argv[1]
 needles = ['indirect_call', 'topn']
 
 print('== Stats for %s ==' % location)
 for needle in needles:
+    all = []
     for root, dirs, files in os.walk(location):
         for f in files:
             if f.endswith('.gcda'):
