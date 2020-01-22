@@ -336,7 +336,7 @@ class Release(GitRevision):
     def __str__(self):
         return self.commit.hexsha + ':' + self.name
 
-    def description(self, describe):
+    def description(self, describe=False):
         return '%s (%s)(%s)' % (colored(self.name, description_color), self.short_hexsha(), self.timestamp_str())
 
     def patch_name(self):
@@ -354,7 +354,7 @@ class Branch(GitRevision):
     def __str__(self):
         return self.commit.hexsha + ':' + self.name
 
-    def description(self, describe):
+    def description(self, describe=False):
         return '%s (%s)(%s)' % (colored(self.name, description_color), self.short_hexsha(), self.timestamp_str())
 
     def print_info(self):
