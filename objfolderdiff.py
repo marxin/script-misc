@@ -21,7 +21,7 @@ def get_files(folder):
             if f.endswith('.o'):
                 full = os.path.join(root, f)
                 assert full.startswith(folder)
-                yield full[len(folder):]
+                yield full[len(folder) + 1:]
 
 def objdump(f):
     obj = '/tmp/objdfolderdiff-file.o'
