@@ -43,7 +43,7 @@ for needle in needles:
     c = len(all) / 9
     while i < c:
         topn = all[9 * i: 9 * (i + 1)]
-        if topn[2] == -1:
+        if topn[2] == -1 or topn[2] == -9223372036854775808:
             invalid += 1
         else:
             used = 0
