@@ -13,6 +13,7 @@ parser = argparse.ArgumentParser(description = 'Diff object files in given folde
 parser.add_argument('source1', help = 'Folder 1')
 parser.add_argument('source2', help = 'Folder 2')
 parser.add_argument('-d', '--diff', action = 'store_true', help = 'Print diff for different files')
+parser.add_argument('-v', '--verbose', action = 'store_true', help = 'Verbose')
 args = parser.parse_args()
 
 def get_files(folder):
@@ -49,8 +50,8 @@ if set(source_files1) != set(source_files2):
 for i, f in enumerate(source_files1):
     s1 = objdump(os.path.join(args.source1, f))
     s2 = objdump(os.path.join(args.source2, f))
-    if s1 != s2:
+    if s1 != s2 or args.verbose:
         print('%6d/%6d: %s: ' % (i, len(source_files1), f), end = '')
-        print(colored('different', 'red') if s1 != s2 else 'equal')
+        print(colored('different', 'red') if s1 != s2 else colored('equal', 'green'))
         if args.diff:
             print_diff(f, s1, s2)
