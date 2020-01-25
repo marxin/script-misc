@@ -232,7 +232,10 @@ class GitRevision:
         return os.path.join(extract_location, 'usr', 'local')
 
     def get_archive_path(self):
-        return self.get_folder_path() + '.7z'
+        fullpath = self.get_folder_path() + '.7z'
+        if os.path.exists(fullpath):
+            return fullpath
+        return self.get_folder_path() + '.tar.zst'
 
     def get_folder_path(self):
         return os.path.join(install_location, self.commit.hexsha)
@@ -311,7 +314,10 @@ class GitRevision:
     def compress(self):
         archive = self.get_archive_path()
         self.strip()
-        subprocess.check_output('7z a %s %s/*' % (archive, extract_location), shell = True)
+        assert archive.endswith('.tar.zst')
+        tarfile = archive.replace('.zst', '')
+        subprocess.check_output('tar cfv %s %s/*' % (tarfile, extract_location), shell = True)
+        subprocess.check_output('zstd --rm -q -19 -T16 %s' % tarfile, shell = True)
 
     def decompress(self):
         archive = self.get_archive_path()
@@ -319,8 +325,13 @@ class GitRevision:
             return False
 
         shutil.rmtree(extract_location, ignore_errors = True)
-        cmd = '7z x %s -o%s -aoa' % (archive, extract_location)
-        subprocess.check_output(cmd, shell = True)
+        os.mkdir(extract_location)
+        if archive.endswith('7z'):
+            cmd = '7z x %s -o%s -aoa' % (archive, extract_location)
+            subprocess.check_output(cmd, shell = True)
+        else:
+            cmd = 'zstdcat -T16 %s | tar x -C %s' % (archive, extract_location)
+            subprocess.check_output(cmd, shell = True)
         return True
 
     def print_status(self):
@@ -456,7 +467,7 @@ class GitRepository:
         files = os.listdir(install_location)
         existing = set()
         for f in files:
-            if f.endswith('.7z'):
+            if f.endswith('.7z') or f.endswith('.tar.zst'):
                 existing.add(f.split('.')[0])
 
         for l in self.all:
