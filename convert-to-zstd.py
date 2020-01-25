@@ -35,5 +35,4 @@ for i, line in enumerate(todo):
         subprocess.check_output('zstd --rm -q -19 -T16 %s' % tarfile, shell = True)
         os.remove(archive)
         size_after = os.path.getsize(tarfile + '.zst')
-        print((datetime.now() - start).total_seconds())
-        print('Size before: %d, after: %d, change: %.2f%%' % (size_before, size_after, 100.0 * size_after / size_before))
+        print('Took: %s, size before: %d, after: %d, change: %.2f%%' % (str((datetime.now() - start).total_seconds()), size_before, size_after, 100.0 * size_after / size_before))
