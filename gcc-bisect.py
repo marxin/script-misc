@@ -188,10 +188,9 @@ class GitRevision:
     def run(self, describe):
         start = datetime.now()
         log = '/tmp/output'
-        clean = False
         with lock:
             if os.path.exists(self.get_archive_path()):
-                clean = self.decompress()
+                self.decompress()
 
             my_env = os.environ.copy()
             my_env['PATH'] = os.path.join(self.get_install_path(), 'bin') + ':' + my_env['PATH']
