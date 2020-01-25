@@ -232,10 +232,10 @@ class GitRevision:
         return os.path.join(extract_location, 'usr', 'local')
 
     def get_archive_path(self):
-        fullpath = self.get_folder_path() + '.7z'
+        fullpath = self.get_folder_path() + '.tar.zst'
         if os.path.exists(fullpath):
             return fullpath
-        return self.get_folder_path() + '.tar.zst'
+        return self.get_folder_path() + '.7z'
 
     def get_folder_path(self):
         return os.path.join(install_location, self.commit.hexsha)
