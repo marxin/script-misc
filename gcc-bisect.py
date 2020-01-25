@@ -232,10 +232,10 @@ class GitRevision:
         return os.path.join(extract_location, 'usr', 'local')
 
     def get_archive_path(self):
-        fullpath = self.get_folder_path() + '.tar.zst'
+        fullpath = self.get_folder_path() + '.7z'
         if os.path.exists(fullpath):
             return fullpath
-        return self.get_folder_path() + '.7z'
+        return self.get_folder_path() + '.tar.zst'
 
     def get_folder_path(self):
         return os.path.join(install_location, self.commit.hexsha)
@@ -316,8 +316,11 @@ class GitRevision:
         self.strip()
         assert archive.endswith('.tar.zst')
         tarfile = archive.replace('.zst', '')
-        subprocess.check_output('tar cfv %s %s/*' % (tarfile, extract_location), shell = True)
+        current = os.getcwd()
+        os.chdir(extract_location)
+        subprocess.check_output('tar cfv %s *' % tarfile, shell = True)
         subprocess.check_output('zstd --rm -q -19 -T16 %s' % tarfile, shell = True)
+        os.chdir(current)
 
     def decompress(self):
         archive = self.get_archive_path()
