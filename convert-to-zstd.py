@@ -18,13 +18,13 @@ for i, line in enumerate(todo):
     revision = line.strip()
     print('%d/%d: %s' % (i, len(todo), revision))
 
-    shutil.rmtree(extract_location, ignore_errors = True)
-    os.mkdir(extract_location)
     archive = os.path.join(install_location, revision + '.7z')
     if os.path.exists(archive):
-        start = datetime.now()
-        size_before = os.path.getsize(archive)
         with lock:
+            shutil.rmtree(extract_location, ignore_errors = True)
+            os.mkdir(extract_location)
+            start = datetime.now()
+            size_before = os.path.getsize(archive)
             cmd = '7z x %s -o%s -aoa' % (archive, extract_location)
             subprocess.check_output(cmd, shell = True)
             tarfile = os.path.join(install_location, revision + '.tar')
