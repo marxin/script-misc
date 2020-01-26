@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 import filelock
+import sys
 
 from datetime import datetime
 
@@ -36,3 +37,4 @@ for i, line in enumerate(todo):
         os.remove(archive)
         size_after = os.path.getsize(tarfile + '.zst')
         print('Took: %s, size before: %d, after: %d, change: %.2f%%' % (str((datetime.now() - start).total_seconds()), size_before, size_after, 100.0 * size_after / size_before))
+        sys.stdout.flush()

@@ -319,7 +319,7 @@ class GitRevision:
         current = os.getcwd()
         os.chdir(extract_location)
         subprocess.check_output('tar cfv %s *' % tarfile, shell = True)
-        subprocess.check_output('zstd --rm -q -19 -T16 %s' % tarfile, shell = True)
+        subprocess.check_output('zstd --rm -q -19 -T0 %s' % tarfile, shell = True)
         os.chdir(current)
 
     def decompress(self):
@@ -333,7 +333,7 @@ class GitRevision:
             cmd = '7z x %s -o%s -aoa' % (archive, extract_location)
             subprocess.check_output(cmd, shell = True)
         else:
-            cmd = 'zstdcat -T16 %s | tar x -C %s' % (archive, extract_location)
+            cmd = 'zstdcat -T0 %s | tar x -C %s' % (archive, extract_location)
             subprocess.check_output(cmd, shell = True)
         return True
 
