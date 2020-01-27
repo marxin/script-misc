@@ -179,7 +179,10 @@ class GitRevision:
         hash = colored(self.short_hexsha(), description_color)
         if describe:
             r = subprocess.check_output('git gcc-descr --full %s' % self.commit.hexsha, cwd=git_location, shell=True, encoding='utf8')
-            hash = colored(r.strip(), 'green')
+            parts = r.strip().split('-')
+            assert len(parts) == 3
+            parts[2] = parts[2][:17]
+            hash = colored('-'.join(parts), 'green')
         return '%s(%s)(%s)' % (hash, self.timestamp_str(), self.commit.author.email)
 
     def patch_name(self):
