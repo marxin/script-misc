@@ -53,27 +53,27 @@ for needle in needles:
         topn = all[TOPN_COUNTER_VALUES * i: TOPN_COUNTER_VALUES * (i + 1)]
         sum += topn[0]
         if topn[0] == 0:
-          not_executed += 1
-          i += 1
-          continue
+            not_executed += 1
+            i += 1
+            continue
         if topn[2] == -1 or topn[2] == -9223372036854775808:
             invalid += 1
             invalid_freq += topn[0]
         else:
-          match = False
-          for j in range(TOPN_COUNTERS):
-           if topn[2 * j + 2] == topn[0] * TOPN_COUNTERS:
-             match = True
-          if match and topn[0] != 0:
-            one += 1
-            one_freq += topn[0]
-          else:
-            used = 0
+            match = False
             for j in range(TOPN_COUNTERS):
-                if topn[2 * j + 2] > topn[0] / 2:
-                    used += 1
-            used_values[used] += 1
-            used_values_freq[used] += topn[0]
+                if topn[2 * j + 2] == topn[0] * TOPN_COUNTERS:
+                    match = True
+            if match and topn[0] != 0:
+                one += 1
+                one_freq += topn[0]
+            else:
+                used = 0
+                for j in range(TOPN_COUNTERS):
+                    if topn[2 * j + 2] > topn[0] / 2:
+                        used += 1
+                used_values[used] += 1
+                used_values_freq[used] += topn[0]
 
         i += 1
 
