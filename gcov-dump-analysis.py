@@ -98,3 +98,5 @@ for needle in needles:
     all_invalid = list(sorted(all_invalid, key = lambda x: x[0], reverse = True))
     for i in range(N):
         print('  freq: %.2f%%: %s' % (100 * all_invalid[i][0] / sum, all_invalid[i]))
+    print()
+    print()
