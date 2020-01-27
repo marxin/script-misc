@@ -44,6 +44,7 @@ for needle in needles:
 
     used_values = [0] * (TOPN_COUNTERS + 1)
     used_values_freq = [0] * (TOPN_COUNTERS + 1)
+    all_invalid = []
     invalid = 0
     invalid_freq = 0
     not_executed = 0
@@ -63,6 +64,7 @@ for needle in needles:
         if topn[2] == -1 or topn[2] == -9223372036854775808:
             invalid += 1
             invalid_freq += topn[0]
+            all_invalid.append(topn)
         else:
             match = False
             for j in range(TOPN_COUNTERS):
@@ -90,3 +92,9 @@ for needle in needles:
     for i in range(TOPN_COUNTERS + 1):
         print('    %d values: %8d times (%2.2f%%) freq:%12d (%2.2f%%)' % (i, used_values[i], 100.0 * used_values[i] / c, used_values_freq[i], 100 * used_values_freq[i] / sum))
     print()
+
+    N = 10
+    print('Top %d invalid counters:' % N)
+    all_invalid = list(sorted(all_invalid, key = lambda x: x[0], reverse = True))
+    for i in range(N):
+        print('  freq: %.2f%%: %s' % (100 * all_invalid[i][0] / sum, all_invalid[i]))
