@@ -37,27 +37,50 @@ for needle in needles:
                         buffer += values
 
     used_values = [0] * 5
+    used_values_freq = [0] * 5
     invalid = 0
+    invalid_freq = 0
+    not_executed = 0
+    one = 0
+    one_freq = 0
+    sum = 0
 
     i = 0
     c = len(all) / 9
     while i < c:
         topn = all[9 * i: 9 * (i + 1)]
+        sum += topn[0]
+        if topn[0] == 0:
+          not_executed += 1
+          i += 1
+          continue
         if topn[2] == -1 or topn[2] == -9223372036854775808:
             invalid += 1
+            invalid_freq += topn[0]
         else:
+          match = 0
+          for j in range(4):
+           if topn[2 * j + 2] == topn[0] * 4:
+             match = 1
+          if match != 0 and topn[0] != 0:
+            one += 1
+            one_freq += topn[0]
+          else:
             used = 0
             for j in range(4):
-                if topn[2 * j + 2] != 0:
+                if topn[2 * j + 2] > topn[0] / 2:
                     used += 1
             used_values[used] += 1
+            used_values_freq[used] += topn[0]
 
         i += 1
 
     print('stats for %s:' % needle)
-    print('  total: %d' % (len(all) / 9))
-    print('  invalid: %d' % (invalid))
+    print('  total: %d freq: %d' % (len(all) / 9, sum))
+    print('  not executed at all: %d' % (not_executed))
+    print('  invalid: %d (%2.2f%%) freq:%d (%2.2f%%)' % (invalid, 100 * invalid / c,invalid_freq,100*invalid_freq/sum))
+    print('  only one target: %d (%2.2f%%) freq:%d (%2.2f%%)' % (one, 100 * one / c,one_freq,100*one_freq/sum))
     print('  tracked values:')
     for i in range(5):
-        print('    %d values: %8d times (%.2f%%)' % (i, used_values[i], 100.0 * used_values[i] / c))
+        print('    %d values: %8d times (%2.2f%%) freq:%12d (%2.2f%%)' % (i, used_values[i], 100.0 * used_values[i] / c,used_values_freq[i], 100 * used_values_freq[i] / sum))
     print()
