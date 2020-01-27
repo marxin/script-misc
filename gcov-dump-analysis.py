@@ -82,7 +82,7 @@ for needle in needles:
     print('  not executed at all: %d' % (not_executed))
     print('  invalid: %d (%2.2f%%) freq:%d (%2.2f%%)' % (invalid, 100 * invalid / c, invalid_freq, 100 * invalid_freq / sum))
     print('  only one target: %d (%2.2f%%) freq:%d (%2.2f%%)' % (one, 100 * one / c, one_freq, 100 * one_freq / sum))
-    print('  useful values:')
+    print('  useful values (with not one target):')
     for i in range(5):
         print('    %d values: %8d times (%2.2f%%) freq:%12d (%2.2f%%)' % (i, used_values[i], 100.0 * used_values[i] / c, used_values_freq[i], 100 * used_values_freq[i] / sum))
     print()
