@@ -9,6 +9,10 @@ location = sys.argv[1]
 needles = ['indirect_call', 'topn']
 
 TOPN_COUNTERS = 4
+
+if len(sys.argv) == 3:
+    TOPN_COUNTERS = int(sys.argv[2])
+
 TOPN_COUNTER_VALUES = 2 * TOPN_COUNTERS + 1
 
 print('== Stats for %s ==' % location)
@@ -83,6 +87,6 @@ for needle in needles:
     print('  invalid: %d (%2.2f%%) freq:%d (%2.2f%%)' % (invalid, 100 * invalid / c, invalid_freq, 100 * invalid_freq / sum))
     print('  only one target: %d (%2.2f%%) freq:%d (%2.2f%%)' % (one, 100 * one / c, one_freq, 100 * one_freq / sum))
     print('  useful values (with not one target):')
-    for i in range(5):
+    for i in range(TOPN_COUNTERS + 1):
         print('    %d values: %8d times (%2.2f%%) freq:%12d (%2.2f%%)' % (i, used_values[i], 100.0 * used_values[i] / c, used_values_freq[i], 100 * used_values_freq[i] / sum))
     print()
