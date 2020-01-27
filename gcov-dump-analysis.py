@@ -58,11 +58,11 @@ for needle in needles:
             invalid += 1
             invalid_freq += topn[0]
         else:
-          match = 0
+          match = False
           for j in range(4):
            if topn[2 * j + 2] == topn[0] * 4:
-             match = 1
-          if match != 0 and topn[0] != 0:
+             match = True
+          if match and topn[0] != 0:
             one += 1
             one_freq += topn[0]
           else:
@@ -78,9 +78,9 @@ for needle in needles:
     print('stats for %s:' % needle)
     print('  total: %d freq: %d' % (len(all) / 9, sum))
     print('  not executed at all: %d' % (not_executed))
-    print('  invalid: %d (%2.2f%%) freq:%d (%2.2f%%)' % (invalid, 100 * invalid / c,invalid_freq,100*invalid_freq/sum))
-    print('  only one target: %d (%2.2f%%) freq:%d (%2.2f%%)' % (one, 100 * one / c,one_freq,100*one_freq/sum))
-    print('  tracked values:')
+    print('  invalid: %d (%2.2f%%) freq:%d (%2.2f%%)' % (invalid, 100 * invalid / c, invalid_freq, 100 * invalid_freq / sum))
+    print('  only one target: %d (%2.2f%%) freq:%d (%2.2f%%)' % (one, 100 * one / c, one_freq, 100 * one_freq / sum))
+    print('  useful values:')
     for i in range(5):
-        print('    %d values: %8d times (%2.2f%%) freq:%12d (%2.2f%%)' % (i, used_values[i], 100.0 * used_values[i] / c,used_values_freq[i], 100 * used_values_freq[i] / sum))
+        print('    %d values: %8d times (%2.2f%%) freq:%12d (%2.2f%%)' % (i, used_values[i], 100.0 * used_values[i] / c, used_values_freq[i], 100 * used_values_freq[i] / sum))
     print()
