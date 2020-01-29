@@ -49,7 +49,7 @@ for f in files:
                 b = b[:-2]
             size = [1024 * int(a), 1024 * int(b)]
             have_dwz_size += 1
-        if 'sepdebugcrcfix' in l:
+        if 'sepdebugcrcfix:' in l:
             i2 = i - 1
             while not 'extracting debug' in lines[i2]:
                 i2 -= 1
