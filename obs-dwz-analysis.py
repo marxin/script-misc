@@ -35,7 +35,7 @@ for f in files:
     r = None
     size = [0, 0]
     for i, l in enumerate(lines):
-        if 'dwz: ' in l and not 'is not a shared library' in l and not 'too much work for irq' in l:
+        if ' dwz: ' in l and not 'is not a shared library' in l and not 'too much work for irq' in l:
             print('WARNING:%s:%s' % (f, l))
         t = 'original debug info size'
         if t in l:
