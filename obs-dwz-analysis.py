@@ -17,6 +17,9 @@ def print_package(p):
     size_comparison = 100.0 * p[6] / p[5] if p[5] else 0
     print('%30s%6d / %6ds%10.2f%% %10s / %10s %10.2f%%' % (p[0], p[1], p[3], p[4], sizeof_fmt(p[5]), sizeof_fmt(p[6]), size_comparison))
 
+def print_header():
+    print('%30s%6s / %6s%11s %10s / %10s %10s' % ('Package', 'DWZ', 'Total', 'Ratio', 'Size before', 'Size after', 'Ratio'))
+
 def sizeof_fmt(num):
     for x in ['B','KB','MB','GB','TB']:
         if num < 1024.0:
@@ -75,16 +78,19 @@ N = 50
 
 print()
 print('Top %d by time:' % N)
+print_header()
 for r in sorted(results, key = lambda x: x[1], reverse = True)[:N]:
     print_package(r)
 
 print()
 print('Top %d by percentage of package build time:' % N)
+print_header()
 for r in sorted(results, key = lambda x: x[4], reverse = True)[:N]:
     print_package(r)
 
 print()
 print('Top %d by size of package debug info size:' % N)
+print_header()
 for r in sorted(results, key = lambda x: x[5], reverse = True)[:N]:
     print_package(r)
 
