@@ -50,7 +50,10 @@ for f in files:
             size = [1024 * int(a), 1024 * int(b)]
             have_dwz_size += 1
         if 'sepdebugcrcfix' in l:
-            start = get_time(lines[i - 1])
+            i2 = i - 1
+            while not 'extracting debug' in lines[i2]:
+                i2 -= 1
+            start = get_time(lines[i2])
             end = get_time(l)
             assert end >= start
             r = [f, end - start]
