@@ -18,7 +18,7 @@ def print_package(p):
     print('%30s%6d / %6ds%10.2f%% %10s / %10s %10.2f%%' % (p[0], p[1], p[3], p[4], sizeof_fmt(p[5]), sizeof_fmt(p[6]), size_comparison))
 
 def print_header():
-    print('%30s%6s / %6s%11s %10s / %10s %10s' % ('Package', 'DWZ', 'Total', 'Ratio', 'Size before', 'Size after', 'Ratio'))
+    print('%30s%6s / %6s%11s %10s / %10s %10s' % ('Package', 'dwz', 'Total', 'Ratio', 'Size before', 'Size after', 'Ratio'))
 
 def sizeof_fmt(num):
     for x in ['B','KB','MB','GB','TB']:
