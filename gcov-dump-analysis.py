@@ -93,10 +93,11 @@ for needle in needles:
         print('    %d values: %8d times (%2.2f%%) freq:%12d (%2.2f%%)' % (i, used_values[i], 100.0 * used_values[i] / c, used_values_freq[i], 100 * used_values_freq[i] / sum))
     print()
 
-    N = 10
-    print('Top %d invalid counters:' % N)
-    all_invalid = list(sorted(all_invalid, key = lambda x: x[0], reverse = True))
-    for i in range(N):
-        print('  freq: %.2f%%: %s' % (100 * all_invalid[i][0] / sum, all_invalid[i]))
-    print()
-    print()
+    if invalid:
+        N = 10
+        print('Top %d invalid counters:' % N)
+        all_invalid = list(sorted(all_invalid, key = lambda x: x[0], reverse = True))
+        for i in range(N):
+            print('  freq: %.2f%%: %s' % (100 * all_invalid[i][0] / sum, all_invalid[i]))
+        print()
+        print()
