@@ -21,6 +21,7 @@ for needle in needles:
     counter_count = 0
     total_freq = 0
     total_freq_with_half = 0
+    total_tuples = 0
     for root, dirs, files in os.walk(location):
         for f in files:
             if f.endswith('.gcda'):
@@ -34,6 +35,7 @@ for needle in needles:
                         total = values[0]
                         total_freq += total
                         n = values[1]
+                        total_tuples += n
                         values = values[2:]
                         assert len(values) == 2 * n
                         if not n in histogram:
@@ -52,6 +54,7 @@ for needle in needles:
                                     assert False
 
     print('Total: %d, total freq: %d, covered freq: %d (%.2f%%)' % (counter_count, total_freq, total_freq_with_half, 100.0 * total_freq_with_half / total_freq))
+    print('Total tuples: %d (size before: 9*N=%d, after: 2*N + (2*TUPLE_COUNT)=%d' % (total_tuples, 9 * counter_count, 2 * counter_count + 2 * total_tuples))
     print('Histogram:')
     for (k, v) in sorted(histogram.items(), key = lambda x: x[0]):
         print('  %4d tracked: %5d (%.2f%%), >=%.2f: %4d (cov. freq: %12d (%.2f%%))' % (k, v[0], 100.0 * v[0] / counter_count, threshold, v[1], v[2], 100.0 * v[2] / total_freq))
