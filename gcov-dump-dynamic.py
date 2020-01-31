@@ -46,8 +46,8 @@ for needle in needles:
                                     histogram[n][1] += 1
                                     histogram[n][2] += z[1]
                                     total_freq_with_half += z[1]
-                                    if n == 256:
-                                        print('   ' + str(z))
+                                    #if n == 256:
+                                    #    print('   ' + str(z))
                                 elif n == 1:
                                     assert False
 
