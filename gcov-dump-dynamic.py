@@ -22,6 +22,7 @@ for needle in needles:
     total_freq = 0
     total_freq_with_half = 0
     total_tuples = 0
+    missing_freq = 0
     for root, dirs, files in os.walk(location):
         for f in files:
             if f.endswith('.gcda'):
@@ -42,8 +43,11 @@ for needle in needles:
                             histogram[n] = [0, 0, 0]
                         histogram[n][0] += 1
                         if values:
-                            zipped = sorted(list(zip(values[::2], values[1::2])), key = lambda x: x[1], reverse = True)[:8]
-                            for z in zipped:
+                            zipped = sorted(list(zip(values[::2], values[1::2])), key = lambda x: x[1], reverse = True)
+                            s = sum(x[1] for x in zipped)
+                            assert s <= total
+                            missing_freq += total - s
+                            for z in zipped[:8]:
                                 if z[1] >= (threshold * total):
                                     histogram[n][1] += 1
                                     histogram[n][2] += z[1]
@@ -53,8 +57,10 @@ for needle in needles:
                                 elif n == 1:
                                     assert False
 
-    print('Total: %d, total freq: %d, covered freq: %d (%.2f%%)' % (counter_count, total_freq, total_freq_with_half, 100.0 * total_freq_with_half / total_freq))
-    print('Total tuples: %d (size before: 9*N=%d, after: 2*N + (2*TUPLE_COUNT)=%d' % (total_tuples, 9 * counter_count, 2 * counter_count + 2 * total_tuples))
+    print('Total: %d, total freq: %d, covered freq: %d (%.2f%%), missing freq: %d (%.2f%%)' % (counter_count, total_freq,
+        total_freq_with_half, 100.0 * total_freq_with_half / total_freq, missing_freq, 100.0 * missing_freq / total_freq))
+    print('Total tuples: %d (size before: 9*N=%d, after: 2*N + (2*TUPLE_COUNT)=%d'
+            % (total_tuples, 9 * counter_count, 2 * counter_count + 2 * total_tuples))
     print('Histogram:')
     for (k, v) in sorted(histogram.items(), key = lambda x: x[0]):
         print('  %4d tracked: %5d (%.2f%%), >=%.2f: %4d (cov. freq: %12d (%.2f%%))' % (k, v[0], 100.0 * v[0] / counter_count, threshold, v[1], v[2], 100.0 * v[2] / total_freq))
