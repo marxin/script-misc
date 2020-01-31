@@ -47,5 +47,5 @@ for needle in needles:
     print('Total: %d, total freq: %d, covered freq: %d (%.2f%%)' % (counter_count, total_freq, total_freq_with_half, 100.0 * total_freq_with_half / total_freq))
     print('Histogram:')
     for (k, v) in sorted(histogram.items(), key = lambda x: x[0]):
-        print('  %4d tracked tuples: %5d (%.2f%%), >=0.5: %4d (covered freq: %12d (%.2f%%))' % (k, v[0], 100.0 * v[0] / counter_count, v[1], v[2], 100.0 * v[2] / total_freq))
+        print('  %4d tracked: %5d (%.2f%%), >=0.5: %4d (cov. freq: %12d (%.2f%%))' % (k, v[0], 100.0 * v[0] / counter_count, v[1], v[2], 100.0 * v[2] / total_freq))
     print()
