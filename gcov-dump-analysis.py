@@ -15,7 +15,9 @@ if len(sys.argv) == 3:
 
 TOPN_COUNTER_VALUES = 2 * TOPN_COUNTERS + 1
 
+threshold = 0.25
 print('== Stats for %s ==' % location)
+print('Consider useful values with threshold >= %.2f' % threshold)
 for needle in needles:
     all = []
     for root, dirs, files in os.walk(location):
@@ -98,19 +100,20 @@ for needle in needles:
             hit = 0
             nonrep_hit = 0
             for j in range(TOPN_COUNTERS):
-                if topn[2 * j + 2] > abs (topn[0]) / 2:
+                topn0_threshold = abs (topn[0]) * threshold
+                if topn[2 * j + 2] / TOPN_COUNTERS >= topn0_threshold:
                     allways_used += 1
                     allways_sum += abs (topn[2 * j + 2])
                     allways_hit += abs (topn[2 * j + 2])
-                if topn[0] > 0 and abs (topn[2 * j + 2]) > abs (topn[0]) / 2:
+                if topn[0] > 0 and abs (topn[2 * j + 2]) / TOPN_COUNTERS >= topn0_threshold:
                     all_used += 1
                     all_sum += abs (topn[2 * j + 2])
                     all_hit += abs (topn[2 * j + 2])
-                if abs (topn[2 * j + 2]) > abs (topn[0]) / 2:
+                if abs (topn[2 * j + 2]) / TOPN_COUNTERS >= topn0_threshold:
                     nonrep_used += 1
                     nonrep_sum += abs (topn[2 * j + 2])
                     nonrep_hit += abs (topn[2 * j + 2])
-                if (topn[2 * j + 2] > 0 or topn[0] > 0) and abs (topn[2 * j + 2]) > abs (topn[0]) / 2:
+                if (topn[2 * j + 2] > 0 or topn[0] > 0) and abs (topn[2 * j + 2]) / TOPN_COUNTERS >= topn0_threshold:
                     used += 1
                     rep_sum += abs (topn[2 * j + 2])
                     hit += abs (topn[2 * j + 2])
