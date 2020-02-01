@@ -136,19 +136,24 @@ for needle in needles:
     print('  only one target: %d (%2.2f%%) freq:%d (%2.2f%%)' % (one, 100 * one / c, one_freq, 100 * one_freq / sum))
     print('  useful values (with not one target):')
     for i in range(TOPN_COUNTERS + 1):
-        print('    %d allways winning values: %8d times (%2.2f%%) freq:%12d (%2.2f%%) hitrate: (%2.2f%%)' % (i, allways_used_values[i], 100.0 * allways_used_values[i] / c, allways_used_values_freq[i], 100 * allways_used_values_freq[i] / sum, allways_used_values_hit[i]*100/allways_used_values_freq[i]/TOPN_COUNTERS))
+        f = allways_used_values_hit[i]*100/allways_used_values_freq[i]/TOPN_COUNTERS if allways_used_values_freq[i] else 0
+        print('    %d allways winning values: %8d times (%2.2f%%) freq:%12d (%2.2f%%) hitrate: (%2.2f%%)' % (i, allways_used_values[i], 100.0 * allways_used_values[i] / c, allways_used_values_freq[i], 100 * allways_used_values_freq[i] / sum, f))
     print('  total hitrate in all runs: freq:%d (%2.2f%%)' % (one_freq + allways_sum/TOPN_COUNTERS, 100 * (one_freq + allways_sum/TOPN_COUNTERS) / sum))
     for i in range(TOPN_COUNTERS + 1):
-        print('    %d all reproducible values: %8d times (%2.2f%%) freq:%12d (%2.2f%%) hitrate: (%2.2f%%)' % (i, all_used_values[i], 100.0 * all_used_values[i] / c, all_used_values_freq[i], 100 * all_used_values_freq[i] / sum, all_used_values_hit[i]*100/all_used_values_freq[i]/TOPN_COUNTERS))
+        f = all_used_values_hit[i]*100/all_used_values_freq[i]/TOPN_COUNTERS if all_used_values_freq[i] else 0
+        print('    %d all reproducible values: %8d times (%2.2f%%) freq:%12d (%2.2f%%) hitrate: (%2.2f%%)' % (i, all_used_values[i], 100.0 * all_used_values[i] / c, all_used_values_freq[i], 100 * all_used_values_freq[i] / sum, f))
     print('  total hitrate with all counters valid: freq:%d (%2.2f%%)' % (one_freq + all_sum/TOPN_COUNTERS, 100 * (one_freq + all_sum/TOPN_COUNTERS) / sum))
     for i in range(TOPN_COUNTERS + 1):
-        print('    %d some reroducible values: %8d times (%2.2f%%) freq:%12d (%2.2f%%) hitrate: (%2.2f%%)' % (i, used_values[i], 100.0 * used_values[i] / c, used_values_freq[i], 100 * used_values_freq[i] / sum, used_values_hit[i]*100/used_values_freq[i]/TOPN_COUNTERS))
+        f = used_values_hit[i]*100/used_values_freq[i]/TOPN_COUNTERS if used_values_freq[i] else 0
+        print('    %d some reroducible values: %8d times (%2.2f%%) freq:%12d (%2.2f%%) hitrate: (%2.2f%%)' % (i, used_values[i], 100.0 * used_values[i] / c, used_values_freq[i], 100 * used_values_freq[i] / sum, f))
     print('  total hitrate with some counters valid: freq:%d (%2.2f%%)' % (one_freq + rep_sum/TOPN_COUNTERS, 100 * (one_freq + rep_sum/TOPN_COUNTERS) / sum))
     for i in range(TOPN_COUNTERS + 1):
-        print('    %d non-reproducible values: %8d times (%2.2f%%) freq:%12d (%2.2f%%) hitrate: (%2.2f%%)' % (i, nonrep_used_values[i], 100.0 * nonrep_used_values[i] / c, nonrep_used_values_freq[i], 100 * nonrep_used_values_freq[i] / sum, nonrep_used_values_hit[i]*100/nonrep_used_values_freq[i]/TOPN_COUNTERS))
+        f = nonrep_used_values_hit[i]*100/nonrep_used_values_freq[i]/TOPN_COUNTERS if nonrep_used_values_freq[i] else 0
+        print('    %d non-reproducible values: %8d times (%2.2f%%) freq:%12d (%2.2f%%) hitrate: (%2.2f%%)' % (i, nonrep_used_values[i], 100.0 * nonrep_used_values[i] / c, nonrep_used_values_freq[i], 100 * nonrep_used_values_freq[i] / sum, f))
     print('  total hitrate predicted non-reproducibly: freq:%d (%2.2f%%)' % (one_freq + nonrep_sum/TOPN_COUNTERS, 100 * (one_freq + nonrep_sum/TOPN_COUNTERS) / sum))
     print()
 
+    """
     N = 10
     print('Top %d with missing vals counters:' % N)
     all_with_missing_vals = list(sorted(all_with_missing_vals, key = lambda x: -x[0], reverse = True))
@@ -156,3 +161,4 @@ for needle in needles:
         print('  freq: %.2f%%: %s' % (100 * all_with_missing_vals[i][0] / sum, all_with_missing_vals[i]))
     print()
     print()
+    """
