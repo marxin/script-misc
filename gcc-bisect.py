@@ -41,7 +41,6 @@ patches_folder = os.path.join(script_dirname, 'gcc-bisect-patches')
 patches = ['0001-Use-ucontext_t-not-struct-ucontext-in-linux-unwind.h.patch', 'gnu-inline.patch', 'ubsan.patch']
 
 parser = argparse.ArgumentParser(description='Build GCC binaries.')
-parser.add_argument('action', nargs = '?', metavar = 'action', help = 'Action', default = 'print', choices = ['print', 'build', 'bisect'])
 parser.add_argument('command', nargs = '?', metavar = 'command', help = 'GCC command')
 parser.add_argument('-t', '--silent', action = 'store_true', help = 'Silent logging')
 parser.add_argument('-x', '--negate', action = 'store_true', help = 'FAIL if result code is equal to zero')
@@ -55,6 +54,8 @@ parser.add_argument('-i', '--ice', action = 'store_true', help = 'Grep stderr fo
 parser.add_argument('-a', '--ask', action = 'store_true', help = 'Ask about return code')
 parser.add_argument('-o', '--old', action = 'store_true', help = 'Test also old releases')
 parser.add_argument('-v', '--verbose', action = 'store_true', help = 'Verbose output')
+parser.add_argument('--build', action = 'store_true', help = 'Build revisions')
+parser.add_argument('--print', action = 'store_true', help = 'Print built revisions')
 
 args = parser.parse_args()
 repo = Repo(git_location)
@@ -566,9 +567,9 @@ class GitRepository:
 
 # MAIN
 g = GitRepository()
-if args.action == 'print':
+if args.print:
     g.print()
-elif args.action == 'build':
+elif args.build:
     g.build()
-elif args.action == 'bisect':
+else:
     g.bisect()
