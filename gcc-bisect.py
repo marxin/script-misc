@@ -236,9 +236,6 @@ class GitRevision:
         return os.path.join(extract_location, 'usr', 'local')
 
     def get_archive_path(self):
-        fullpath = self.get_folder_path() + '.7z'
-        if os.path.exists(fullpath):
-            return fullpath
         return self.get_folder_path() + '.tar.zst'
 
     def get_folder_path(self):
@@ -333,12 +330,8 @@ class GitRevision:
 
         shutil.rmtree(extract_location, ignore_errors = True)
         os.mkdir(extract_location)
-        if archive.endswith('7z'):
-            cmd = '7z x %s -o%s -aoa' % (archive, extract_location)
-            subprocess.check_output(cmd, shell = True)
-        else:
-            cmd = 'zstdcat -T0 %s | tar x -C %s' % (archive, extract_location)
-            subprocess.check_output(cmd, shell = True)
+        cmd = 'zstdcat -T0 %s | tar x -C %s' % (archive, extract_location)
+        subprocess.check_output(cmd, shell = True)
         return True
 
     def print_status(self):
@@ -474,7 +467,7 @@ class GitRepository:
         files = os.listdir(install_location)
         existing = set()
         for f in files:
-            if f.endswith('.7z') or f.endswith('.tar.zst'):
+            if f.endswith('.tar.zst'):
                 existing.add(f.split('.')[0])
 
         for l in self.all:
