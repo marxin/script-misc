@@ -28,34 +28,39 @@ for needle in needles:
             if f.endswith('.gcda'):
                 counter += 1
                 full = os.path.join(root, f)
-                r = subprocess.check_output('gcov-dump -l ' + full, encoding = 'utf8', shell = True)
+                r = subprocess.check_output('gcov-dump -l -r ' + full, encoding = 'utf8', shell = True)
                 for l in r.split('\n'):
                     if needle in l:
-                        counter_count += 1
-                        values = [int(x) for x in l.split(':')[-1].split(' ') if x]
-                        total = values[0]
-                        total_freq += total
-                        n = values[1]
-                        total_tuples += n
-                        values = values[2:]
-                        assert len(values) == 2 * n
-                        if not n in histogram:
-                            histogram[n] = [0, 0, 0]
-                        histogram[n][0] += 1
-                        if values:
-                            zipped = sorted(list(zip(values[::2], values[1::2])), key = lambda x: x[1], reverse = True)
-                            s = sum(x[1] for x in zipped)
-                            assert s <= total
-                            missing_freq += total - s
-                            for z in zipped[:8]:
-                                if z[1] >= (threshold * total):
-                                    histogram[n][1] += 1
-                                    histogram[n][2] += z[1]
-                                    total_freq_with_half += z[1]
-                                    #if n == 256:
-                                    #    print('   ' + str(z))
-                                elif n == 1:
-                                    assert False
+                        if ' 0 counts' in l:
+                            continue
+                        allvalues = [int(x) for x in l.split(':')[-1].split(' ') if x]
+                        while allvalues:
+                            counter_count += 1
+                            n = allvalues[1]
+                            values = allvalues[:2 + 2 * n]
+                            allvalues = allvalues[len(values):]
+                            total = values[0]
+                            total_freq += total
+                            total_tuples += n
+                            values = values[2:]
+                            assert len(values) == 2 * n
+                            if not n in histogram:
+                                histogram[n] = [0, 0, 0]
+                            histogram[n][0] += 1
+                            if values:
+                                zipped = sorted(list(zip(values[::2], values[1::2])), key = lambda x: x[1], reverse = True)
+                                s = sum(x[1] for x in zipped)
+                                assert s <= total
+                                missing_freq += total - s
+                                for z in zipped[:8]:
+                                    if z[1] >= (threshold * total):
+                                        histogram[n][1] += 1
+                                        histogram[n][2] += z[1]
+                                        total_freq_with_half += z[1]
+                                        #if n == 256:
+                                        #    print('   ' + str(z))
+                                    elif n == 1:
+                                        assert False
 
     print('Total: %d, total freq: %d, covered freq: %d (%.2f%%), missing freq: %d (%.2f%%)' % (counter_count, total_freq,
         total_freq_with_half, 100.0 * total_freq_with_half / total_freq, missing_freq, 100.0 * missing_freq / total_freq))
