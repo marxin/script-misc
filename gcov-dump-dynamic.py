@@ -8,7 +8,7 @@ counter = 0
 location = sys.argv[1]
 needles = ['indirect_call', 'topn']
 
-threshold = 0.5
+threshold = 0.25
 
 if len(sys.argv) == 3:
     threshold = float(sys.argv[2])
