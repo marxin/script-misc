@@ -35,6 +35,9 @@ for needle in needles:
                             continue
                         allvalues = [int(x) for x in l.split(':')[-1].split(' ') if x]
                         while allvalues:
+                            if len(allvalues) == 1:
+                                print('WARNING: ' + l)
+                                break
                             counter_count += 1
                             n = allvalues[1]
                             values = allvalues[:2 + 2 * n]
@@ -43,14 +46,18 @@ for needle in needles:
                             total_freq += total
                             total_tuples += n
                             values = values[2:]
-                            assert len(values) == 2 * n
+                            if len(values) != 2 * n:
+                                print('WARNING: %s' + l)
+                                break
                             if not n in histogram:
                                 histogram[n] = [0, 0, 0]
                             histogram[n][0] += 1
                             if values:
                                 zipped = sorted(list(zip(values[::2], values[1::2])), key = lambda x: x[1], reverse = True)
                                 s = sum(x[1] for x in zipped)
-                                assert s <= total
+                                if s > total:
+                                    print('WARNING: strage: %s' % l)
+                                    break
                                 missing_freq += total - s
                                 for z in zipped[:8]:
                                     if z[1] >= (threshold * total):
