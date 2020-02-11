@@ -59,9 +59,9 @@ print('Already mentioned in bintuils.changes: %d' % len(resolved_cves))
 print('Total CVEs in openSUSE bugzilla: %d' % len(cve_bugs))
 print('Not mentioned CVEs:')
 
+cve_bugs = [cve for cve in cve_bugs if not cve[0] in resolved_cves]
 for cve in cve_bugs:
-    if not cve[1] in resolved_cves:
-        print('%d (%s): %s' % (cve[0], cve[1], str(cve[2])))
+    print('%d (%s): %s' % (cve[0], cve[1], str(cve[2])))
 
 print('\nMentioned CVEs in the latest binutils release:')
 for cve in cve_bugs:
