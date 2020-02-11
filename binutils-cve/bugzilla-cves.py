@@ -57,15 +57,16 @@ cve_bugs = list(sorted(cve_bugs, key = lambda x: x[0]))
 
 print('Already mentioned in bintuils.changes: %d' % len(resolved_cves))
 print('Total CVEs in openSUSE bugzilla: %d' % len(cve_bugs))
-print('Not mentioned CVEs:')
 
-cve_bugs = [cve for cve in cve_bugs if not cve[0] in resolved_cves]
+cve_bugs = [cve for cve in cve_bugs if not cve[1] in resolved_cves]
+
+print('Not mentioned CVEs: %d' % len(cve_bugs))
 for cve in cve_bugs:
     print('%d (%s): %s' % (cve[0], cve[1], str(cve[2])))
 
 print('\nMentioned CVEs in the latest binutils release:')
 for cve in cve_bugs:
     if any(map(lambda x: x in mentioned_prs, cve[2])):
-        print('%d (%s): %s: %s%d' % (cve[0], cve[1], str(cve[2]), opensuse_bugzilla_prefix, cve[0]))
+        print('bnc#%d aka %s aka %s     %s%d' % (cve[0], cve[1], ' '.join(['PR' + str(x) for x in cve[2]]), opensuse_bugzilla_prefix, cve[0]))
         for b in cve[2]:
             print('  %s%d' % (binutils_bugzilla_prefix, b))
