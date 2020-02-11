@@ -25,6 +25,15 @@ for line in open('binutils.diff').readlines():
     if m:
         mentioned_prs.add(int(m.group(2)))
 
+# parse already mentioned CVEs in bintuils package
+resolved_cves = set()
+
+for line in open('/home/marxin/BIG/osc/home:marxin:branches:devel:gcc-clean/binutils/binutils.changes').readlines():
+    line = line.strip()
+    m = cve_regex.search(line)
+    if m:
+        resolved_cves.add(m.group(0))
+
 cve_bugs = []
 
 for bug in bugs:
@@ -46,10 +55,15 @@ for bug in bugs:
 
 cve_bugs = list(sorted(cve_bugs, key = lambda x: x[0]))
 
-for cve in cve_bugs:
-    print('%d (%s): %s' % (cve[0], cve[1], str(cve[2])))
+print('Already mentioned in bintuils.changes: %d' % len(resolved_cves))
+print('Total CVEs in openSUSE bugzilla: %d' % len(cve_bugs))
+print('Not mentioned CVEs:')
 
-print('\nMentioned CVEs in binutils ChangeLogs:')
+for cve in cve_bugs:
+    if not cve[1] in resolved_cves:
+        print('%d (%s): %s' % (cve[0], cve[1], str(cve[2])))
+
+print('\nMentioned CVEs in the latest binutils release:')
 for cve in cve_bugs:
     if any(map(lambda x: x in mentioned_prs, cve[2])):
         print('%d (%s): %s: %s%d' % (cve[0], cve[1], str(cve[2]), opensuse_bugzilla_prefix, cve[0]))
