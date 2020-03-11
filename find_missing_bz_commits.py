@@ -35,7 +35,7 @@ commits = {}
 branches = ['origin/releases/gcc-8', 'origin/releases/gcc-9', 'origin/master']
 
 for b in branches:
-    r = subprocess.check_output('git log %s --since=2020-03-04 --oneline --pretty=tformat:"%%H"' % b, shell = True, encoding = 'utf')
+    r = subprocess.check_output('git log %s --since=2020-03-10 --oneline --pretty=tformat:"%%H"' % b, shell = True, encoding = 'utf')
     for hash in r.strip().split('\n'):
         commits[hash] = subprocess.check_output('git log --format=medium -n 1 ' + hash, shell = True, encoding = 'utf8').strip()
 
