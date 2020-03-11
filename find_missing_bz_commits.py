@@ -28,7 +28,7 @@ def get_commits_from_comments(pr):
             text = comment['thetext']
             for l in text.split('\n'):
                 l = l.rstrip()
-                if l.startswith('commit r'):
+                if l.startswith('commit '):
                     yield l
 
 commits = {}
