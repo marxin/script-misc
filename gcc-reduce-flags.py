@@ -8,7 +8,7 @@ import glob
 
 assert len(sys.argv) >= 2
 
-pattern = 'nternal compiler error'
+patterns = ['nternal compiler error', 'Segmentation fault', 'runtime error:', 'ERROR: AddressSanitizer', 'fcompare-debug']
 
 if len(sys.argv) == 3:
     pattern = sys.argv[2]
@@ -16,7 +16,12 @@ if len(sys.argv) == 3:
 def does_ice(command):
     r = subprocess.run(command, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
     stderr = r.stderr.decode('utf-8')
-    return r.returncode == 124 or pattern in stderr or 'Segmentation fault' in stderr or 'runtime error:' in stderr or 'ERROR: AddressSanitizer' in stderr
+    if r.returncode == 124:
+        return True
+    for p in patterns:
+        if p in stderr:
+            return True
+    return False
 
 def do_cmd(base, flags):
     return 'timeout 10 %s %s' % (' '.join(base), ' '.join(flags))
