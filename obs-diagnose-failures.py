@@ -21,7 +21,7 @@ def find_in_line(haystack, line):
             return line[:i] + p + line[i + len(needle):]
 
 categories = [('segfault', ['Segmentation fault', 'internal compiler error', 'Killed signal', 'lto1: fatal error']),
-        ('multiple symbol definition', ['multiple definition of']),
+        ('multiple definition', ['multiple definition of']),
         ('Werror', ['[-Werror=']),
         ('error', ['error:']),
         ('test-failure', ['test-suite.log] Error', 'test] Error', 'The following tests FAILED']),
