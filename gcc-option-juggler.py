@@ -585,7 +585,7 @@ class OptimizationLevel:
         r = subprocess.run(os.path.join(script_dir, "gcc-reduce-flags.py") + " '" + cmd + "'", shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
         assert r.returncode == 0
         reduced_command = r.stdout.decode('utf-8').strip()
-        print('Reduced command: ' + reduced_command)
+        print(colored('Reduced command: ' + reduced_command, 'green'))
 
         if args.reduce:
             self.reduce_testcase(reduced_command)
