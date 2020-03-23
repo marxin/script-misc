@@ -116,7 +116,7 @@ def get_compiler():
 def get_compiler_by_extension(f):
     if f.endswith('.c'):
         return get_compiler()
-    elif f.endswith('.C') or f.endswith('.cpp'):
+    elif f.endswith('.C') or f.endswith('.cpp') or f.endswith('.cc'):
         return get_compiler_prefix() + 'g++'
     elif f.endswith('.f') or f.endswith('.f90'):
         return get_compiler_prefix() + 'gfortran'
@@ -194,6 +194,8 @@ def find_ice(stderr):
         if ice in l:
             subject = l[l.find(ice) + len(ice):]
             found_ice = True
+        elif 'compare-debug' in l and 'error:' in l:
+            return (l, l)
         elif args.ubsan and ubsan_re in l:
             subject = l[l.find(ubsan_re) + len(ubsan_re):]
             return (subject, l)
