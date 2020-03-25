@@ -58,8 +58,6 @@ parser.add_argument('--timeout', type = int, default = 10, help = 'Default timeo
 parser.add_argument('-v', '--verbose', action = 'store_true', help = 'Verbose messages')
 parser.add_argument('-l', '--logging', action = 'store_true', help = 'Log error output')
 parser.add_argument('-r', '--reduce', action = 'store_true', help = 'Creduce a failing test-case')
-parser.add_argument('-u', '--ubsan', action = 'store_true', help = 'Fail also for an UBSAN error')
-parser.add_argument('-a', '--asan', action = 'store_true', help = 'Fail also for an ASAN error')
 parser.add_argument('-f', '--filter', action = 'store_true', help = 'First filter valid source files')
 parser.add_argument('-m', '--maxparam', help = 'Maximum param value')
 parser.add_argument('-t', '--target', default = 'x86_64', help = 'Default target', choices = ['x86_64', 'ppc64', 'ppc64le', 's390x', 'aarch64', 'arm', 'riscv64'])
@@ -196,10 +194,10 @@ def find_ice(stderr):
             found_ice = True
         elif 'compare-debug' in l and 'error:' in l:
             return (l, l)
-        elif args.ubsan and ubsan_re in l:
+        elif ubsan_re in l:
             subject = l[l.find(ubsan_re) + len(ubsan_re):]
             return (subject, l)
-        elif args.asan and asan_re in l:
+        elif and asan_re in l:
             subject = l[l.find(asan_re) + len(asan_re):]
             return (subject, l)
         elif 'in ' in l and ' at ' in l:
@@ -552,11 +550,9 @@ class OptimizationLevel:
         # TODO: warning
         cmd = 'timeout %d %s %s -fmax-errors=1 -I/home/marxin/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s %s %s -o/dev/null -S' % (args.timeout, compiler, args.cflags, self.level, source_file, ' '.join(options))
         my_env = os.environ.copy()
+        my_env['UBSAN_OPTIONS'] = 'color=never halt_on_error=1'
+        my_env['ASAN_OPTIONS'] = 'color=never detect_leaks=0'
 
-        if args.ubsan:
-            my_env['UBSAN_OPTIONS'] = 'color=never halt_on_error=1'
-        elif args.asan:
-            my_env['ASAN_OPTIONS'] = 'color=never detect_leaks=0'
         r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE, env = my_env)
         if r.returncode != 0:
             try:
