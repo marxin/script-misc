@@ -197,7 +197,7 @@ def find_ice(stderr):
         elif ubsan_re in l:
             subject = l[l.find(ubsan_re) + len(ubsan_re):]
             return (subject, l)
-        elif and asan_re in l:
+        elif asan_re in l:
             subject = l[l.find(asan_re) + len(asan_re):]
             return (subject, l)
         elif 'in ' in l and ' at ' in l:
