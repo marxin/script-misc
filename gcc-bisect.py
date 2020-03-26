@@ -350,7 +350,7 @@ class GitRevision:
             return False
 
         shutil.rmtree(extract_location, ignore_errors = True)
-        os.mkdir(extract_location)
+        os.makedirs(extract_location)
         cmd = 'zstdcat -T0 %s | tar x -C %s' % (archive, extract_location)
         subprocess.check_output(cmd, shell = True)
         return True
