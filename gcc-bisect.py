@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
-# one needs the following python modules:
-# python3-filelock python3-GitPython python3-semantic_version
+# one needs the following packages:
+# python3-filelock python3-GitPython python3-semantic_version python3-termcolor zstd
 
 import sys
 import hashlib
