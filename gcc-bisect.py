@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+# one needs the following python modules:
+# python3-filelock python3-GitPython python3-semantic_version
+
 import sys
 import hashlib
 import argparse
