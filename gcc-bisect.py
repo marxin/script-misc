@@ -31,11 +31,19 @@ title_color = 'cyan'
 oldest_release = '4.8'
 oldest_active_branch = 7
 
-lock = filelock.FileLock('/tmp/gcc_build_binary.lock')
+# These locations should be set up by a script consumer
+# TODO: set up corresponding locations
+
+# location to GCC git repository
 git_location = '/home/marxin/Programming/gcc-gcc-bisect/'
-install_location = '/home/marxin/DATA/gcc-binaries/'
-log_file = '/home/marxin/Programming/script-misc/gcc-build.log'
+# location to prebuilt binaries
+binaries_location = '/home/marxin/DATA/gcc-binaries/'
+# location where prebuilt binaries are extracted
 extract_location = '/dev/shm/gcc-bisect-bin/'
+
+# Other locations should not by set up by a script consumer
+lock = filelock.FileLock(os.path.join(script_dirname, '.gcc_build_binary.lock'))
+log_file = '/home/marxin/Programming/script-misc/gcc-build.log'
 
 patches_folder = os.path.join(script_dirname, 'gcc-bisect-patches')
 patches = ['0001-Use-ucontext_t-not-struct-ucontext-in-linux-unwind.h.patch', 'gnu-inline.patch', 'ubsan.patch']
@@ -239,7 +247,7 @@ class GitRevision:
         return self.get_folder_path() + '.tar.zst'
 
     def get_folder_path(self):
-        return os.path.join(install_location, self.commit.hexsha)
+        return os.path.join(binaries_location, self.commit.hexsha)
 
     def install(self, start):
         with lock:
@@ -464,7 +472,7 @@ class GitRepository:
                 r.build()
 
     def initialize_binaries(self):
-        files = os.listdir(install_location)
+        files = os.listdir(binaries_location)
         existing = set()
         for f in files:
             if f.endswith('.tar.zst'):
