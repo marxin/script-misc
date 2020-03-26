@@ -40,7 +40,7 @@ extract_location = '/dev/shm/gcc-bisect-bin/'
 patches_folder = os.path.join(script_dirname, 'gcc-bisect-patches')
 patches = ['0001-Use-ucontext_t-not-struct-ucontext-in-linux-unwind.h.patch', 'gnu-inline.patch', 'ubsan.patch']
 
-parser = argparse.ArgumentParser(description='Build GCC binaries.')
+parser = argparse.ArgumentParser(description='Bisect by prebuilt GCC binaries.')
 parser.add_argument('command', nargs = '?', metavar = 'command', help = 'GCC command')
 parser.add_argument('-t', '--silent', action = 'store_true', help = 'Silent logging')
 parser.add_argument('-x', '--negate', action = 'store_true', help = 'FAIL if result code is equal to zero')
