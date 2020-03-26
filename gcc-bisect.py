@@ -15,11 +15,13 @@ import time
 import math
 import filelock
 import re
+import configparser
 
 from datetime import datetime,timedelta
 from termcolor import colored
 from git import Repo
 from semantic_version import Version
+from pathlib import Path
 
 # configuration
 script_dirname = os.path.abspath(os.path.dirname(__file__))
@@ -34,15 +36,23 @@ title_color = 'cyan'
 oldest_release = '4.8'
 oldest_active_branch = 7
 
-# These locations should be set up by a script consumer
-# TODO: set up corresponding locations
+config_location = str(Path.home()) + '/.config/gcc-bisect.ini'
+config = configparser.ConfigParser()
+config.read(config_location)
 
-# location to GCC git repository
-git_location = '/home/marxin/Programming/gcc-gcc-bisect/'
-# location to prebuilt binaries
-binaries_location = '/home/marxin/DATA/gcc-binaries/'
-# location where prebuilt binaries are extracted
-extract_location = '/dev/shm/gcc-bisect-bin/'
+if not 'Default' in config:
+    print('Cannot find Default section in config file: %s' % config_location)
+    exit(127)
+
+needed_variables = ['git_location', 'binaries_location', 'extract_location']
+for nv in needed_variables:
+    if not nv in config['Default']:
+        print('Missing variable %s in config file: %s' % (nv, config_location))
+        exit(127)
+
+git_location = config['Default']['git_location']
+binaries_location = config['Default']['binaries_location']
+extract_location = config['Default']['extract_location']
 
 # Other locations should not by set up by a script consumer
 lock = filelock.FileLock(os.path.join(script_dirname, '.gcc_build_binary.lock'))
