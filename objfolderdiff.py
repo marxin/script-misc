@@ -17,6 +17,8 @@ parser.add_argument('-v', '--verbose', action = 'store_true', help = 'Verbose')
 args = parser.parse_args()
 
 def get_files(folder):
+    if folder.endswith('/'):
+        folder = folder[:-1]
     for root, dirs, files in os.walk(folder, topdown=False):
         for f in files:
             if f.endswith('.o'):
@@ -42,16 +44,21 @@ def print_diff(f, source1, source2):
     subprocess.run('diff -u %s %s' % (f1, f2), shell = True)
 
 source_files1 = list(sorted(get_files(args.source1)))
-source_files2 = list(sorted(get_files(args.source1)))
+source_files2 = list(sorted(get_files(args.source2)))
 
 if set(source_files1) != set(source_files2):
     print('List of files is not equal (%d/%d)' % (len(source_files1), len(source_files2)))
 
+ret = 0
 for i, f in enumerate(source_files1):
     s1 = objdump(os.path.join(args.source1, f))
     s2 = objdump(os.path.join(args.source2, f))
-    if s1 != s2 or args.verbose:
-        print('%6d/%6d: %s: ' % (i, len(source_files1), f), end = '')
-        print(colored('different', 'red') if s1 != s2 else colored('equal', 'green'))
-        if args.diff:
-            print_diff(f, s1, s2)
+    if s1 != s2:
+        ret = 1
+        if args.verbose:
+            print('%6d/%6d: %s: ' % (i, len(source_files1), f), end = '')
+            print(colored('different', 'red') if s1 != s2 else colored('equal', 'green'))
+            if args.diff:
+                print_diff(f, s1, s2)
+
+exit(ret)
