@@ -53,12 +53,12 @@ ret = 0
 for i, f in enumerate(source_files1):
     s1 = objdump(os.path.join(args.source1, f))
     s2 = objdump(os.path.join(args.source2, f))
-    if s1 != s2:
-        ret = 1
-        if args.verbose:
-            print('%6d/%6d: %s: ' % (i, len(source_files1), f), end = '')
-            print(colored('different', 'red') if s1 != s2 else colored('equal', 'green'))
-            if args.diff:
-                print_diff(f, s1, s2)
+    if s1 != s2 or args.verbose:
+        if s1 != s2:
+            ret = 1
+        print('%6d/%6d: %s: ' % (i, len(source_files1), f), end = '')
+        print(colored('different', 'red') if s1 != s2 else colored('equal', 'green'))
+        if args.diff:
+            print_diff(f, s1, s2)
 
 exit(ret)
