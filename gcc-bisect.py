@@ -36,24 +36,6 @@ title_color = 'cyan'
 oldest_release = '4.8'
 oldest_active_branch = 8
 
-config_location = str(Path.home().joinpath('.config/gcc-bisect.ini'))
-config = configparser.ConfigParser()
-config.read(config_location)
-
-if not 'Default' in config:
-    print('Cannot find Default section in config file: %s' % config_location)
-    exit(127)
-
-needed_variables = ['git_location', 'binaries_location', 'extract_location']
-for nv in needed_variables:
-    if not nv in config['Default']:
-        print('Missing variable %s in config file: %s' % (nv, config_location))
-        exit(127)
-
-git_location = config['Default']['git_location']
-binaries_location = config['Default']['binaries_location']
-extract_location = config['Default']['extract_location']
-
 # Other locations should not by set up by a script consumer
 lock = filelock.FileLock(os.path.join(script_dirname, '.gcc_build_binary.lock'))
 log_file = '/home/marxin/Programming/script-misc/gcc-build.log'
@@ -79,6 +61,25 @@ parser.add_argument('--build', action = 'store_true', help = 'Build revisions')
 parser.add_argument('--print', action = 'store_true', help = 'Print built revisions')
 
 args = parser.parse_args()
+
+config_location = str(Path.home().joinpath('.config/gcc-bisect.ini'))
+config = configparser.ConfigParser()
+config.read(config_location)
+
+if not 'Default' in config:
+    print('Cannot find Default section in config file: %s' % config_location)
+    exit(127)
+
+needed_variables = ['git_location', 'binaries_location', 'extract_location']
+for nv in needed_variables:
+    if not nv in config['Default']:
+        print('Missing variable %s in config file: %s' % (nv, config_location))
+        exit(127)
+
+git_location = config['Default']['git_location']
+binaries_location = config['Default']['binaries_location']
+extract_location = config['Default']['extract_location']
+
 repo = Repo(git_location)
 head = repo.commit('origin/master')
 
