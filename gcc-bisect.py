@@ -34,7 +34,7 @@ description_color = 'blue'
 title_color = 'cyan'
 
 oldest_release = '4.8'
-oldest_active_branch = 7
+oldest_active_branch = 8
 
 config_location = str(Path.home().joinpath('.config/gcc-bisect.ini'))
 config = configparser.ConfigParser()
