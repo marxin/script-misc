@@ -398,6 +398,8 @@ class Branch(GitRevision):
         flush_print('%3s-branch: branch commits: %8d, head distance: %8d (have: %d)' % (self.name, len(branch_commits), len(head_commits), len(existing_head_commits)))
 
 class GitRepository:
+    RELEASE_BRANCH_PREFIX = 'origin/releases/gcc-'
+
     def __init__(self):
         self.releases = []
         self.branches = []
@@ -439,16 +441,16 @@ class GitRepository:
 
     def parse_branches(self):
         remote = repo.remotes['origin']
-        branches = list(filter(lambda x: 'origin/releases/gcc-' in x.name, remote.refs))
+        # support bases for 5+ releases
+        branches = list(filter(lambda x: self.RELEASE_BRANCH_PREFIX in x.name and '.' not in x.name, remote.refs))
+        branches = sorted(branches, key = lambda x: int(strip_prefix(x.name, self.RELEASE_BRANCH_PREFIX)))
         for b in branches:
-            name = strip_prefix(b.name, 'origin/releases/gcc-')
+            name = strip_prefix(b.name, self.RELEASE_BRANCH_PREFIX)
             branch_commit = repo.commit(b.name)
-            if name >= str(oldest_active_branch):
-                b = Branch(name, branch_commit)
-                self.branches.append(b)
-            if name >= oldest_release:
-                base = repo.merge_base(head, branch_commit)[0]
-                self.branch_bases.append(Release(name + '-base', base))
+            if name and int(name) >= oldest_active_branch:
+                self.branches.append(Branch(name, branch_commit))
+            base = repo.merge_base(head, branch_commit)[0]
+            self.branch_bases.append(Release(name + '-base', base))
 
     def parse_latest_revisions(self):
         for c in repo.iter_commits(last_revision + '..origin/master', first_parent = True):
