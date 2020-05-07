@@ -33,7 +33,7 @@ last_revision = '58a41b43b5f02c67544569c508424efa4115ad9f'
 description_color = 'blue'
 title_color = 'cyan'
 
-oldest_release = '4.8'
+oldest_release = '4.8.0'
 oldest_active_branch = 8
 
 # Other locations should not by set up by a script consumer
@@ -436,9 +436,10 @@ class GitRepository:
         releases = list(filter(lambda x: 'releases/gcc-' in x.name and not 'prerelease' in x.name, repo.tags))
         for r in releases:
             version = strip_prefix(r.name, 'releases/gcc-')
-            self.releases.append(Release(version, repo.commit(r.name)))
+            if version.count('.') == 2:
+                self.releases.append(Release(version, repo.commit(r.name)))
 
-        self.releases = sorted(filter(lambda x: x.name >= oldest_release, self.releases), key = lambda x: x.name)
+        self.releases = sorted(filter(lambda x: Version(x.name) >= Version(oldest_release), self.releases), key = lambda x: Version(x.name))
 
     def parse_branches(self):
         remote = repo.remotes['origin']
