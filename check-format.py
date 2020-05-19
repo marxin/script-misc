@@ -13,7 +13,7 @@ tmp = '/tmp/patch'
 changelog = '/tmp/changelog'
 
 subprocess.check_output('git diff %s > %s' % (args.revision, tmp), shell = True)
-subprocess.run('%s/mklog %s > %s' % (contrib, tmp, changelog), shell = True, encoding = 'utf8')
+subprocess.run('git gcc-mklog %s > %s' % (tmp, changelog), shell = True, encoding = 'utf8')
 
 if args.inplace:
     print('applying clang-format in place')
