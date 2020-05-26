@@ -9,11 +9,9 @@ parser.add_argument('-i', '--inplace', action = 'store_true', help = 'Apply patc
 args = parser.parse_args()
 
 contrib = '~/Programming/gcc/contrib/'
-tmp = '/tmp/patch'
-changelog = '/tmp/changelog'
+tmp = '/tmp/gcc.patch'
 
 subprocess.check_output('git diff %s > %s' % (args.revision, tmp), shell = True)
-subprocess.run('%s/legacy/mklog %s > %s' % (contrib, tmp, changelog), shell = True, encoding = 'utf8')
 
 if args.inplace:
     print('applying clang-format in place')
