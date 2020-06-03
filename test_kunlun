@@ -1,0 +1,3 @@
+#!/bin/bash
+
+ssh -f mliska@kunlun 'screen -dm gcc_testsuite_runner.py -f ~/Programming/gcc -x -l c,c++,lto,fortran -t /dev/shm/mliska/gcc -j160 -r @$@'
