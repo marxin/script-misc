@@ -51,8 +51,7 @@ def to_gigabyte(value):
 def get_process_name(proc):
     name = proc.name()
     cmdline = proc.cmdline()
-    if (name == 'ld' or name == 'ld.gold'
-            and len(cmdline) >= 2 and cmdline[1] == '-plugin'):
+    if name == 'ld' or name == 'ld.gold' and '-plugin' in cmdline:
         return 'ld'
     elif name == 'lto1-wpa':
         return 'WPA'
