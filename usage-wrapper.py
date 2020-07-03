@@ -71,8 +71,7 @@ def record():
         cpu_data.append(used_cpu)
 
         entry = {}
-        attrs = ['name', 'cmdline', 'memory_info']
-        for proc in psutil.process_iter(attrs=attrs):
+        for proc in psutil.Process().children(recursive=True):
             try:
                 name = get_process_name(proc)
                 if name:
