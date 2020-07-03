@@ -36,7 +36,7 @@ parser.add_argument('-v', '--verbose', action='store_true', help='Verbose')
 parser.add_argument('-s', '--separate-ltrans', action='store_true',
                     help='Separate LTRANS processes in graph')
 parser.add_argument('-o', '--output', default='usage.svg',
-                    help='Path to output image')
+                    help='Path to output image (default: usage.svg)')
 parser.add_argument('-r', '--range',
                     help='Plot only the selected time range (e.g. 200-300)')
 parser.add_argument('-t', '--title', help='Graph title')
