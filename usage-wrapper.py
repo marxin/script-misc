@@ -95,7 +95,7 @@ def record():
 def generate_graph(peak_memory):
     fig, (cpu_subplot, mem_subplot) = plt.subplots(2, sharex=True)
     if args.title:
-        fig.suptitle(args.title)
+        fig.suptitle(args.title, fontsize=17)
     fig.set_figheight(5)
     fig.set_figwidth(10)
     cpu_subplot.set_title('CPU usage (red=single core)')
