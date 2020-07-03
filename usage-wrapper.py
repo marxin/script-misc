@@ -28,12 +28,23 @@ cpu_count = psutil.cpu_count()
 special_processes = {'ld': 'gold', 'WPA': 'deepskyblue',
                      'ltrans': 'forestgreen'}
 
+descr = 'Run command and measure memory and CPU utilization'
+parser = argparse.ArgumentParser(description=descr)
+parser.add_argument('command', metavar='command', help='Command')
+parser.add_argument('-v', '--verbose', action='store_true', help='Verbose')
+parser.add_argument('-s', '--separate-ltrans', action='store_true',
+                    help='Separate LTRANS processes in graph')
+parser.add_argument('-o', '--output', default='usage.svg',
+                    help='Path to output image')
+parser.add_argument('-t', '--title', help='Graph title')
+args = parser.parse_args()
+
 
 def to_gigabyte(value):
     return value / 1024**3
 
 
-def get_process_name(proc, separate_ltrans):
+def get_process_name(proc):
     name = proc.name()
     cmdline = proc.cmdline()
     if (name == 'ld' or name == 'ld.gold'
@@ -42,14 +53,14 @@ def get_process_name(proc, separate_ltrans):
     elif name == 'lto1-wpa':
         return 'WPA'
     elif '-fltrans' in cmdline:
-        if separate_ltrans:
+        if args.separate_ltrans:
             return 'ltrans-%d' % proc.pid
         else:
             return 'ltrans'
     return None
 
 
-def record(separate_ltrans):
+def record():
     while not done:
         timestamp = time.monotonic() - start_ts
         used_cpu = psutil.cpu_percent(interval=INTERVAL)
@@ -62,7 +73,7 @@ def record(separate_ltrans):
         attrs = ['name', 'cmdline', 'memory_info']
         for proc in psutil.process_iter(attrs=attrs):
             try:
-                name = get_process_name(proc, separate_ltrans)
+                name = get_process_name(proc)
                 if name:
                     memory = to_gigabyte(proc.memory_info().rss)
                     if name not in process_mapping:
@@ -81,10 +92,10 @@ def record(separate_ltrans):
         memory_subdata.append(entry)
 
 
-def generate_graph(output_path, title, peak_memory):
+def generate_graph(peak_memory):
     fig, (cpu_subplot, mem_subplot) = plt.subplots(2, sharex=True)
-    if title:
-        fig.suptitle(title)
+    if args.title:
+        fig.suptitle(args.title)
     fig.set_figheight(5)
     fig.set_figwidth(10)
     cpu_subplot.set_title('CPU usage (red=single core)')
@@ -124,29 +135,24 @@ def generate_graph(output_path, title, peak_memory):
         mem_subplot.stackplot(timestamps, stacks, labels=process_labels,
                               colors=colors)
         mem_subplot.legend(loc='upper left')
-    plt.savefig(output_path)
+    plt.savefig(args.output)
+    if args.verbose:
+        print('Saving plot to %s' % args.output)
 
 
-descr = 'Run command and measure memory and CPU utilization'
-parser = argparse.ArgumentParser(description=descr)
-parser.add_argument('command', metavar='command', help='Command')
-parser.add_argument('-v', '--verbose', action='store_true', help='Verbose')
-parser.add_argument('-s', '--separate-ltrans', action='store_true',
-                    help='Separate LTRANS processes in graph')
-parser.add_argument('-o', '--output', default='usage.svg',
-                    help='Path to output image')
-parser.add_argument('-t', '--title', help='Graph title')
-args = parser.parse_args()
-
-thread = threading.Thread(target=record, args=(args.separate_ltrans,))
+thread = threading.Thread(target=record, args=())
 thread.start()
 
 if args.verbose:
     print('Running command', flush=True)
-subprocess.run(args.command, shell=True)
 
-done = True
-thread.join()
-min_memory = min(memory_data)
-memory_data = [x - min_memory for x in memory_data]
-generate_graph(args.output, args.title, max(memory_data))
+try:
+    subprocess.run(args.command, shell=True)
+except KeyboardInterrupt:
+    pass
+finally:
+    done = True
+    thread.join()
+    min_memory = min(memory_data)
+    memory_data = [x - min_memory for x in memory_data]
+    generate_graph(max(memory_data))
