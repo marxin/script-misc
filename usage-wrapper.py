@@ -85,7 +85,7 @@ def generate_graph(output_path, title, peak_memory):
     fig.set_figwidth(10)
     cpu_subplot.set_title('CPU usage (red=single core)')
     cpu_subplot.set_ylabel('%')
-    cpu_subplot.plot(timestamps, cpu_data)
+    cpu_subplot.plot(timestamps, cpu_data, c='blue')
     cpu_subplot.set_ylim([0, 105])
     cpu_subplot.axhline(color='r', alpha=0.5, y=100.0 / cpu_count)
     cpu_subplot.grid(True)
