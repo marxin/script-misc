@@ -25,14 +25,15 @@ done = False
 start_ts = time.monotonic()
 cpu_count = psutil.cpu_count()
 
-special_processes = {'ld': 'gold', 'WPA': 'deepskyblue'}
+special_processes = {'ld': 'gold', 'WPA': 'deepskyblue',
+                     'ltrans': 'forestgreen'}
 
 
 def to_gigabyte(value):
     return value / 1024**3
 
 
-def get_process_name(proc):
+def get_process_name(proc, separate_ltrans):
     name = proc.name()
     cmdline = proc.cmdline()
     if (name == 'ld' or name == 'ld.gold'
@@ -41,11 +42,14 @@ def get_process_name(proc):
     elif name == 'lto1-wpa':
         return 'WPA'
     elif '-fltrans' in cmdline:
-        return 'ltrans-%d' % proc.pid
+        if separate_ltrans:
+            return 'ltrans-%d' % proc.pid
+        else:
+            return 'ltrans'
     return None
 
 
-def record():
+def record(separate_ltrans):
     while not done:
         timestamp = time.monotonic() - start_ts
         used_cpu = psutil.cpu_percent(interval=INTERVAL)
@@ -58,7 +62,7 @@ def record():
         attrs = ['name', 'cmdline', 'memory_info']
         for proc in psutil.process_iter(attrs=attrs):
             try:
-                name = get_process_name(proc)
+                name = get_process_name(proc, separate_ltrans)
                 if name:
                     memory = to_gigabyte(proc.memory_info().rss)
                     if name not in process_mapping:
@@ -98,7 +102,7 @@ def generate_graph(output_path, title, peak_memory):
     # scale it to a reasonable limit
     limit = math.ceil(peak_memory * 1.2)
     mem_subplot.set_ylim([0, limit])
-    mem_subplot.set_yticks(range(limit + 1))
+    mem_subplot.set_yticks(range(0, limit + 1, math.ceil((limit + 1) / 10)))
     mem_subplot.grid(True)
 
     stacks = []
@@ -127,12 +131,14 @@ descr = 'Run command and measure memory and CPU utilization'
 parser = argparse.ArgumentParser(description=descr)
 parser.add_argument('command', metavar='command', help='Command')
 parser.add_argument('-v', '--verbose', action='store_true', help='Verbose')
+parser.add_argument('-s', '--separate-ltrans', action='store_true',
+                    help='Separate LTRANS processes in graph')
 parser.add_argument('-o', '--output', default='usage.svg',
                     help='Path to output image')
 parser.add_argument('-t', '--title', help='Graph title')
 args = parser.parse_args()
 
-thread = threading.Thread(target=record, args=())
+thread = threading.Thread(target=record, args=(args.separate_ltrans,))
 thread.start()
 
 if args.verbose:
