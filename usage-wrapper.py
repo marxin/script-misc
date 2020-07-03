@@ -77,10 +77,12 @@ def record():
         memory_subdata.append(entry)
 
 
-def generate_graph(output_path, peak_memory):
-    f, (cpu_subplot, mem_subplot) = plt.subplots(2, sharex=True)
-    f.set_figheight(5)
-    f.set_figwidth(10)
+def generate_graph(output_path, title, peak_memory):
+    fig, (cpu_subplot, mem_subplot) = plt.subplots(2, sharex=True)
+    if title:
+        fig.suptitle(title)
+    fig.set_figheight(5)
+    fig.set_figwidth(10)
     cpu_subplot.set_title('CPU usage (red=single core)')
     cpu_subplot.set_ylabel('%')
     cpu_subplot.plot(timestamps, cpu_data)
@@ -114,9 +116,10 @@ def generate_graph(output_path, peak_memory):
         if name in process_mapping:
             colors[process_mapping[name]] = color
 
-    mem_subplot.stackplot(timestamps, stacks, labels=process_labels,
-                          colors=colors)
-    mem_subplot.legend(loc='upper left')
+    if stacks:
+        mem_subplot.stackplot(timestamps, stacks, labels=process_labels,
+                              colors=colors)
+        mem_subplot.legend(loc='upper left')
     plt.savefig(output_path)
 
 
@@ -126,6 +129,7 @@ parser.add_argument('command', metavar='command', help='Command')
 parser.add_argument('-v', '--verbose', action='store_true', help='Verbose')
 parser.add_argument('-o', '--output', default='usage.svg',
                     help='Path to output image')
+parser.add_argument('-t', '--title', help='Graph title')
 args = parser.parse_args()
 
 thread = threading.Thread(target=record, args=())
@@ -139,4 +143,4 @@ done = True
 thread.join()
 min_memory = min(memory_data)
 memory_data = [x - min_memory for x in memory_data]
-generate_graph(args.output, max(memory_data))
+generate_graph(args.output, args.title, max(memory_data))
