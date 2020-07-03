@@ -77,7 +77,7 @@ def record():
         memory_subdata.append(entry)
 
 
-def generate_graph(peak_memory):
+def generate_graph(output_path, peak_memory):
     f, (cpu_subplot, mem_subplot) = plt.subplots(2, sharex=True)
     f.set_figheight(5)
     f.set_figwidth(10)
@@ -117,14 +117,15 @@ def generate_graph(peak_memory):
     mem_subplot.stackplot(timestamps, stacks, labels=process_labels,
                           colors=colors)
     mem_subplot.legend(loc='upper left')
-
-    plt.savefig('output.svg')
+    plt.savefig(output_path)
 
 
 descr = 'Run command and measure memory and CPU utilization'
 parser = argparse.ArgumentParser(description=descr)
 parser.add_argument('command', metavar='command', help='Command')
 parser.add_argument('-v', '--verbose', action='store_true', help='Verbose')
+parser.add_argument('-o', '--output', default='usage.svg',
+                    help='Path to output image')
 args = parser.parse_args()
 
 thread = threading.Thread(target=record, args=())
@@ -138,4 +139,4 @@ done = True
 thread.join()
 min_memory = min(memory_data)
 memory_data = [x - min_memory for x in memory_data]
-generate_graph(max(memory_data))
+generate_graph(args.output, max(memory_data))
