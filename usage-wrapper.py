@@ -37,8 +37,11 @@ parser.add_argument('-s', '--separate-ltrans', action='store_true',
                     help='Separate LTRANS processes in graph')
 parser.add_argument('-o', '--output', default='usage.svg',
                     help='Path to output image')
+parser.add_argument('-r', '--range',
+                    help='Plot only the selected time range (e.g. 200-300)')
 parser.add_argument('-t', '--title', help='Graph title')
 args = parser.parse_args()
+time_range = [int(x) for x in args.range.split('-')] if args.range else None
 
 
 def to_gigabyte(value):
@@ -64,6 +67,10 @@ def get_process_name(proc):
 def record():
     while not done:
         timestamp = time.monotonic() - start_ts
+        if time_range:
+            if timestamp < time_range[0] or timestamp > time_range[1]:
+                time.sleep(INTERVAL)
+                continue
         used_cpu = psutil.cpu_percent(interval=INTERVAL)
         used_memory = to_gigabyte(psutil.virtual_memory().used)
         timestamps.append(timestamp)
@@ -103,7 +110,7 @@ def generate_graph(peak_memory):
     cpu_subplot.plot(timestamps, cpu_data, c='blue', lw=LW)
     cpu_subplot.set_ylim([0, 105])
     cpu_subplot.axhline(color='r', alpha=0.5, y=100.0 / cpu_count, lw=LW)
-    cpu_subplot.set_xlim(left=0)
+    cpu_subplot.set_xlim(left=time_range[0] if time_range else 0)
     cpu_subplot.grid(True)
 
     mem_subplot.plot(timestamps, memory_data, c='blue', lw=LW)
@@ -154,6 +161,9 @@ except KeyboardInterrupt:
 finally:
     done = True
     thread.join()
-    min_memory = min(memory_data)
-    memory_data = [x - min_memory for x in memory_data]
-    generate_graph(max(memory_data))
+    if memory_data:
+        min_memory = min(memory_data)
+        memory_data = [x - min_memory for x in memory_data]
+        generate_graph(max(memory_data))
+    elif args.verbose:
+        print('No collected data')
