@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 
-import psutil
-import time
-import threading
-import subprocess
 import argparse
 import math
+import subprocess
+import threading
+import time
 
 import matplotlib.pyplot as plt
-import numpy as np
 
-def to_gigabyte(value):
-    return value / 1024**3
+import psutil
+
 
 INTERVAL = 0.33
 
@@ -29,16 +27,23 @@ cpu_count = psutil.cpu_count()
 
 special_processes = {'ld': 'gold', 'WPA': 'deepskyblue'}
 
+
+def to_gigabyte(value):
+    return value / 1024**3
+
+
 def get_process_name(proc):
     name = proc.name()
     cmdline = proc.cmdline()
-    if name == 'ld' or name == 'ld.gold' and len(cmdline) >= 2 and cmdline[1] == '-plugin':
+    if (name == 'ld' or name == 'ld.gold'
+            and len(cmdline) >= 2 and cmdline[1] == '-plugin'):
         return 'ld'
     elif name == 'lto1-wpa':
         return 'WPA'
     elif '-fltrans' in cmdline:
         return 'ltrans-%d' % proc.pid
     return None
+
 
 def record():
     while not done:
@@ -50,28 +55,30 @@ def record():
         cpu_data.append(used_cpu)
 
         entry = {}
-        for proc in psutil.process_iter(attrs=['name', 'cmdline', 'memory_info']):
+        attrs = ['name', 'cmdline', 'memory_info']
+        for proc in psutil.process_iter(attrs=attrs):
             try:
                 name = get_process_name(proc)
                 if name:
                     memory = to_gigabyte(proc.memory_info().rss)
-                    if not name in process_mapping:
-                        l = len(process_mapping)
-                        process_mapping[name] = l
+                    if name not in process_mapping:
+                        length = len(process_mapping)
+                        process_mapping[name] = length
                         if name in special_processes:
                             process_labels.append(name)
                         else:
                             process_labels.append(None)
-                    if not name in entry:
+                    if name not in entry:
                         entry[name] = 0
                     entry[name] += memory
-            except Exception as e:
+            except Exception:
                 # the process can be gone
                 pass
         memory_subdata.append(entry)
 
+
 def generate_graph(peak_memory):
-    f, (cpu_subplot, mem_subplot) = plt.subplots(2, sharex = True)
+    f, (cpu_subplot, mem_subplot) = plt.subplots(2, sharex=True)
     cpu_subplot.set_title('CPU usage (red=single core)')
     cpu_subplot.set_ylabel('%')
     cpu_subplot.plot(timestamps, cpu_data)
@@ -83,7 +90,6 @@ def generate_graph(peak_memory):
     mem_subplot.set_title('Memory usage')
     mem_subplot.set_ylabel('GB')
 
-    total_memory = to_gigabyte(psutil.virtual_memory().total)
     # scale it to a reasonable limit
     limit = math.ceil(peak_memory * 1.2)
     mem_subplot.set_ylim([0, limit])
@@ -91,7 +97,7 @@ def generate_graph(peak_memory):
     mem_subplot.grid(True)
 
     stacks = []
-    for i in range(len(process_mapping)):
+    for _ in range(len(process_mapping)):
         stacks.append([])
     for values in memory_subdata:
         for k, v in process_mapping.items():
@@ -105,14 +111,17 @@ def generate_graph(peak_memory):
         if name in process_mapping:
             colors[process_mapping[name]] = color
 
-    mem_subplot.stackplot(timestamps, stacks, labels=process_labels, colors=colors)
+    mem_subplot.stackplot(timestamps, stacks, labels=process_labels,
+                          colors=colors)
     mem_subplot.legend(loc='upper left')
 
     plt.savefig('output.svg')
 
-parser = argparse.ArgumentParser(description='Run command and measure memory and CPU utilization')
-parser.add_argument('command', metavar = 'command', help = 'Command')
-parser.add_argument('-v', '--verbose', action = 'store_true', help = 'Verbose')
+
+descr = 'Run command and measure memory and CPU utilization'
+parser = argparse.ArgumentParser(description=descr)
+parser.add_argument('command', metavar='command', help='Command')
+parser.add_argument('-v', '--verbose', action='store_true', help='Verbose')
 args = parser.parse_args()
 
 thread = threading.Thread(target=record, args=())
