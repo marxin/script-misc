@@ -12,6 +12,7 @@ import psutil
 
 
 INTERVAL = 0.33
+LW = 0.7
 
 timestamps = []
 cpu_data = []
@@ -100,12 +101,12 @@ def generate_graph(peak_memory):
     fig.set_figwidth(10)
     cpu_subplot.set_title('CPU usage (red=single core)')
     cpu_subplot.set_ylabel('%')
-    cpu_subplot.plot(timestamps, cpu_data, c='blue')
+    cpu_subplot.plot(timestamps, cpu_data, c='blue', lw=LW)
     cpu_subplot.set_ylim([0, 105])
     cpu_subplot.axhline(color='r', alpha=0.5, y=100.0 / cpu_count)
     cpu_subplot.grid(True)
 
-    mem_subplot.plot(timestamps, memory_data, c='blue')
+    mem_subplot.plot(timestamps, memory_data, c='blue', lw=LW)
     mem_subplot.set_title('Memory usage')
     mem_subplot.set_ylabel('GB')
     mem_subplot.set_xlabel('time')
