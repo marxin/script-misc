@@ -103,7 +103,7 @@ def generate_graph(peak_memory):
     cpu_subplot.set_ylabel('%')
     cpu_subplot.plot(timestamps, cpu_data, c='blue', lw=LW)
     cpu_subplot.set_ylim([0, 105])
-    cpu_subplot.axhline(color='r', alpha=0.5, y=100.0 / cpu_count)
+    cpu_subplot.axhline(color='r', alpha=0.5, y=100.0 / cpu_count, lw=LW)
     cpu_subplot.grid(True)
 
     mem_subplot.plot(timestamps, memory_data, c='blue', lw=LW)
