@@ -13,7 +13,6 @@ List of scripts:
 + symbol_section_finder - reads a set of object files and find corresponding sections for given list of functions
 + gcc-function-reorder - script compares all symbols met by compiler, if all occure in correct order according to dump
 + spec_statistics - script being to parse spec results and arrange them to latex table style
-+ vmstat_parser - loads CPU utilization and memory usage from vmstat output; matplotlib is used for graph visualization
 + function_call_stats - temporary script for function call statistics aggregation
 + filter_lists - given a file to filter and a file with lines that should be filtered, print all these lines
 + icf_parser - ICF to IPA sem equality function equality comparer
@@ -22,7 +21,6 @@ List of scripts:
 + spec_batch_runner - runs a set of SPEC tests and collects statistics
 + spec_speed_size_graph - matplotlib graph generator for a single SPEC benchmark
 + stap_run - uses systemtap script to monitor disk access to binary and creates graph with readpage_graph script
-+ system_top - utilizes vmstat and free commands to get used memory and CPU (including lto1 in WPA and LTRANS phases)
 + gentoo_parse_packages - parses a list of packages (with topic) and generates emerge command
 + binaries_walker - goes through all shared libraries and ELF executables and presents stats about size of files
 + table_transformer - transforms CSV-like data to HTML table
