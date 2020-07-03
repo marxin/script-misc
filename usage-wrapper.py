@@ -79,6 +79,8 @@ def record():
 
 def generate_graph(peak_memory):
     f, (cpu_subplot, mem_subplot) = plt.subplots(2, sharex=True)
+    f.set_figheight(5)
+    f.set_figwidth(10)
     cpu_subplot.set_title('CPU usage (red=single core)')
     cpu_subplot.set_ylabel('%')
     cpu_subplot.plot(timestamps, cpu_data)
@@ -89,6 +91,7 @@ def generate_graph(peak_memory):
     mem_subplot.plot(timestamps, memory_data, c='blue')
     mem_subplot.set_title('Memory usage')
     mem_subplot.set_ylabel('GB')
+    mem_subplot.set_xlabel('time')
 
     # scale it to a reasonable limit
     limit = math.ceil(peak_memory * 1.2)
