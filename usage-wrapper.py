@@ -193,10 +193,10 @@ def generate_graph(time_range):
     if mem_stacks:
         mem_subplot.stackplot(timestamps, mem_stacks, labels=process_labels,
                               colors=colors)
-        mem_subplot.legend(loc='best')
+        mem_subplot.legend(loc='best', prop={'size': 6})
         cpu_subplot.stackplot(timestamps, cpu_stacks, labels=process_labels,
                               colors=colors)
-        cpu_subplot.legend(loc='best')
+        cpu_subplot.legend(loc='best', prop={'size': 6})
 
     filename = args.output
     if time_range:
