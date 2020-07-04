@@ -2,6 +2,7 @@
 
 import argparse
 import math
+import os
 import subprocess
 import threading
 import time
@@ -14,10 +15,11 @@ import psutil
 INTERVAL = 0.33
 LW = 0.7
 
-timestamps = []
-cpu_data = []
-memory_data = []
-process_usage = []
+global_timestamps = []
+global_cpu_data = []
+global_memory_data = []
+global_process_usage = []
+
 process_name_map = {}
 process_labels = []
 lock = threading.Lock()
@@ -37,11 +39,11 @@ parser.add_argument('-s', '--separate-ltrans', action='store_true',
                     help='Separate LTRANS processes in graph')
 parser.add_argument('-o', '--output', default='usage.svg',
                     help='Path to output image (default: usage.svg)')
-parser.add_argument('-r', '--range',
-                    help='Plot only the selected time range (e.g. 200-300)')
+parser.add_argument('-r', '--ranges',
+                    help='Plot only the selected time ranges '
+                    '(e.g. 20-30, 0-1000)')
 parser.add_argument('-t', '--title', help='Graph title')
 args = parser.parse_args()
-time_range = [int(x) for x in args.range.split('-')] if args.range else None
 
 
 def to_gigabyte(value):
@@ -67,15 +69,11 @@ def record():
     active_pids = {}
     while not done:
         timestamp = time.monotonic() - start_ts
-        if time_range:
-            if timestamp < time_range[0] or timestamp > time_range[1]:
-                time.sleep(INTERVAL)
-                continue
         used_cpu = psutil.cpu_percent(interval=INTERVAL)
         used_memory = to_gigabyte(psutil.virtual_memory().used)
-        timestamps.append(timestamp)
-        memory_data.append(used_memory)
-        cpu_data.append(used_cpu)
+        global_timestamps.append(timestamp)
+        global_memory_data.append(used_memory)
+        global_cpu_data.append(used_cpu)
 
         entry = {}
         seen_pids = set()
@@ -109,13 +107,34 @@ def record():
                 del active_pids[pid]
         if args.verbose:
             print(entry, flush=True)
-        process_usage.append(entry)
+        global_process_usage.append(entry)
 
 
-def generate_graph(peak_memory):
+def generate_graph(time_range):
+    timestamps = []
+    cpu_data = []
+    memory_data = []
+    process_usage = []
+    peak_memory = max(global_memory_data)
+
+    # filter date by timestamp
+    for i, ts in enumerate(global_timestamps):
+        if not time_range or time_range[0] <= ts and ts <= time_range[1]:
+            timestamps.append(ts)
+            cpu_data.append(global_cpu_data[i])
+            memory_data.append(global_memory_data[i])
+            process_usage.append(global_process_usage[i])
+
+    if not timestamps:
+        if args.verbose:
+            print('No data for range: %s' % str(time_range))
+        return
+
     fig, (cpu_subplot, mem_subplot) = plt.subplots(2, sharex=True)
-    if args.title:
-        fig.suptitle(args.title, fontsize=17)
+    title = args.title if args.title else ''
+    if time_range:
+        title += ' (%d-%d s)' % (time_range[0], time_range[1])
+    fig.suptitle(title, fontsize=17)
     fig.set_figheight(5)
     fig.set_figwidth(10)
     cpu_subplot.set_title('CPU usage (red=single core)')
@@ -132,7 +151,10 @@ def generate_graph(peak_memory):
     mem_subplot.set_xlabel('time')
 
     # scale it to a reasonable limit
-    limit = math.ceil(peak_memory * 1.2)
+    limit = 1
+    while 1.2 * peak_memory > limit:
+        limit *= 2
+    limit = math.ceil(limit)
     mem_subplot.set_ylim([0, limit])
     mem_subplot.set_yticks(range(0, limit + 1, math.ceil((limit + 1) / 10)))
     mem_subplot.grid(True)
@@ -165,15 +187,27 @@ def generate_graph(peak_memory):
                               colors=colors)
         cpu_subplot.legend(loc='upper left')
 
-    plt.savefig(args.output)
+    filename = args.output
+    if time_range:
+        tr = '-%d-%d' % (time_range[0], time_range[1])
+        filename = os.path.splitext(args.output)[0] + tr + '.svg'
+    plt.savefig(filename)
     if args.verbose:
-        print('Saving plot to %s' % args.output)
+        print('Saving plot to %s' % filename)
 
 
 thread = threading.Thread(target=record, args=())
 thread.start()
 
+ranges = []
+if args.ranges:
+    for r in args.ranges.split(','):
+        parts = r.split('-')
+        assert len(parts) == 2
+        ranges.append([int(x) for x in parts])
+
 if args.verbose:
+    print('Ranges are %s' % str(ranges))
     print('Running command', flush=True)
 
 try:
@@ -183,9 +217,10 @@ except KeyboardInterrupt:
 finally:
     done = True
     thread.join()
-    if memory_data:
-        min_memory = min(memory_data)
-        memory_data = [x - min_memory for x in memory_data]
-        generate_graph(max(memory_data))
-    elif args.verbose:
-        print('No collected data')
+    if global_memory_data:
+        min_memory = min(global_memory_data)
+        global_memory_data = [x - min_memory for x in global_memory_data]
+
+        generate_graph(None)
+        for r in ranges:
+            generate_graph(r)
