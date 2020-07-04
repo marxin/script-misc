@@ -29,7 +29,7 @@ start_ts = time.monotonic()
 cpu_count = psutil.cpu_count()
 
 special_processes = {'ld': 'gold', 'WPA': 'deepskyblue',
-                     'ltrans': 'forestgreen'}
+                     'ltrans': 'forestgreen', 'as': 'coral'}
 
 descr = 'Run command and measure memory and CPU utilization'
 parser = argparse.ArgumentParser(description=descr)
@@ -57,6 +57,8 @@ def get_process_name(proc):
         return 'ld'
     elif name == 'lto1-wpa':
         return 'WPA'
+    elif name == 'as':
+        return 'as'
     elif '-fltrans' in cmdline:
         if args.separate_ltrans:
             return 'ltrans-%d' % proc.pid
@@ -137,7 +139,10 @@ def generate_graph(time_range):
     fig.suptitle(title, fontsize=17)
     fig.set_figheight(5)
     fig.set_figwidth(10)
-    cpu_subplot.set_title('CPU usage (red=single core)')
+    local_peak_memory = max(memory_data)
+    local_cpu_average = sum(cpu_data) / len(cpu_data)
+    cpu_subplot.set_title('CPU usage (red=single core, avg=%.1f%%)'
+                          % local_cpu_average)
     cpu_subplot.set_ylabel('%')
     cpu_subplot.plot(timestamps, cpu_data, c='blue', lw=LW)
     cpu_subplot.set_ylim([0, 105])
@@ -146,7 +151,7 @@ def generate_graph(time_range):
     cpu_subplot.grid(True)
 
     mem_subplot.plot(timestamps, memory_data, c='blue', lw=LW)
-    mem_subplot.set_title('Memory usage')
+    mem_subplot.set_title('Memory usage (peak: %.1f GB)' % local_peak_memory)
     mem_subplot.set_ylabel('GB')
     mem_subplot.set_xlabel('time')
 
