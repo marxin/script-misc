@@ -17,8 +17,8 @@ LW = 0.7
 timestamps = []
 cpu_data = []
 memory_data = []
-memory_subdata = []
-process_mapping = {}
+process_usage = []
+process_name_map = {}
 process_labels = []
 lock = threading.Lock()
 
@@ -64,6 +64,7 @@ def get_process_name(proc):
 
 
 def record():
+    active_pids = {}
     while not done:
         timestamp = time.monotonic() - start_ts
         if time_range:
@@ -77,25 +78,38 @@ def record():
         cpu_data.append(used_cpu)
 
         entry = {}
+        seen_pids = set()
         for proc in psutil.Process().children(recursive=True):
             try:
                 name = get_process_name(proc)
                 if name:
+                    seen_pids.add(proc.pid)
+                    if proc.pid not in active_pids:
+                        active_pids[proc.pid] = proc
+                    else:
+                        proc = active_pids[proc.pid]
                     memory = to_gigabyte(proc.memory_info().rss)
-                    if name not in process_mapping:
-                        length = len(process_mapping)
-                        process_mapping[name] = length
+                    cpu = proc.cpu_percent() / cpu_count
+                    if name not in process_name_map:
+                        length = len(process_name_map)
+                        process_name_map[name] = length
                         if name in special_processes:
                             process_labels.append(name)
                         else:
                             process_labels.append(None)
                     if name not in entry:
-                        entry[name] = 0
-                    entry[name] += memory
+                        entry[name] = {'memory': 0, 'cpu': 0}
+                    entry[name]['cpu'] += cpu
+                    entry[name]['memory'] += memory
             except Exception:
                 # the process can be gone
                 pass
-        memory_subdata.append(entry)
+        for pid in list(active_pids.keys()):
+            if pid not in seen_pids:
+                del active_pids[pid]
+        if args.verbose:
+            print(entry, flush=True)
+        process_usage.append(entry)
 
 
 def generate_graph(peak_memory):
@@ -123,25 +137,34 @@ def generate_graph(peak_memory):
     mem_subplot.set_yticks(range(0, limit + 1, math.ceil((limit + 1) / 10)))
     mem_subplot.grid(True)
 
-    stacks = []
-    for _ in range(len(process_mapping)):
-        stacks.append([])
-    for values in memory_subdata:
-        for k, v in process_mapping.items():
+    # TODO: move to a function
+    cpu_stacks = []
+    mem_stacks = []
+    for _ in range(len(process_name_map)):
+        cpu_stacks.append([])
+        mem_stacks.append([])
+    for values in process_usage:
+        for k, v in process_name_map.items():
             if k in values:
-                stacks[v].append(values[k])
+                cpu_stacks[v].append(values[k]['cpu'])
+                mem_stacks[v].append(values[k]['memory'])
             else:
-                stacks[v].append(0)
+                cpu_stacks[v].append(0)
+                mem_stacks[v].append(0)
 
     colors = list(plt.cm.get_cmap('tab20c').colors * 100)
     for name, color in special_processes.items():
-        if name in process_mapping:
-            colors[process_mapping[name]] = color
+        if name in process_name_map:
+            colors[process_name_map[name]] = color
 
-    if stacks:
-        mem_subplot.stackplot(timestamps, stacks, labels=process_labels,
+    if mem_stacks:
+        mem_subplot.stackplot(timestamps, mem_stacks, labels=process_labels,
                               colors=colors)
         mem_subplot.legend(loc='upper left')
+        cpu_subplot.stackplot(timestamps, cpu_stacks, labels=process_labels,
+                              colors=colors)
+        cpu_subplot.legend(loc='upper left')
+
     plt.savefig(args.output)
     if args.verbose:
         print('Saving plot to %s' % args.output)
