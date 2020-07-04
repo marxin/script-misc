@@ -28,9 +28,11 @@ done = False
 start_ts = time.monotonic()
 cpu_count = psutil.cpu_count()
 
-special_processes = {'ld': 'gold', 'WPA': 'deepskyblue',
+special_processes = {'ld': 'gold',
+                     'WPA': 'deepskyblue',
                      'WPA-stream-out': 'lightblue',
-                     'ltrans': 'forestgreen', 'as': 'coral'}
+                     'ltrans': 'forestgreen',
+                     'as': 'coral'}
 for i, k in enumerate(special_processes.keys()):
     process_name_map[k] = i
     process_labels.append(k)
@@ -100,9 +102,7 @@ def record():
                     if name not in process_name_map:
                         length = len(process_name_map)
                         process_name_map[name] = length
-                        if name in special_processes:
-                            process_labels.append(name)
-                        else:
+                        if name not in special_processes:
                             process_labels.append(None)
                     if name not in entry:
                         entry[name] = {'memory': 0, 'cpu': 0}
