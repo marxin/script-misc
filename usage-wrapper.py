@@ -166,8 +166,8 @@ def generate_graph(time_range):
     limit = 1
     while 1.2 * peak_memory > limit:
         limit *= 2
-    mem_subplot.set_ylim([0, limit])
-    mem_subplot.set_yticks(range(0, limit + 1, math.ceil((limit + 1) / 10)))
+    mem_subplot.set_ylim([0, limit + 1])
+    mem_subplot.set_yticks(range(0, limit + 1, math.ceil(limit / 8)))
     mem_subplot.grid(True)
 
     # TODO: move to a function
