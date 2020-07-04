@@ -59,7 +59,7 @@ def get_process_name(proc):
     cmdline = proc.cmdline()
     if name == 'ld' or name == 'ld.gold':
         return 'ld'
-    elif name == 'lto1-wpa':
+    elif name == 'lto1-wpa' or name == 'lto1-wpa-stream':
         return 'WPA'
     elif name == 'as':
         return 'as'
