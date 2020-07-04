@@ -30,6 +30,10 @@ cpu_count = psutil.cpu_count()
 
 special_processes = {'ld': 'gold', 'WPA': 'deepskyblue',
                      'ltrans': 'forestgreen', 'as': 'coral'}
+for i, k in enumerate(special_processes.keys()):
+    process_name_map[k] = i
+    process_labels.append(k)
+
 
 descr = 'Run command and measure memory and CPU utilization'
 parser = argparse.ArgumentParser(description=descr)
@@ -160,7 +164,7 @@ def generate_graph(time_range):
     while 1.2 * peak_memory > limit:
         limit *= 2
     limit = math.ceil(limit)
-    mem_subplot.set_ylim([0, limit])
+    mem_subplot.set_ylim([0, limit + 1])
     mem_subplot.set_yticks(range(0, limit + 1, math.ceil((limit + 1) / 10)))
     mem_subplot.grid(True)
 
