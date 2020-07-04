@@ -119,6 +119,19 @@ def record():
         global_process_usage.append(entry)
 
 
+def stack_values(process_usage, key):
+    stacks = []
+    for _ in range(len(process_name_map)):
+        stacks.append([])
+    for values in process_usage:
+        for k, v in process_name_map.items():
+            if k in values:
+                stacks[v].append(values[k][key])
+            else:
+                stacks[v].append(0)
+    return stacks
+
+
 def generate_graph(time_range):
     timestamps = []
     cpu_data = []
@@ -164,32 +177,19 @@ def generate_graph(time_range):
 
     # scale it to a reasonable limit
     limit = 1
-    while 1.2 * peak_memory > limit:
+    while peak_memory / limit >= 0.8:
         limit *= 2
-    mem_subplot.set_ylim([0, limit + 1])
+    mem_subplot.set_ylim([0, 1.1 * limit])
     mem_subplot.set_yticks(range(0, limit + 1, math.ceil(limit / 8)))
     mem_subplot.grid(True)
-
-    # TODO: move to a function
-    cpu_stacks = []
-    mem_stacks = []
-    for _ in range(len(process_name_map)):
-        cpu_stacks.append([])
-        mem_stacks.append([])
-    for values in process_usage:
-        for k, v in process_name_map.items():
-            if k in values:
-                cpu_stacks[v].append(values[k]['cpu'])
-                mem_stacks[v].append(values[k]['memory'])
-            else:
-                cpu_stacks[v].append(0)
-                mem_stacks[v].append(0)
 
     colors = list(plt.cm.get_cmap('tab20c').colors * 100)
     for name, color in special_processes.items():
         if name in process_name_map:
             colors[process_name_map[name]] = color
 
+    mem_stacks = stack_values(process_usage, 'memory')
+    cpu_stacks = stack_values(process_usage, 'cpu')
     if mem_stacks:
         mem_subplot.stackplot(timestamps, mem_stacks, labels=process_labels,
                               colors=colors)
