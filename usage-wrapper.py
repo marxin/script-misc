@@ -32,7 +32,9 @@ special_processes = {'ld': 'gold',
                      'WPA': 'deepskyblue',
                      'WPA-stream-out': 'lightblue',
                      'ltrans': 'forestgreen',
-                     'as': 'coral'}
+                     'as': 'coral',
+                     'dwz': 'limegreen',
+                     'rpmbuild': 'plum'}
 for i, k in enumerate(special_processes.keys()):
     process_name_map[k] = i
     process_labels.append(k)
@@ -66,8 +68,8 @@ def get_process_name(proc):
         return 'WPA'
     elif name == 'lto1-wpa-stream':
         return 'WPA-stream-out'
-    elif name == 'as':
-        return 'as'
+    elif name == 'as' or name == 'dwz' or name == 'rpmbuild':
+        return name
     elif '-fltrans' in cmdline:
         if args.separate_ltrans:
             return 'ltrans-%d' % proc.pid
