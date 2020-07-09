@@ -48,7 +48,7 @@ echo "[revision $rev]" > $pkg/gcc/REVISION
 git archive --format=tar --prefix=$pkg/ -o $packagedir/$pkg.tar $rev
 tar rvf $packagedir/$pkg.tar $pkg/gcc/REVISION
 mv $pkg /tmp/
-xz $packagedir/$pkg.tar
+xz -T0 $packagedir/$pkg.tar
 ls -l $packagedir/$pkg.tar.xz
 
 cd $packagedir
