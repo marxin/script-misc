@@ -590,4 +590,8 @@ if args.print:
 elif args.build:
     g.build()
 else:
-    g.bisect()
+    if not args.command:
+        print('Missing command for bisection!')
+        exit(1)
+    else:
+        g.bisect()
