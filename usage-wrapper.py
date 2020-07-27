@@ -109,7 +109,9 @@ def record():
                     if name not in entry:
                         entry[name] = {'memory': 0, 'cpu': 0}
                     entry[name]['cpu'] += cpu
-                    entry[name]['memory'] += memory
+                    # FIXME: ignore WPA streaming memory - COW makes it bogus
+                    if name != 'WPA-stream-out':
+                        entry[name]['memory'] += memory
             except Exception:
                 # the process can be gone
                 pass
