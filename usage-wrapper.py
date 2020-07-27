@@ -165,8 +165,7 @@ def generate_graph(time_range):
     fig.set_figwidth(10)
     local_peak_memory = max(memory_data)
     local_cpu_average = sum(cpu_data) / len(cpu_data)
-    cpu_subplot.set_title('CPU usage (red=single core, avg=%.1f%%)'
-                          % local_cpu_average)
+    cpu_subplot.set_title('CPU usage')
     cpu_subplot.set_ylabel('%')
     cpu_subplot.plot(timestamps, cpu_data, c='blue', lw=LW)
     cpu_subplot.set_ylim([0, 105])
@@ -175,7 +174,7 @@ def generate_graph(time_range):
     cpu_subplot.grid(True)
 
     mem_subplot.plot(timestamps, memory_data, c='blue', lw=LW)
-    mem_subplot.set_title('Memory usage (peak: %.1f GB)' % local_peak_memory)
+    mem_subplot.set_title('Memory usage')
     mem_subplot.set_ylabel('GB')
     mem_subplot.set_xlabel('time')
 
@@ -206,6 +205,12 @@ def generate_graph(time_range):
     if time_range:
         tr = '-%d-%d' % (time_range[0], time_range[1])
         filename = os.path.splitext(args.output)[0] + tr + '.svg'
+    plt.subplots_adjust(bottom=0.15)
+    plt.figtext(0.1, 0.025,
+                'CPU red line = single core; CPU count: %d, CPU avg: %.1f%%, '
+                'peak memory: %.1f GB; total memory: %.1f GB'
+                % (cpu_count, local_cpu_average, local_peak_memory,
+                   to_gigabyte(psutil.virtual_memory().total)))
     plt.savefig(filename)
     if args.verbose:
         print('Saving plot to %s' % filename)
