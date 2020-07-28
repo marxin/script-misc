@@ -13,7 +13,7 @@ import psutil
 
 
 INTERVAL = 0.33
-LW = 0.7
+LW = 0.5
 
 global_timestamps = []
 global_cpu_data = []
@@ -180,7 +180,7 @@ def generate_graph(time_range):
 
     # scale it to a reasonable limit
     limit = 1
-    while peak_memory / limit >= 0.8:
+    while peak_memory / limit >= 0.95:
         limit *= 2
     mem_subplot.set_ylim([0, 1.1 * limit])
     mem_subplot.set_yticks(range(0, limit + 1, math.ceil(limit / 8)))
