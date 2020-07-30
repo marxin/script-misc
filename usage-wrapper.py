@@ -207,7 +207,7 @@ def generate_graph(time_range):
         tr = '-%d-%d' % (time_range[0], time_range[1])
         filename = os.path.splitext(args.output)[0] + tr + '.svg'
     plt.subplots_adjust(bottom=0.15)
-    hostname = os.hostname()[1].split('.')[0]
+    hostname = os.uname()[1].split('.')[0]
     plt.figtext(0.1, 0.025,
                 'hostname: %s; CPU count: %d, CPU avg: %.1f%%, '
                 'peak memory: %.1f GB; total memory: %.1f GB'
