@@ -141,7 +141,6 @@ def generate_graph(time_range):
     cpu_data = []
     memory_data = []
     process_usage = []
-    peak_memory = max(global_memory_data)
 
     # filter date by timestamp
     for i, ts in enumerate(global_timestamps):
@@ -150,6 +149,7 @@ def generate_graph(time_range):
             cpu_data.append(global_cpu_data[i])
             memory_data.append(global_memory_data[i])
             process_usage.append(global_process_usage[i])
+    peak_memory = max(memory_data)
 
     if not timestamps:
         if args.verbose:
