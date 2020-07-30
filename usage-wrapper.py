@@ -149,12 +149,13 @@ def generate_graph(time_range):
             cpu_data.append(global_cpu_data[i])
             memory_data.append(global_memory_data[i])
             process_usage.append(global_process_usage[i])
-    peak_memory = max(memory_data)
 
     if not timestamps:
         if args.verbose:
             print('No data for range: %s' % str(time_range))
         return
+
+    peak_memory = max(memory_data)
 
     fig, (cpu_subplot, mem_subplot) = plt.subplots(2, sharex=True)
     title = args.title if args.title else ''
