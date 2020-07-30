@@ -181,7 +181,7 @@ def generate_graph(time_range):
 
     # scale it to a reasonable limit
     limit = 1
-    while peak_memory / limit >= 0.95:
+    while peak_memory > limit:
         limit *= 2
     mem_subplot.set_ylim([0, 1.1 * limit])
     mem_subplot.set_yticks(range(0, limit + 1, math.ceil(limit / 8)))
@@ -207,10 +207,11 @@ def generate_graph(time_range):
         tr = '-%d-%d' % (time_range[0], time_range[1])
         filename = os.path.splitext(args.output)[0] + tr + '.svg'
     plt.subplots_adjust(bottom=0.15)
+    hostname = os.hostname()[1].split('.')[0]
     plt.figtext(0.1, 0.025,
-                'CPU red line = single core; CPU count: %d, CPU avg: %.1f%%, '
+                'hostname: %s; CPU count: %d, CPU avg: %.1f%%, '
                 'peak memory: %.1f GB; total memory: %.1f GB'
-                % (cpu_count, local_cpu_average, local_peak_memory,
+                % (hostname, cpu_count, local_cpu_average, local_peak_memory,
                    to_gigabyte(psutil.virtual_memory().total)))
     plt.savefig(filename)
     if args.verbose:
