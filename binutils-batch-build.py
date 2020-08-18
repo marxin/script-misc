@@ -171,7 +171,7 @@ z8k-coff
 targets = targets.strip().split('\n')
 cpu_count = psutil.cpu_count()
 
-for i, target in enumerate():
+for i, target in enumerate(targets):
     print('%d/%d: %s' % (i, len(targets), target))
     folder = tempfile.TemporaryDirectory(prefix='/dev/shm/')
     os.chdir(folder.name)
