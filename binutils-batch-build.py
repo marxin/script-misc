@@ -179,7 +179,9 @@ for i, target in enumerate(targets):
             % target, shell=True, stderr=subprocess.DEVNULL)
     subprocess.check_output('make -j%d' % cpu_count, shell=True, stderr=subprocess.DEVNULL)
     subprocess.run('make check -k -j%d' % cpu_count, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    output = subprocess.check_output('find .  -name "*.log" | xargs grep "^FAIL" | sort', shell=True, stderr=subprocess.DEVNULL, encoding='utf8')
+    output = subprocess.check_output('find .  -name "*.log" | xargs grep "^FAIL" | sort', shell=True, stderr=subprocess.DEVNULL, encoding='utf8').strip()
     if output:
+        errors = len(output.split('\n'))
+        print('Errors: %d' % errors)
         print(output)
     folder.cleanup()
