@@ -171,14 +171,14 @@ z8k-coff
 targets = targets.strip().split('\n')
 cpu_count = psutil.cpu_count()
 
-for i, target in enumerate(targets[:3]):
+for i, target in enumerate():
     print('%d/%d: %s' % (i, len(targets), target))
     folder = tempfile.TemporaryDirectory(prefix='/dev/shm/')
     os.chdir(folder.name)
     subprocess.check_output('~/Programming/binutils/configure --build=x86_64-linux --disable-nls --disable-gdb --disable-gdbserver --disable-sim --disable-readline --disable-libdecnumber --enable-obsolete --target=%s'
             % target, shell=True, stderr=subprocess.DEVNULL)
     subprocess.check_output('make -j%d' % cpu_count, shell=True, stderr=subprocess.DEVNULL)
-    subprocess.check_output('make check -k -j%d' % cpu_count, shell=True, stderr=subprocess.DEVNULL)
+    subprocess.run('make check -k -j%d' % cpu_count, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     output = subprocess.check_output('find .  -name "*.log" | xargs grep "^FAIL" | sort', shell=True, stderr=subprocess.DEVNULL, encoding='utf8')
     if output:
         print(output)
