@@ -182,6 +182,6 @@ for i, target in enumerate(targets):
     output = subprocess.check_output('find .  -name "*.log" | xargs grep "^FAIL" | sort', shell=True, stderr=subprocess.DEVNULL, encoding='utf8').strip()
     if output:
         errors = len(output.split('\n'))
-        print('Errors: %d' % errors)
+        print('test errors: %d' % errors)
         print(output)
     folder.cleanup()
