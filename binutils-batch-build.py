@@ -181,7 +181,9 @@ def build_and_test_target(target):
                 % target, shell=True, stderr=subprocess.DEVNULL)
         r = subprocess.run('make', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
         if r.returncode != 0:
-            return [l for l in r.stdout.split('\n') if 'error:' in l]
+            errors = [l for l in r.stdout.split('\n') if 'error:' in l]
+            assert errors
+            return errors
 
         subprocess.run('make check -k', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         output = subprocess.check_output('find .  -name "*.log" | xargs grep "^FAIL" | sort', shell=True, stderr=subprocess.DEVNULL, encoding='utf8').strip()
