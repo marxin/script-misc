@@ -174,7 +174,6 @@ cpu_count = psutil.cpu_count()
 
 def build_and_test_target(target):
     try:
-        print('.', end='', flush=True)
         folder = tempfile.TemporaryDirectory(prefix='/dev/shm/')
         os.chdir(folder.name)
         subprocess.check_output('~/Programming/binutils/configure --build=x86_64-linux --disable-nls --disable-gdb --disable-gdbserver --disable-sim --disable-readline --disable-libdecnumber --enable-obsolete --target=%s'
@@ -194,6 +193,7 @@ def build_and_test_target(target):
 
 results = {}
 
+print('.' * len(targets))
 with concurrent.futures.ProcessPoolExecutor() as executor:
     future_map = {executor.submit(build_and_test_target, target): target for target in targets}
     for future in concurrent.futures.as_completed(future_map):
@@ -203,6 +203,7 @@ with concurrent.futures.ProcessPoolExecutor() as executor:
             results[target] = future.result()
         except Exception as exc:
             print('%r generated an exception: %s' % (target, exc))
+print()
 
 for target in targets:
     errors = results[target]
