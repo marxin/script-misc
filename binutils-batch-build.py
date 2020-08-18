@@ -180,7 +180,7 @@ def build_and_test_target(target):
                 % target, shell=True, stderr=subprocess.DEVNULL)
         r = subprocess.run('make -j8', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
         if r.returncode != 0:
-            errors = [l for l in r.stdout.split('\n') if 'error:' in l]
+            errors = [l for l in r.stderr.split('\n') if 'error:' in l]
             assert errors
             return errors
 
