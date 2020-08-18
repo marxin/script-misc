@@ -179,8 +179,11 @@ def build_and_test_target(target):
         os.chdir(folder.name)
         subprocess.check_output('~/Programming/binutils/configure --build=x86_64-linux --disable-nls --disable-gdb --disable-gdbserver --disable-sim --disable-readline --disable-libdecnumber --enable-obsolete --target=%s'
                 % target, shell=True, stderr=subprocess.DEVNULL)
-        subprocess.check_output('make -j%d' % cpu_count, shell=True, stderr=subprocess.DEVNULL)
-        subprocess.run('make check -k -j%d' % cpu_count, shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        r = subprocess.run('make', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        if r.returncode != 0:
+            return [l for l in r.stdout.split('\n') if 'error:' in l]
+
+        subprocess.run('make check -k', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         output = subprocess.check_output('find .  -name "*.log" | xargs grep "^FAIL" | sort', shell=True, stderr=subprocess.DEVNULL, encoding='utf8').strip()
         print('D', end='', flush=True)
         return output.split('\n') if output else []
@@ -201,6 +204,7 @@ with concurrent.futures.ProcessPoolExecutor() as executor:
 
 for target in targets:
     errors = results[target]
-    print(target)
-    print('test errors: %d' % len(errors))
-    print('\n'.join(errors))
+    if errors:
+        print(target)
+        print('test errors: %d' % len(errors))
+        print('\n'.join(errors))
