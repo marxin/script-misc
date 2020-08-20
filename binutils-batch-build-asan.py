@@ -169,7 +169,7 @@ z80-elf
 z8k-coff
 '''
 
-targets = targets.strip().split('\n')[3:5]
+targets = targets.strip().split('\n')
 cpu_count = psutil.cpu_count()
 
 def build_and_test_target(target):
@@ -197,6 +197,7 @@ def report_error(command, test_case, location, full_line, target):
     prefix = 'ASAN error: ' if 'AddressSanitizer' in full_line else 'UBSAN error: '
     if not location in seen:
         seen.add(location)
+        print('-' * 80)
         print(prefix + location)
         print('The following fails when I build binutils with:')
         print('configure --build=x86_64-linux --disable-nls --disable-gdb --disable-gdbserver --disable-sim --disable-readline --disable-libdecnumber --enable-obsolete --target=%s CFLAGS="-g -O2 -fsanitize=address,undefined -Wno-error" CXXLAGS="-g -O2 -fsanitize=address,undefined -Wno-error" LDFLAGS="-ldl"' % target)
