@@ -1,0 +1,60 @@
+From 5187b01a4fcbea82f52798240595a32ddf7e0fe5 Mon Sep 17 00:00:00 2001
+From: Jakub Jelinek <jakub@redhat.com>
+Date: Mon, 21 Sep 2020 14:20:05 +0200
+Subject: [PATCH] Fix fallout from Support new mallinfo2 function.
+
+2020-09-21  Jakub Jelinek  <jakub@redhat.com>
+
+	* configure.ac: Use mallinfo mallinfo2 as first operand of
+	gcc_AC_CHECK_DECLS rather than [mallinfo, mallinfo2].
+	* configure: Regenerated.
+	* config.in: Regenerated.
+---
+ gcc/config.in    | 3 ++-
+ gcc/configure    | 2 +-
+ gcc/configure.ac | 2 +-
+ 3 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/gcc/config.in b/gcc/config.in
+index 1832c112ed9..5835ceaf669 100644
+--- a/gcc/config.in
++++ b/gcc/config.in
+@@ -983,7 +983,8 @@
+ #endif
+ 
+ 
+-/* Define to 1 if we found a declaration for 'mallinfo */
++/* Define to 1 if we found a declaration for 'mallinfo', otherwise define to
++   0. */
+ #ifndef USED_FOR_TARGET
+ #undef HAVE_DECL_MALLINFO
+ #endif
+diff --git a/gcc/configure b/gcc/configure
+index d33ee9fc5d2..33a3e34029f 100755
+--- a/gcc/configure
++++ b/gcc/configure
+@@ -11549,7 +11549,7 @@ fi
+ done
+ 
+ 
+-for ac_func in mallinfo, mallinfo2
++for ac_func in mallinfo mallinfo2
+ do
+   ac_tr_decl=`$as_echo "HAVE_DECL_$ac_func" | $as_tr_cpp`
+ { $as_echo "$as_me:${as_lineno-$LINENO}: checking whether $ac_func is declared" >&5
+diff --git a/gcc/configure.ac b/gcc/configure.ac
+index fedb7b2800f..975f6d97c4b 100644
+--- a/gcc/configure.ac
++++ b/gcc/configure.ac
+@@ -1488,7 +1488,7 @@ gcc_AC_CHECK_DECLS(getrlimit setrlimit getrusage, , ,[
+ #endif
+ ])
+ 
+-gcc_AC_CHECK_DECLS([mallinfo, mallinfo2], , ,[
++gcc_AC_CHECK_DECLS(mallinfo mallinfo2, , ,[
+ #include "ansidecl.h"
+ #include "system.h"
+ #ifdef HAVE_MALLOC_H
+-- 
+2.28.0
+

@@ -41,7 +41,7 @@ lock = filelock.FileLock(os.path.join(script_dirname, '.gcc_build_binary.lock'))
 log_file = '/home/marxin/Programming/script-misc/gcc-build.log'
 
 patches_folder = os.path.join(script_dirname, 'gcc-bisect-patches')
-patches = ['0001-Use-ucontext_t-not-struct-ucontext-in-linux-unwind.h.patch', 'gnu-inline.patch', 'ubsan.patch']
+patches = ['0001-Use-ucontext_t-not-struct-ucontext-in-linux-unwind.h.patch', 'gnu-inline.patch', 'ubsan.patch', 'mallinfo.patch']
 
 parser = argparse.ArgumentParser(description='Bisect by prebuilt GCC binaries.')
 parser.add_argument('command', nargs = '?', metavar = 'command', help = 'GCC command')
