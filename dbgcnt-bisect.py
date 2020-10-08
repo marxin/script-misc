@@ -21,13 +21,15 @@ def format_dbgcnt(needed, start, end):
     s = ':'.join(['%d-%d' % (x, x) for x in needed])
     if s:
         s += ':'
-    return ' -fdbg-cnt=%s:%s%d-%d' % (args.dbg_cnt_name, s, start, end)
+    s2 = '%d-%d' % (start, end) if start != -1 else ''
+    return ' -fdbg-cnt=%s:%s%s' % (args.dbg_cnt_name, s, s2)
 
 
 def test(minimum, maximum, needed, count):
     steps = math.ceil(math.log2(count))
     extra_arg = format_dbgcnt(needed, minimum, maximum)
-    print('%s (steps ~ %d)' % (extra_arg.lstrip(), steps))
+    if minimum != -1:
+        print('%s (steps ~ %d)' % (extra_arg.lstrip(), steps))
     cmd = args.gcc_command + extra_arg
     subprocess.check_output(cmd, shell=True, stderr=subprocess.PIPE)
     r = subprocess.run(args.run_command, shell=True,
@@ -44,12 +46,16 @@ def avg(boundaries):
 
 
 def shrinken(start, end, needed):
-    print('Needed: %s, shrinking: [%d,%d]' % (str(needed), start, end)
+    print('Needed: %s, shrinking: [%d,%d]' % (str(needed), start, end))
     boundaries = [start, end]
+
+    # fast bail out
+    if needed and not test(-1, -1, needed, 1):
+        return None
 
     while boundaries[1] - boundaries[0] > 1:
         middle = avg(boundaries)
-        r = test(1, middle, needed, boundaries[1] - boundaries[0])
+        r = test(boundaries[0], middle, needed, boundaries[1] - boundaries[0])
         if r:
             boundaries[0] = middle
         else:
@@ -75,9 +81,12 @@ boundaries = [1, args.max_argument]
 
 while True:
     next_boundaries = shrinken(boundaries[0], boundaries[1], needed)
+    if next_boundaries is None:
+        break
     needed.append(next_boundaries[0])
     needed.append(next_boundaries[1])
     if next_boundaries[1] - next_boundaries[0] <= 1:
         break
+    boundaries = [next_boundaries[0] + 1, next_boundaries[1] - 1]
 
-print(format_dbgcnt(needed, 0, 0))
+print(format_dbgcnt(needed, -1, -1))
