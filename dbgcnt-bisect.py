@@ -10,11 +10,14 @@ parser.add_argument('run_command', help='Run command')
 parser.add_argument('dbg_cnt_name', help='Debug counter name')
 parser.add_argument('max_argument', type=int,
                     help='Maximum value of the debug counter')
-parser.add_argument('-v', '--verbose', action = 'store_true', help = 'Verbose output')
+parser.add_argument('--min-argument', type=int, default='1',
+                    help='Minimum value of the debug counter')
+parser.add_argument('-v', '--verbose', action='store_true',
+                    help='Verbose output')
 
 args = parser.parse_args()
 
-boundaries = [1, args.max_argument]
+boundaries = [args.min_argument, args.max_argument]
 
 while boundaries[1] - boundaries[0] > 1:
     middle = (boundaries[1] + boundaries[0]) / 2
@@ -32,4 +35,4 @@ while boundaries[1] - boundaries[0] > 1:
     else:
         boundaries[1] = middle
 
-print('First bad value is -dbg-cnt=%s:%d' % boundaries[1])
+print('First bad value is -dbg-cnt=%s:%d' % (args.dbg_cnt_name, boundaries[1]))
