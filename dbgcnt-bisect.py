@@ -55,7 +55,7 @@ def shrinken(start, end, needed):
 
     while boundaries[1] - boundaries[0] > 1:
         middle = avg(boundaries)
-        r = test(boundaries[0], middle, needed, boundaries[1] - boundaries[0])
+        r = test(start, middle, needed, boundaries[1] - boundaries[0])
         if r:
             boundaries[0] = middle
         else:
