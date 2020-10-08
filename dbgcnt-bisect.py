@@ -44,7 +44,7 @@ def avg(boundaries):
 
 
 def shrinken(start, end, needed):
-    print('Needed: %s' % str(needed))
+    print('Needed: %s, shrinking: [%d,%d]' % (str(needed), start, end)
     boundaries = [start, end]
 
     while boundaries[1] - boundaries[0] > 1:
