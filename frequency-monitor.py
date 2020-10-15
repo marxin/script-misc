@@ -34,8 +34,8 @@ except KeyboardInterrupt:
     pass
 finally:
     print('xx')
-    plt.plot(times, cpus, label='CPU #0 usage')
-    plt.plot(times, frequencies, label='CPU #0 frequency (in %)')
+    plt.plot(times, cpus, label='CPU #0 usage (in %)')
+    plt.plot(times, frequencies, label='CPU #0 frequency (in MHz)')
     plt.grid(True)
     plt.legend()
     for i, ts in enumerate(times):
