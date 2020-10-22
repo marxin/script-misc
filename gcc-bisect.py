@@ -218,12 +218,12 @@ class GitRevision:
             if not args.silent:
                 flush_print(r.stdout, end = '')
 
-        return success
+        return (success, r.stdout)
 
     def test(self, describe = False):
         if not self.has_binary:
             flush_print('  %s: missing binary' % (self.description()))
-            return False
+            return (False, None)
         else:
             return self.run(describe)
 
@@ -488,7 +488,7 @@ class GitRepository:
             flush_print(colored('Releases', title_color))
             results = {True: [], False: []}
             for r in self.releases:
-                results[r.test()].append(r.name)
+                results[r.test()[0]].append(r.name)
 
             Release.print_known_to('work', filter_versions(results[True]))
             Release.print_known_to('fail', filter_versions(results[False]))
@@ -514,8 +514,8 @@ class GitRepository:
             r = self.find_commit(args.bisect_end, candidates)
             candidates = candidates[:candidates.index(r)+1]
 
-        first = candidates[0].test()
-        last = candidates[-1].test()
+        first = candidates[0].test()[0]
+        last = candidates[-1].test()[0]
 
         if first != last:
             GitRepository.bisect_recursive(candidates, first, last)
@@ -539,7 +539,7 @@ class GitRepository:
             flush_print('  bisecting: %d revisions (~%d steps)' % (len(candidates), steps))
             assert r1 != r2
             index = int(len(candidates) / 2)
-            middle = candidates[index].test()
+            middle = candidates[index].test()[0]
             if r1 == middle:
                 GitRepository.bisect_recursive(candidates[index:], middle, r2)
             else:
