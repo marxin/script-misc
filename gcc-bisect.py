@@ -189,7 +189,6 @@ class GitRevision:
 
     def run(self, describe):
         start = datetime.now()
-        log = '/tmp/output'
         with lock:
             if os.path.exists(self.get_archive_path()):
                 self.decompress()
@@ -198,28 +197,26 @@ class GitRevision:
             my_env['PATH'] = os.path.join(self.get_install_path(), 'bin') + ':' + my_env['PATH']
             ld_library_path = my_env['LD_LIBRARY_PATH'] if 'LD_LIBRARY_PATH' in my_env else ''
             my_env['LD_LIBRARY_PATH'] = os.path.join(self.get_install_path(), 'lib64') + ':' + ld_library_path
-            with open(log, 'w') as out:
-                r = subprocess.call(args.command, shell = True, stdout = out, stderr = out, env = my_env)
+            r = subprocess.run(args.command, shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, env = my_env, encoding='utf8')
 
             # handle ICE
-            output = open(log).read()
-            success = r == 0
+            success = r.returncode == 0
             if success and args.ask:
                 if not args.silent:
-                    flush_print(output, end = '')
+                    flush_print(r.stdout, end = '')
                 success = input("Retcode: ") == '0'
             elif args.ice:
                 messages = ['internal compiler error', 'Fatal Error', 'Internal compiler error', 'Please submit a full bug report',
                         'lto-wrapper: fatal error']
-                success = any(map(lambda m: m in output, messages))
+                success = any(map(lambda m: m in r.stdout, messages))
 
             if args.negate:
                 success = not success
 
-            text = colored('OK', 'green') if success else colored('FAILED', 'red') + ' (%d)' % r
+            text = colored('OK', 'green') if success else colored('FAILED', 'red') + ' (%d)' % r.returncode
             flush_print('  %s: [took: %3.3fs] result: %s' % (self.description(describe), (datetime.now() - start).total_seconds(), text))
             if not args.silent:
-                flush_print(output, end = '')
+                flush_print(r.stdout, end = '')
 
         return success
 
