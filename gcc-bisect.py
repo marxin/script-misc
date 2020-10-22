@@ -141,27 +141,6 @@ def run_cmd(command, strict = False):
         assert not strict
         return (False, error)
 
-def get_release_name(version):
-    if len(version.split('.')) == 2:
-        version += '.0'
-    v = Version(version)
-    if v.major < 5:
-        return '%d.%d' % (v.major, v.minor)
-    else:
-        return v.major
-
-def filter_versions(versions):
-    seen = set()
-    r = []
-    versions = reversed(versions)
-    for i, v in enumerate(versions):
-        name = get_release_name(v)
-        if not name in seen:
-            seen.add(name)
-            r.append(v)
-
-    return reversed(r)
-
 class GitRevision:
     def __init__(self, commit):
         self.commit = commit
@@ -359,10 +338,6 @@ class Release(GitRevision):
     def patch_name(self):
         return self.name + '.patch'
 
-    @staticmethod
-    def print_known_to(text, versions):
-        print('known-to-%s: %s' % (text, ', '.join(versions)))
-
 class Branch(GitRevision):
     def __init__(self, name, commit):
         GitRevision.__init__(self, commit)
@@ -504,14 +479,12 @@ class GitRepository:
         if not args.old:
             self.releases = list(filter(lambda x: x.version.major >= oldest_active_branch, self.releases))
 
-        self.release_results = None
         self.failing_branches = None
         if not args.only_latest:
             flush_print(colored('Releases', title_color))
-            self.release_results = {True: [], False: []}
             self.failing_branches = []
             for r in self.releases:
-                self.release_results[r.test()[0]].append(r.name)
+                r.test()
 
             flush_print(colored('\nActive branches', title_color))
             for r in self.branches:
@@ -554,10 +527,6 @@ class GitRepository:
                     if len(self.failing_branches) and len(self.failing_branches) != len(self.branches):
                         prefix = f'[{"/".join(self.failing_branches)} Regression] '
                 print(f'{prefix}ICE {m.group("details")} since {revision.get_full_hash()}')
-                if self.release_results:
-                    print()
-                    Release.print_known_to('work', filter_versions(self.release_results[True]))
-                    Release.print_known_to('fail', filter_versions(self.release_results[False]))
                 return
 
     def bisect_recursive(self, candidates, r1, r2):
