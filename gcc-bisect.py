@@ -174,14 +174,17 @@ class GitRevision:
     def short_hexsha(self):
         return self.commit.hexsha[0:16]
 
+    def get_full_hash(self):
+        r = subprocess.check_output('git gcc-descr --full %s' % self.commit.hexsha, cwd=git_location, shell=True, encoding='utf8')
+        parts = r.strip().split('-')
+        assert len(parts) == 3
+        parts[2] = parts[2][:17]
+        return '-'.join(parts)
+
     def description(self, describe=False):
         hash = colored(self.short_hexsha(), description_color)
         if describe:
-            r = subprocess.check_output('git gcc-descr --full %s' % self.commit.hexsha, cwd=git_location, shell=True, encoding='utf8')
-            parts = r.strip().split('-')
-            assert len(parts) == 3
-            parts[2] = parts[2][:17]
-            hash = colored('-'.join(parts), 'green')
+            hash = colored(self.get_full_hash(), 'green')
         return '%s(%s)(%s)' % (hash, self.timestamp_str(), self.commit.author.email)
 
     def patch_name(self):
@@ -431,6 +434,9 @@ class GitRepository:
         for c in repo.iter_commits(last_revision + '..origin/master', first_parent = True):
             self.latest.append(GitRevision(c))
 
+    def get_master_branch(self):
+        print(self.branches[-1])
+
     @staticmethod
     def get_patch_name_tokens(file):
         r = os.path.splitext(os.path.basename(file))[0].split('..')
@@ -523,10 +529,19 @@ class GitRepository:
             flush_print('  bisect finished: ' +  colored('there is no change!', 'red'))
 
     @staticmethod
+    def print_bugzilla_title(output, revision):
+        for line in output.split('\n'):
+            m = re.match('.*internal compiler error: in (?P<fn>.*), at (?P<at>.*)', line)
+            if m:
+                print('\nBugzilla info:')
+                print(f'ICE in {m.group("fn")} at {m.group("at")} since {revision.get_full_hash()}')
+                return
+
+    @staticmethod
     def bisect_recursive(candidates, r1, r2):
         if len(candidates) == 2:
             flush_print('\nFirst change is:')
-            candidates[0].test(describe=True)
+            output = candidates[0].test(describe=True)
             print(candidates[0].commit.message)
             candidates[1].test(describe=True)
             print(candidates[1].commit.message)
@@ -534,6 +549,7 @@ class GitRepository:
             l = len(revisions) - 2
             if l > 0:
                 flush_print(colored('Revisions in between: %d' % l, 'red', attrs = ['bold']))
+            GitRepository.print_bugzilla_title(output[1], candidates[0])
         else:
             steps = math.ceil(math.log2(len(candidates))) - 1
             flush_print('  bisecting: %d revisions (~%d steps)' % (len(candidates), steps))
