@@ -489,8 +489,10 @@ class GitRepository:
 
             flush_print(colored('\nActive branches', title_color))
             for r in self.branches:
-                result = r.test()
-                if not result[0]:
+                report = not r.test()[0]
+                if args.ice:
+                    report = not report
+                if report:
                     self.failing_branches.append(r.name)
 
             flush_print(colored('\nActive branch bases', title_color))
