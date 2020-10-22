@@ -142,6 +142,8 @@ def run_cmd(command, strict = False):
         return (False, error)
 
 def get_release_name(version):
+    if len(version.split('.')) == 2:
+        version += '.0'
     v = Version(version)
     if v.major < 5:
         return '%d.%d' % (v.major, v.minor)
@@ -341,6 +343,13 @@ class Release(GitRevision):
         GitRevision.__init__(self, commit)
         self.name = name
 
+        if '-base' in self.name:
+            return
+        version_name = name
+        if len(version_name.split('.')) == 2:
+            version_name += '.0'
+        self.version = Version(version_name)
+
     def __str__(self):
         return self.commit.hexsha + ':' + self.name
 
@@ -378,6 +387,7 @@ class GitRepository:
     RELEASE_BRANCH_PREFIX = 'origin/releases/gcc-'
 
     def __init__(self):
+        self.master_branch = None
         self.releases = []
         self.branches = []
         self.branch_bases = []
@@ -395,6 +405,7 @@ class GitRepository:
         self.parse_releases()
         self.parse_branches()
         self.parse_latest_revisions()
+        self.releases.append(Release(self.get_master_branch() + '.0', head))
 
         self.all = [self.releases, self.branch_bases, self.branches, self.latest]
         self.initialize_binaries()
@@ -415,7 +426,12 @@ class GitRepository:
             if version.count('.') == 2:
                 self.releases.append(Release(version, repo.commit(r.name)))
 
-        self.releases = sorted(filter(lambda x: Version(x.name) >= Version(oldest_release), self.releases), key = lambda x: Version(x.name))
+        self.releases = sorted(filter(lambda x: x.version >= Version(oldest_release), self.releases), key = lambda x: x.version)
+
+    def get_master_branch(self):
+        if not self.master_branch:
+            self.master_branch = str(int(self.branches[-1].name) + 1)
+        return self.master_branch
 
     def parse_branches(self):
         remote = repo.remotes['origin']
@@ -429,13 +445,11 @@ class GitRepository:
                 self.branches.append(Branch(name, branch_commit))
             base = repo.merge_base(head, branch_commit)[0]
             self.branch_bases.append(Release(name + '-base', base))
+        self.branches.append(Branch(self.get_master_branch(), head))
 
     def parse_latest_revisions(self):
         for c in repo.iter_commits(last_revision + '..origin/master', first_parent = True):
             self.latest.append(GitRevision(c))
-
-    def get_master_branch(self):
-        print(self.branches[-1])
 
     @staticmethod
     def get_patch_name_tokens(file):
@@ -488,20 +502,22 @@ class GitRepository:
 
     def bisect(self):
         if not args.old:
-            self.releases = list(filter(lambda x: Version(x.name).major >= oldest_active_branch, self.releases))
+            self.releases = list(filter(lambda x: x.version.major >= oldest_active_branch, self.releases))
 
+        self.release_results = None
+        self.failing_branches = None
         if not args.only_latest:
             flush_print(colored('Releases', title_color))
-            results = {True: [], False: []}
+            self.release_results = {True: [], False: []}
+            self.failing_branches = []
             for r in self.releases:
-                results[r.test()[0]].append(r.name)
-
-            Release.print_known_to('work', filter_versions(results[True]))
-            Release.print_known_to('fail', filter_versions(results[False]))
+                self.release_results[r.test()[0]].append(r.name)
 
             flush_print(colored('\nActive branches', title_color))
             for r in self.branches:
-                r.test()
+                result = r.test()
+                if not result[0]:
+                    self.failing_branches.append(r.name)
 
             flush_print(colored('\nActive branch bases', title_color))
             for r in self.branch_bases:
@@ -524,21 +540,27 @@ class GitRepository:
         last = candidates[-1].test()[0]
 
         if first != last:
-            GitRepository.bisect_recursive(candidates, first, last)
+            self.bisect_recursive(candidates, first, last)
         else:
             flush_print('  bisect finished: ' +  colored('there is no change!', 'red'))
 
-    @staticmethod
-    def print_bugzilla_title(output, revision):
+    def print_bugzilla_title(self, output, revision):
         for line in output.split('\n'):
-            m = re.match('.*internal compiler error: in (?P<fn>.*), at (?P<at>.*)', line)
+            m = re.match('.*internal compiler error: (?P<details>.*)', line)
             if m:
                 print('\nBugzilla info:')
-                print(f'ICE in {m.group("fn")} at {m.group("at")} since {revision.get_full_hash()}')
+                prefix = ''
+                if self.failing_branches != None:
+                    if len(self.failing_branches) and len(self.failing_branches) != len(self.branches):
+                        prefix = f'[{"/".join(self.failing_branches)} Regression] '
+                print(f'{prefix}ICE {m.group("details")} since {revision.get_full_hash()}')
+                if self.release_results:
+                    print()
+                    Release.print_known_to('work', filter_versions(self.release_results[True]))
+                    Release.print_known_to('fail', filter_versions(self.release_results[False]))
                 return
 
-    @staticmethod
-    def bisect_recursive(candidates, r1, r2):
+    def bisect_recursive(self, candidates, r1, r2):
         if len(candidates) == 2:
             flush_print('\nFirst change is:')
             output = candidates[0].test(describe=True)
@@ -549,7 +571,7 @@ class GitRepository:
             l = len(revisions) - 2
             if l > 0:
                 flush_print(colored('Revisions in between: %d' % l, 'red', attrs = ['bold']))
-            GitRepository.print_bugzilla_title(output[1], candidates[0])
+            self.print_bugzilla_title(output[1], candidates[0])
         else:
             steps = math.ceil(math.log2(len(candidates))) - 1
             flush_print('  bisecting: %d revisions (~%d steps)' % (len(candidates), steps))
@@ -557,10 +579,10 @@ class GitRepository:
             index = int(len(candidates) / 2)
             middle = candidates[index].test()[0]
             if r1 == middle:
-                GitRepository.bisect_recursive(candidates[index:], middle, r2)
+                self.bisect_recursive(candidates[index:], middle, r2)
             else:
                 assert middle == r2
-                GitRepository.bisect_recursive(candidates[:index+1], r1, middle)
+                self.bisect_recursive(candidates[:index+1], r1, middle)
 
 # MAIN
 g = GitRepository()
