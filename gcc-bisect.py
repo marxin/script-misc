@@ -528,7 +528,7 @@ class GitRepository:
                         prefix = f'[{"/".join(self.failing_branches)} Regression] '
                 summary = f'{prefix}ICE {m.group("details")} since {revision.get_full_hash()}'
                 url = f'https://gcc.gnu.org/bugzilla/enter_bug.cgi?product=gcc&short_desc={quote(summary)}&cc={revision.commit.author.email}'
-                print(f"Bugzilla: \u001b]8;;{url}\u001b\\{summary}\u001b]8;;\u001b\\")
+                print(f'{colored("Bugzilla:", "yellow")} \u001b]8;;{url}\u001b\\{summary}\u001b]8;;\u001b\\')
                 return
 
     def bisect_recursive(self, candidates, r1, r2):
