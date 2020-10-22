@@ -506,7 +506,8 @@ class OptimizationLevel:
 
     def add_interesting_options(self):
         sanitize_values = 'address,kernel-address,thread,leak,undefined,vptr,shift,integer-divide-by-zero,unreachable,vla-bound,null,return,signed-integer-overflow,bounds,bounds-strict,alignment,object-size,float-divide-by-zero,float-cast-overflow,nonnull-attribute,returns-nonnull-attribute,bool,enum'.split(',')
-        self.options.append(EnumFlag('-fsanitize=', None, sanitize_values, False))
+        if args.target != 'riscv64':
+            self.options.append(EnumFlag('-fsanitize=', None, sanitize_values, False))
 
     def filter_options(self, l):
         filtered = []
