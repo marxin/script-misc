@@ -22,6 +22,7 @@ from termcolor import colored
 from git import Repo
 from semantic_version import Version
 from pathlib import Path
+from urllib.parse import quote
 
 # configuration
 script_dirname = os.path.abspath(os.path.dirname(__file__))
@@ -521,12 +522,13 @@ class GitRepository:
         for line in output.split('\n'):
             m = re.match('.*internal compiler error: (?P<details>.*)', line)
             if m:
-                print('\nBugzilla info:')
                 prefix = ''
                 if self.failing_branches != None:
                     if len(self.failing_branches) and len(self.failing_branches) != len(self.branches):
                         prefix = f'[{"/".join(self.failing_branches)} Regression] '
-                print(f'{prefix}ICE {m.group("details")} since {revision.get_full_hash()}')
+                summary = f'{prefix}ICE {m.group("details")} since {revision.get_full_hash()}'
+                url = f'https://gcc.gnu.org/bugzilla/enter_bug.cgi?product=gcc&short_desc={quote(summary)}&cc={revision.commit.author.email}'
+                print(f"Bugzilla: \u001b]8;;{url}\u001b\\{summary}\u001b]8;;\u001b\\")
                 return
 
     def bisect_recursive(self, candidates, r1, r2):
