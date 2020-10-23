@@ -45,19 +45,19 @@ patches_folder = os.path.join(script_dirname, 'gcc-bisect-patches')
 patches = ['0001-Use-ucontext_t-not-struct-ucontext-in-linux-unwind.h.patch', 'gnu-inline.patch', 'ubsan.patch', 'mallinfo.patch']
 
 parser = argparse.ArgumentParser(description='Bisect by prebuilt GCC binaries.')
-parser.add_argument('command', nargs = '?', metavar = 'command', help = 'GCC command')
-parser.add_argument('--silent', action = 'store_true', help = 'Do not print stderr and stdout output')
-parser.add_argument('-x', '--negate', action = 'store_true', help = 'FAIL if result code is equal to zero')
-parser.add_argument('-p', '--pull', action = 'store_true', help = 'Pull repository')
-parser.add_argument('-l', '--only-latest', action = 'store_true', help = 'Test only latest revisions')
-parser.add_argument('-s', '--bisect-start', help = 'Bisection start revision')
-parser.add_argument('-e', '--bisect-end', help = 'Bisection end revision')
-parser.add_argument('-i', '--ice', action = 'store_true', help = 'Grep stderr for ICE')
-parser.add_argument('-a', '--ask', action = 'store_true', help = 'Ask about return code')
-parser.add_argument('-o', '--old', action = 'store_true', help = 'Test also old releases')
-parser.add_argument('-v', '--verbose', action = 'store_true', help = 'Verbose output')
-parser.add_argument('--build', action = 'store_true', help = 'Build revisions')
-parser.add_argument('--print', action = 'store_true', help = 'Print built revisions')
+parser.add_argument('command', nargs='?', metavar='command', help='GCC command')
+parser.add_argument('--silent', action='store_true', help='Do not print stderr and stdout output')
+parser.add_argument('-x', '--negate', action='store_true', help='FAIL if result code is equal to zero')
+parser.add_argument('-p', '--pull', action='store_true', help='Pull repository')
+parser.add_argument('-l', '--only-latest', action='store_true', help='Test only latest revisions')
+parser.add_argument('-s', '--bisect-start', help='Bisection start revision')
+parser.add_argument('-e', '--bisect-end', help='Bisection end revision')
+parser.add_argument('-i', '--ice', action='store_true', help='Grep stderr for ICE')
+parser.add_argument('-a', '--ask', action='store_true', help='Ask about return code')
+parser.add_argument('-o', '--old', action='store_true', help='Test also old releases')
+parser.add_argument('-v', '--verbose', action='store_true', help='Verbose output')
+parser.add_argument('--build', action='store_true', help='Build revisions')
+parser.add_argument('--print', action='store_true', help='Print built revisions')
 
 args = parser.parse_args()
 
@@ -95,8 +95,8 @@ def revisions_in_range(source, target):
     r = '%s..%s' % (source.hexsha, target.hexsha)
     return list(repo.iter_commits(r)) + [source]
 
-def flush_print(text, end = '\n'):
-    print(text, end = end)
+def flush_print(text, end='\n'):
+    print(text, end=end)
     sys.stdout.flush()
 
 def strip_prefix(text, prefix):
@@ -126,11 +126,11 @@ def build_failed_for_revision(revision_hash):
 
     return False
 
-def run_cmd(command, strict = False):
+def run_cmd(command, strict=False):
     if isinstance(command, list):
         command = ' '.join(command)
     flush_print('Running: %s' % command)
-    r = subprocess.run(command, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    r = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     if r.returncode == 0:
         return (True, None)
     else:
@@ -182,13 +182,13 @@ class GitRevision:
             my_env['PATH'] = os.path.join(self.get_install_path(), 'bin') + ':' + my_env['PATH']
             ld_library_path = my_env['LD_LIBRARY_PATH'] if 'LD_LIBRARY_PATH' in my_env else ''
             my_env['LD_LIBRARY_PATH'] = os.path.join(self.get_install_path(), 'lib64') + ':' + ld_library_path
-            r = subprocess.run(args.command, shell = True, stdout = subprocess.PIPE, stderr = subprocess.STDOUT, env = my_env, encoding='utf8')
+            r = subprocess.run(args.command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env= my_env, encoding='utf8')
 
             # handle ICE
             success = r.returncode == 0
             if success and args.ask:
                 if not args.silent:
-                    flush_print(r.stdout, end = '')
+                    flush_print(r.stdout, end='')
                 success = input("Retcode: ") == '0'
             elif args.ice:
                 messages = ['internal compiler error', 'Fatal Error', 'Internal compiler error', 'Please submit a full bug report',
@@ -201,11 +201,11 @@ class GitRevision:
             text = colored('OK', 'green') if success else colored('FAILED', 'red') + ' (%d)' % r.returncode
             flush_print('  %s: [took: %3.3fs] result: %s' % (self.description(describe), (datetime.now() - start).total_seconds(), text))
             if not args.silent:
-                flush_print(r.stdout, end = '')
+                flush_print(r.stdout, end='')
 
         return (success, r.stdout)
 
-    def test(self, describe = False):
+    def test(self, describe=False):
         if not self.has_binary:
             flush_print('  %s: missing binary' % (self.description()))
             return (False, None)
@@ -251,13 +251,13 @@ class GitRevision:
 
             if os.path.exists(tmp_folder):
                 # try to reuse current build folder, should be very fast then
-                repo.git.checkout(self.commit, force = True)
+                repo.git.checkout(self.commit, force=True)
 
                 os.chdir(git_location)
                 # apply all patches
                 for p in patches:
                     r = subprocess.run('patch -p1 < ' + os.path.join(patches_folder, p),
-                            shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE, encoding = 'utf8')
+                            shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf8')
                     flush_print('applying patch %s with result: %d' % (p, r.returncode))
 
                 os.chdir(tmp_folder)
@@ -299,8 +299,8 @@ class GitRevision:
         tarfile = archive.replace('.zst', '')
         current = os.getcwd()
         os.chdir(extract_location)
-        subprocess.check_output('tar cfv %s *' % tarfile, shell = True)
-        subprocess.check_output('zstd --rm -q -19 -T0 %s' % tarfile, shell = True)
+        subprocess.check_output('tar cfv %s *' % tarfile, shell=True)
+        subprocess.check_output('zstd --rm -q -19 -T0 %s' % tarfile, shell=True)
         os.chdir(current)
 
     def decompress(self):
@@ -308,10 +308,10 @@ class GitRevision:
         if not os.path.exists(archive):
             return False
 
-        shutil.rmtree(extract_location, ignore_errors = True)
+        shutil.rmtree(extract_location, ignore_errors=True)
         os.makedirs(extract_location)
         cmd = 'zstdcat -T0 %s | tar x -C %s' % (archive, extract_location)
-        subprocess.check_output(cmd, shell = True)
+        subprocess.check_output(cmd, shell=True)
         return True
 
     def print_status(self):
