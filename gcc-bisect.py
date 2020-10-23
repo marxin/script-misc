@@ -47,20 +47,31 @@ patches_folder = os.path.join(script_dirname, 'gcc-bisect-patches')
 patches = ['0001-Use-ucontext_t-not-struct-ucontext-in-linux-unwind.h.patch',
            'gnu-inline.patch', 'ubsan.patch', 'mallinfo.patch']
 
-parser = argparse.ArgumentParser(description='Bisect by prebuilt GCC binaries.')
-parser.add_argument('command', nargs='?', metavar='command', help='GCC command')
-parser.add_argument('--silent', action='store_true', help='Do not print stderr and stdout output')
-parser.add_argument('-x', '--negate', action='store_true', help='FAIL if result code is equal to zero')
-parser.add_argument('-p', '--pull', action='store_true', help='Pull repository')
-parser.add_argument('-l', '--only-latest', action='store_true', help='Test only latest revisions')
+DESC = 'Bisect by prebuilt GCC binaries.'
+parser = argparse.ArgumentParser(description=DESC)
+parser.add_argument('command', nargs='?', metavar='command',
+                    help='GCC command')
+parser.add_argument('--silent', action='store_true',
+                    help='Do not print stderr and stdout output')
+parser.add_argument('-x', '--negate', action='store_true',
+                    help='FAIL if result code is equal to zero')
+parser.add_argument('-p', '--pull', action='store_true',
+                    help='Pull repository')
+parser.add_argument('-l', '--only-latest', action='store_true',
+                    help='Test only latest revisions')
 parser.add_argument('-s', '--bisect-start', help='Bisection start revision')
 parser.add_argument('-e', '--bisect-end', help='Bisection end revision')
-parser.add_argument('-i', '--ice', action='store_true', help='Grep stderr for ICE')
-parser.add_argument('-a', '--ask', action='store_true', help='Ask about return code')
-parser.add_argument('-o', '--old', action='store_true', help='Test also old releases')
-parser.add_argument('-v', '--verbose', action='store_true', help='Verbose output')
+parser.add_argument('-i', '--ice', action='store_true',
+                    help='Grep stderr for ICE')
+parser.add_argument('-a', '--ask', action='store_true',
+                    help='Ask about return code')
+parser.add_argument('-o', '--old', action='store_true',
+                    help='Test also old releases')
+parser.add_argument('-v', '--verbose', action='store_true',
+                    help='Verbose output')
 parser.add_argument('--build', action='store_true', help='Build revisions')
-parser.add_argument('--print', action='store_true', help='Print built revisions')
+parser.add_argument('--print', action='store_true',
+                    help='Print built revisions')
 
 args = parser.parse_args()
 
@@ -128,9 +139,9 @@ def build_failed_for_revision(revision_hash):
         return False
 
     lines = [x.strip() for x in open(log_file).readlines()]
-    for l in lines:
-        i = l.find(':')
-        revision = l[:i]
+    for line in lines:
+        i = line.find(':')
+        revision = line[:i]
         if revision == revision_hash:
             return True
 
@@ -194,17 +205,17 @@ class GitRevision:
             my_env['PATH'] = os.path.join(self.get_install_path(), 'bin') + ':' + my_env['PATH']
             ld_library_path = my_env['LD_LIBRARY_PATH'] if 'LD_LIBRARY_PATH' in my_env else ''
             my_env['LD_LIBRARY_PATH'] = os.path.join(self.get_install_path(), 'lib64') + ':' + ld_library_path
-            r = subprocess.run(args.command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env= my_env, encoding='utf8')
+            r = subprocess.run(args.command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=my_env, encoding='utf8')
 
             # handle ICE
             success = r.returncode == 0
             if success and args.ask:
                 if not args.silent:
                     flush_print(r.stdout, end='')
-                success = input("Retcode: ") == '0'
+                success = input('Retcode: ') == '0'
             elif args.ice:
                 messages = ['internal compiler error', 'Fatal Error', 'Internal compiler error', 'Please submit a full bug report',
-                        'lto-wrapper: fatal error']
+                            'lto-wrapper: fatal error']
                 success = any(map(lambda m: m in r.stdout, messages))
 
             if args.negate:
@@ -269,7 +280,7 @@ class GitRevision:
                 # apply all patches
                 for p in patches:
                     r = subprocess.run('patch -p1 < ' + os.path.join(patches_folder, p),
-                            shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf8')
+                                       shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf8')
                     flush_print('applying patch %s with result: %d' % (p, r.returncode))
 
                 os.chdir(tmp_folder)
@@ -285,9 +296,9 @@ class GitRevision:
                 os.mkdir(tmp_folder)
             os.chdir(tmp_folder)
             cmd = [os.path.join(git_location, 'configure'), '--disable-bootstrap', '--enable-checking=yes',
-                    '--disable-libsanitizer', '--enable-languages=c,c++,fortran',
-                    '--without-isl', '--disable-cet',
-                    '--disable-libstdcxx-pch', '--disable-static']
+                   '--disable-libsanitizer', '--enable-languages=c,c++,fortran',
+                   '--without-isl', '--disable-cet',
+                   '--disable-libstdcxx-pch', '--disable-static']
             run_cmd(cmd, True)
             run_cmd('echo "MAKEINFO = :" >> Makefile')
             r = run_cmd(build_command)
@@ -302,7 +313,7 @@ class GitRevision:
 
     def strip(self):
         if os.path.exists(extract_location):
-            run_cmd('find %s -exec strip --strip-debug {} \;' % extract_location)
+            run_cmd('find %s -exec strip --strip-debug {} \\;' % extract_location)
 
     def compress(self):
         archive = self.get_archive_path()
@@ -330,6 +341,7 @@ class GitRevision:
         status = colored('OK', 'green') if self.has_binary else colored('missing binary', 'yellow')
         flush_print('%s: %s' % (self.description(), status))
 
+
 class Release(GitRevision):
     def __init__(self, name, commit):
         GitRevision.__init__(self, commit)
@@ -351,6 +363,7 @@ class Release(GitRevision):
     def patch_name(self):
         return self.name + '.patch'
 
+
 class Branch(GitRevision):
     def __init__(self, name, commit):
         GitRevision.__init__(self, commit)
@@ -371,6 +384,7 @@ class Branch(GitRevision):
         existing_head_commits = list(filter(lambda x: x.hexsha in built, head_commits))
         flush_print('%3s-branch: branch commits: %8d, head distance: %8d (have: %d)' % (self.name, len(branch_commits), len(head_commits), len(existing_head_commits)))
 
+
 class GitRepository:
     RELEASE_BRANCH_PREFIX = 'origin/releases/gcc-'
 
@@ -383,7 +397,7 @@ class GitRepository:
 
         if args.pull:
             attempts = 10
-            for i in range(attempts):
+            for _ in range(attempts):
                 r = self.pull()
                 if r:
                     break
@@ -414,7 +428,7 @@ class GitRepository:
             if version.count('.') == 2:
                 self.releases.append(Release(version, repo.commit(r.name)))
 
-        self.releases = sorted(filter(lambda x: x.version >= Version(oldest_release), self.releases), key = lambda x: x.version)
+        self.releases = sorted(filter(lambda x: x.version >= Version(oldest_release), self.releases), key=lambda x: x.version)
 
     def get_master_branch(self):
         if not self.master_branch:
@@ -425,7 +439,7 @@ class GitRepository:
         remote = repo.remotes['origin']
         # support bases for 5+ releases
         branches = list(filter(lambda x: self.RELEASE_BRANCH_PREFIX in x.name and '.' not in x.name, remote.refs))
-        branches = sorted(branches, key = lambda x: int(strip_prefix(x.name, self.RELEASE_BRANCH_PREFIX)))
+        branches = sorted(branches, key=lambda x: int(strip_prefix(x.name, self.RELEASE_BRANCH_PREFIX)))
         for b in branches:
             name = strip_prefix(b.name, self.RELEASE_BRANCH_PREFIX)
             branch_commit = repo.commit(b.name)
@@ -436,7 +450,7 @@ class GitRepository:
         self.branches.append(Branch(self.get_master_branch(), head))
 
     def parse_latest_revisions(self):
-        for c in repo.iter_commits(last_revision + '..origin/master', first_parent = True):
+        for c in repo.iter_commits(last_revision + '..origin/master', first_parent=True):
             self.latest.append(GitRevision(c))
 
     @staticmethod
@@ -465,8 +479,8 @@ class GitRepository:
             r.print_status()
 
     def build(self):
-        for l in self.all:
-            for r in l:
+        for source in self.all:
+            for r in source:
                 r.build()
 
     def initialize_binaries(self):
@@ -476,17 +490,17 @@ class GitRepository:
             if f.endswith('.tar.zst'):
                 existing.add(f.split('.')[0])
 
-        for l in self.all:
-            for r in l:
+        for source in self.all:
+            for r in source:
                 if r.commit.hexsha in existing:
                     r.has_binary = True
 
     def find_commit(self, name, candidates):
         if 'base' in name:
             b = single_or_default(lambda x: x.name == name, self.branch_bases)
-            if b != None:
+            if b:
                 name = b.commit.hexsha
-        return single_or_default (lambda x: x.commit.hexsha.startswith(name), candidates)
+        return single_or_default(lambda x: x.commit.hexsha.startswith(name), candidates)
 
     def bisect(self):
         if not args.old:
@@ -516,11 +530,11 @@ class GitRepository:
 
         # test whether there's a change in return code
 
-        if args.bisect_start != None:
+        if args.bisect_start:
             r = self.find_commit(args.bisect_start, candidates)
             candidates = candidates[candidates.index(r):]
 
-        if args.bisect_end != None:
+        if args.bisect_end:
             r = self.find_commit(args.bisect_end, candidates)
             candidates = candidates[:candidates.index(r)+1]
 
@@ -530,14 +544,14 @@ class GitRepository:
         if first != last:
             self.bisect_recursive(candidates, first, last)
         else:
-            flush_print('  bisect finished: ' +  colored('there is no change!', 'red'))
+            flush_print('  bisect finished: ' + colored('there is no change!', 'red'))
 
     def print_bugzilla_title(self, output, revision):
         for line in output.split('\n'):
             m = re.match('.*internal compiler error: (?P<details>.*)', line)
             if m:
                 prefix = ''
-                if self.failing_branches != None:
+                if self.failing_branches is not None:
                     if len(self.failing_branches) and len(self.failing_branches) != len(self.branches):
                         prefix = f'[{"/".join(self.failing_branches)} Regression] '
                 summary = f'{prefix}ICE {m.group("details")} since {revision.get_full_hash()}'
@@ -553,9 +567,9 @@ class GitRepository:
             candidates[1].test(describe=True)
             print(candidates[1].commit.message)
             revisions = revisions_in_range(candidates[1].commit, candidates[0].commit)
-            l = len(revisions) - 2
-            if l > 0:
-                flush_print(colored('Revisions in between: %d' % l, 'red', attrs = ['bold']))
+            length = len(revisions) - 2
+            if length > 0:
+                flush_print(colored('Revisions in between: %d' % length, 'red', attrs=['bold']))
             self.print_bugzilla_title(output[1], candidates[0])
         else:
             steps = math.ceil(math.log2(len(candidates))) - 1
@@ -568,6 +582,7 @@ class GitRepository:
             else:
                 assert middle == r2
                 self.bisect_recursive(candidates[:index+1], r1, middle)
+
 
 # MAIN
 g = GitRepository()
