@@ -152,7 +152,8 @@ def run_cmd(command, strict=False):
     if isinstance(command, list):
         command = ' '.join(command)
     flush_print('Running: %s' % command)
-    r = subprocess.run(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    r = subprocess.run(command, shell=True, stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE)
     if r.returncode == 0:
         return (True, None)
     else:
@@ -180,7 +181,9 @@ class GitRevision:
         return self.commit.hexsha[0:16]
 
     def get_full_hash(self):
-        r = subprocess.check_output('git gcc-descr --full %s' % self.commit.hexsha, cwd=git_location, shell=True, encoding='utf8')
+        cmd = 'git gcc-descr --full %s' % self.commit.hexsha
+        r = subprocess.check_output(cmd, cwd=git_location, shell=True,
+                                    encoding='utf8')
         parts = r.strip().split('-')
         assert len(parts) == 3
         parts[2] = parts[2][:17]
@@ -190,7 +193,8 @@ class GitRevision:
         hash = colored(self.short_hexsha(), description_color)
         if describe:
             hash = colored(self.get_full_hash(), 'green')
-        return '%s(%s)(%s)' % (hash, self.timestamp_str(), self.commit.author.email)
+        return '%s(%s)(%s)' % (hash, self.timestamp_str(),
+                               self.commit.author.email)
 
     def patch_name(self):
         return self.commit.hexsha + '.patch'
@@ -202,7 +206,8 @@ class GitRevision:
                 self.decompress()
 
             my_env = os.environ.copy()
-            my_env['PATH'] = os.path.join(self.get_install_path(), 'bin') + ':' + my_env['PATH']
+            my_env['PATH'] = (os.path.join(self.get_install_path(), 'bin')
+                              + ':' + my_env['PATH'])
             ld_library_path = my_env['LD_LIBRARY_PATH'] if 'LD_LIBRARY_PATH' in my_env else ''
             my_env['LD_LIBRARY_PATH'] = os.path.join(self.get_install_path(), 'lib64') + ':' + ld_library_path
             r = subprocess.run(args.command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=my_env, encoding='utf8')
