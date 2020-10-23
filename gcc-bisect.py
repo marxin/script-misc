@@ -1,28 +1,29 @@
 #!/usr/bin/env python3
 
 # one needs the following packages:
-# python3-filelock python3-GitPython python3-semantic_version python3-termcolor zstd
+# python3-filelock python3-GitPython
+# python3-semantic_version python3-termcolor zstd
 
-import sys
-import hashlib
 import argparse
-import json
-import os
-import subprocess
-import tempfile
-import shutil
-import time
-import math
-import filelock
-import re
 import configparser
-
-from datetime import datetime,timedelta
-from termcolor import colored
-from git import Repo
-from semantic_version import Version
+import math
+import os
+import re
+import shutil
+import subprocess
+import sys
+import time
+from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import quote
+
+import filelock
+
+from git import Repo
+
+from semantic_version import Version
+
+from termcolor import colored
 
 # configuration
 script_dirname = os.path.abspath(os.path.dirname(__file__))
@@ -38,11 +39,13 @@ oldest_release = '4.8.0'
 oldest_active_branch = 8
 
 # Other locations should not by set up by a script consumer
-lock = filelock.FileLock(os.path.join(script_dirname, '.gcc_build_binary.lock'))
+lock_path = os.path.join(script_dirname, '.gcc_build_binary.lock')
+lock = filelock.FileLock(lock_path)
 log_file = '/home/marxin/Programming/script-misc/gcc-build.log'
 
 patches_folder = os.path.join(script_dirname, 'gcc-bisect-patches')
-patches = ['0001-Use-ucontext_t-not-struct-ucontext-in-linux-unwind.h.patch', 'gnu-inline.patch', 'ubsan.patch', 'mallinfo.patch']
+patches = ['0001-Use-ucontext_t-not-struct-ucontext-in-linux-unwind.h.patch',
+           'gnu-inline.patch', 'ubsan.patch', 'mallinfo.patch']
 
 parser = argparse.ArgumentParser(description='Bisect by prebuilt GCC binaries.')
 parser.add_argument('command', nargs='?', metavar='command', help='GCC command')
@@ -65,13 +68,13 @@ config_location = str(Path.home().joinpath('.config/gcc-bisect.ini'))
 config = configparser.ConfigParser()
 config.read(config_location)
 
-if not 'Default' in config:
+if 'Default' not in config:
     print('Cannot find Default section in config file: %s' % config_location)
     exit(127)
 
 needed_variables = ['git_location', 'binaries_location', 'extract_location']
 for nv in needed_variables:
-    if not nv in config['Default']:
+    if nv not in config['Default']:
         print('Missing variable %s in config file: %s' % (nv, config_location))
         exit(127)
 
@@ -84,6 +87,7 @@ head = repo.commit('origin/master')
 
 build_times = []
 
+
 def single_or_default(fn, items):
     r = list(filter(fn, items))
     if len(r) == 1:
@@ -91,27 +95,33 @@ def single_or_default(fn, items):
     else:
         raise Exception()
 
+
 def revisions_in_range(source, target):
     r = '%s..%s' % (source.hexsha, target.hexsha)
     return list(repo.iter_commits(r)) + [source]
 
+
 def flush_print(text, end='\n'):
     print(text, end=end)
     sys.stdout.flush()
+
 
 def strip_prefix(text, prefix):
     if text.startswith(prefix):
         return text[len(prefix):]
     return text
 
+
 def strip_suffix(text, suffix):
     if text.endswith(suffix):
         return text[:-len(suffix)]
     return text
 
+
 def log(revision_hash, message):
     with open(log_file, 'a+') as f:
         f.write('%s:%s\n' % (revision_hash, message))
+
 
 def build_failed_for_revision(revision_hash):
     if not os.path.exists(log_file):
@@ -125,6 +135,7 @@ def build_failed_for_revision(revision_hash):
             return True
 
     return False
+
 
 def run_cmd(command, strict=False):
     if isinstance(command, list):
@@ -141,6 +152,7 @@ def run_cmd(command, strict=False):
             flush_print(error)
         assert not strict
         return (False, error)
+
 
 class GitRevision:
     def __init__(self, commit):
@@ -396,7 +408,7 @@ class GitRepository:
             return False
 
     def parse_releases(self):
-        releases = list(filter(lambda x: 'releases/gcc-' in x.name and not 'prerelease' in x.name, repo.tags))
+        releases = list(filter(lambda x: 'releases/gcc-' in x.name and 'prerelease' not in x.name, repo.tags))
         for r in releases:
             version = strip_prefix(r.name, 'releases/gcc-')
             if version.count('.') == 2:
