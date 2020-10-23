@@ -46,7 +46,7 @@ patches = ['0001-Use-ucontext_t-not-struct-ucontext-in-linux-unwind.h.patch', 'g
 
 parser = argparse.ArgumentParser(description='Bisect by prebuilt GCC binaries.')
 parser.add_argument('command', nargs = '?', metavar = 'command', help = 'GCC command')
-parser.add_argument('-t', '--silent', action = 'store_true', help = 'Silent logging')
+parser.add_argument('--silent', action = 'store_true', help = 'Do not print stderr and stdout output')
 parser.add_argument('-x', '--negate', action = 'store_true', help = 'FAIL if result code is equal to zero')
 parser.add_argument('-p', '--pull', action = 'store_true', help = 'Pull repository')
 parser.add_argument('-l', '--only-latest', action = 'store_true', help = 'Test only latest revisions')
