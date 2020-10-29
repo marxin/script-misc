@@ -505,6 +505,9 @@ class GitRepository:
             b = single_or_default(lambda x: x.name == name, self.branch_bases)
             if b:
                 name = b.commit.hexsha
+        elif '-' in name:
+            # Support the GCC format: r11-3685-gfcae5121154d1c33
+            name = name.split('-')[-1][1:]
         return single_or_default(lambda x: x.commit.hexsha.startswith(name), candidates)
 
     def bisect(self):
