@@ -72,6 +72,8 @@ parser.add_argument('-v', '--verbose', action='store_true',
 parser.add_argument('--build', action='store_true', help='Build revisions')
 parser.add_argument('--print', action='store_true',
                     help='Print built revisions')
+parser.add_argument('--success-exit-code', type=int, default=0,
+                    help='Success exit code')
 
 args = parser.parse_args()
 
@@ -154,7 +156,7 @@ def run_cmd(command, strict=False):
     flush_print('Running: %s' % command)
     r = subprocess.run(command, shell=True, stdout=subprocess.PIPE,
                        stderr=subprocess.PIPE)
-    if r.returncode == 0:
+    if r.returncode == args.success_exit_code:
         return (True, None)
     else:
         flush_print('Command failed with return code %d' % r.returncode)
@@ -213,7 +215,7 @@ class GitRevision:
             r = subprocess.run(args.command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=my_env, encoding='utf8')
 
             # handle ICE
-            success = r.returncode == 0
+            success = r.returncode == args.success_exit_code
             if success and args.ask:
                 if not args.silent:
                     flush_print(r.stdout, end='')
