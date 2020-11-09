@@ -27,4 +27,5 @@ while start != end:
         has_failure = True
     start += 1
 
+print(f'Range: {min(revisions)}-{end}')
 sys.exit(1 if has_failure else 0)
