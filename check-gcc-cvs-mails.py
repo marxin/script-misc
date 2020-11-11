@@ -22,7 +22,7 @@ end = max(revisions)
 has_failure = False
 
 while start != end:
-    if start not in revisions and start > 4828:
+    if start not in revisions and start > int(sys.argv[1]):
         print(f'Missing: {start}')
         has_failure = True
     start += 1
