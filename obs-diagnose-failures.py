@@ -20,7 +20,9 @@ def find_in_line(haystack, line):
                 p = needle
             return line[:i] + p + line[i + len(needle):]
 
-categories = [('segfault', ['Segmentation fault', 'internal compiler error', 'Killed signal', 'lto1: fatal error']),
+categories = [
+        ('rpmlint threshold', ['----- Badness']),
+        ('segfault', ['Segmentation fault', 'internal compiler error', 'Killed signal', 'lto1: fatal error']),
         ('multiple definition', ['multiple definition of']),
         ('Werror', ['[-Werror=']),
         ('error', ['error:']),
