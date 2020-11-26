@@ -171,7 +171,7 @@ def generate_graph(time_range):
     cpu_subplot.plot(timestamps, cpu_data, c='blue', lw=LW)
     cpu_subplot.set_ylim([0, 105])
     cpu_subplot.axhline(color='r', alpha=0.5, y=100.0 / cpu_count, lw=LW,
-                        linestyle='dotted')
+                        linestyle='dotted', label='single core')
     cpu_subplot.set_xlim(left=time_range[0] if time_range else 0)
     cpu_subplot.grid(True)
 
