@@ -74,6 +74,7 @@ parser.add_argument('--print', action='store_true',
                     help='Print built revisions')
 parser.add_argument('--success-exit-code', type=int, default=0,
                     help='Success exit code')
+parser.add_argument('-u', '--unpack', help='Only unpack the revision and exit')
 
 args = parser.parse_args()
 
@@ -106,7 +107,7 @@ def single_or_default(fn, items):
     if len(r) == 1:
         return r[0]
     else:
-        raise Exception()
+        raise Exception('Single cannot be called for an empty sequence')
 
 
 def revisions_in_range(source, target):
@@ -204,8 +205,7 @@ class GitRevision:
     def run(self, describe):
         start = datetime.now()
         with lock:
-            if os.path.exists(self.get_archive_path()):
-                self.decompress()
+            self.decompress()
 
             my_env = os.environ.copy()
             my_env['PATH'] = (os.path.join(self.get_install_path(), 'bin')
@@ -600,6 +600,15 @@ if args.print:
     g.print()
 elif args.build:
     g.build()
+elif args.unpack:
+    try:
+        commit = g.find_commit(args.unpack, g.latest)
+        with lock:
+            commit.decompress()
+            print(f'Revision extracted to: {commit.get_install_path() + "/bin"}')
+    except Exception as e:
+        print(f'Cannot find revision: {e}')
+        exit(1)
 else:
     if not args.command:
         print('Missing command for bisection!')
