@@ -498,6 +498,8 @@ class OptimizationLevel:
         for l in output_for_command('%s -c -Q --help=params %s' % (get_compiler(), self.level)):
             if l == '':
                 continue
+            elif 'available in' in l:
+                continue
             parts = split_by_space(l)
 
             assert len(parts) == 2
