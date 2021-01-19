@@ -56,9 +56,11 @@ for needle in needles:
                                 zipped = sorted(list(zip(values[::2], values[1::2])), key = lambda x: x[1], reverse = True)
                                 s = sum(x[1] for x in zipped)
                                 if s > total:
-                                    print('WARNING: strage: %s' % l)
+                                    print('WARNING: strange: %s' % l)
                                     break
                                 missing_freq += total - s
+                                #if s < total and total - s > 100000:
+                                #    print(total - s, len(zipped))
                                 for z in zipped[:8]:
                                     if z[1] >= (threshold * total):
                                         histogram[n][1] += 1
@@ -75,5 +77,5 @@ for needle in needles:
             % (total_tuples, 9 * counter_count, 2 * counter_count + 2 * total_tuples))
     print('Histogram:')
     for (k, v) in sorted(histogram.items(), key = lambda x: x[0]):
-        print('  %4d tracked: %5d (%.2f%%), >=%.2f: %4d (cov. freq: %12d (%.2f%%))' % (k, v[0], 100.0 * v[0] / counter_count, threshold, v[1], v[2], 100.0 * v[2] / total_freq))
+        print('  %4d tracked: %7d (%2.2f%%), >=%.2f: %4d (cov. freq: %12d (%.2f%%))' % (k, v[0], 100.0 * v[0] / counter_count, threshold, v[1], v[2], 100.0 * v[2] / total_freq))
     print()
