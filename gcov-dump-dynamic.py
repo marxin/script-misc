@@ -9,6 +9,8 @@ location = sys.argv[1]
 needles = ['indirect_call', 'topn']
 
 threshold = 0.25
+max_nodes = 32
+interesting_coverage = .3
 
 if len(sys.argv) == 3:
     threshold = float(sys.argv[2])
@@ -18,6 +20,7 @@ print('== Stats for %s ==' % location)
 for needle in needles:
     print('stats for %s:' % needle)
     histogram = {}
+    full_counters = []
     counter_count = 0
     total_freq = 0
     total_freq_with_half = 0
@@ -53,21 +56,19 @@ for needle in needles:
                                 histogram[n] = [0, 0, 0]
                             histogram[n][0] += 1
                             if values:
-                                zipped = sorted(list(zip(values[::2], values[1::2])), key = lambda x: x[1], reverse = True)
+                                zipped = sorted(list(zip(values[::2], values[1::2])), key = lambda x: x[1], reverse=True)
                                 s = sum(x[1] for x in zipped)
                                 if s > total:
                                     print('WARNING: strange: %s' % l)
                                     break
                                 missing_freq += total - s
-                                #if s < total and total - s > 100000:
-                                #    print(total - s, len(zipped))
-                                for z in zipped[:8]:
+                                if n == max_nodes:
+                                    full_counters.append((total, s, zipped))
+                                for z in zipped:
                                     if z[1] >= (threshold * total):
                                         histogram[n][1] += 1
                                         histogram[n][2] += z[1]
                                         total_freq_with_half += z[1]
-                                        #if n == 256:
-                                        #    print('   ' + str(z))
                                     elif n == 1:
                                         assert False
 
@@ -77,5 +78,10 @@ for needle in needles:
             % (total_tuples, 9 * counter_count, 2 * counter_count + 2 * total_tuples))
     print('Histogram:')
     for (k, v) in sorted(histogram.items(), key = lambda x: x[0]):
-        print('  %4d tracked: %7d (%2.2f%%), >=%.2f: %4d (cov. freq: %12d (%.2f%%))' % (k, v[0], 100.0 * v[0] / counter_count, threshold, v[1], v[2], 100.0 * v[2] / total_freq))
+        print('  %4d tracked: %7d (%2.2f%%), >=%.2f: %4d (cov. freq with prevailing: %12d (%.2f%%))' % (k, v[0], 100.0 * v[0] / counter_count, threshold, v[1], v[2], 100.0 * v[2] / total_freq))
+    print(f'    full counters (>={interesting_coverage}%):')
+    for full in sorted(full_counters, key=lambda x: x[1], reverse=True):
+        covered_freq = 100.0 * full[1] / total_freq
+        if covered_freq >= interesting_coverage:
+            print(f'      total: {full[1]} ({covered_freq:.2f}%), prevailing counter: {100.0 * full[2][0][1] / full[0]:.2f}%')
     print()
