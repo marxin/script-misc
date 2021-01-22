@@ -45,7 +45,7 @@ for needle in needles:
                             n = allvalues[1]
                             values = allvalues[:2 + 2 * n]
                             allvalues = allvalues[len(values):]
-                            total = values[0]
+                            total = abs(values[0])
                             total_freq += total
                             total_tuples += n
                             values = values[2:]
@@ -63,7 +63,7 @@ for needle in needles:
                                     break
                                 missing_freq += total - s
                                 if n == max_nodes:
-                                    full_counters.append((total, s, zipped))
+                                    full_counters.append((total, s, zipped, values[0] > 0))
                                 for z in zipped:
                                     if z[1] >= (threshold * total):
                                         histogram[n][1] += 1
@@ -82,6 +82,8 @@ for needle in needles:
     print(f'    full counters (>={interesting_coverage}%):')
     for full in sorted(full_counters, key=lambda x: x[1], reverse=True):
         covered_freq = 100.0 * full[1] / total_freq
-        if covered_freq >= interesting_coverage:
-            print(f'      total: {full[1]} ({covered_freq:.2f}%), prevailing counter: {100.0 * full[2][0][1] / full[0]:.2f}%')
+        if True:
+        #if covered_freq >= interesting_coverage:
+            missing = full[0] - full[1]
+            print(f'      total: {full[1]} ({covered_freq:.2f}%) {"NEG" if full[3] else ""} missing: {missing} (of total: {100.0 * missing / full[0]:.2f}%), prevailing counter: {100.0 * full[2][0][1] / full[0]:.2f}%')
     print()
