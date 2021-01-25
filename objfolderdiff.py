@@ -32,16 +32,19 @@ def objdump(f):
     r = subprocess.check_output('objdump -S %s' % obj, shell = True, encoding = 'utf8')
     return r
 
-def print_diff(f, source1, source2):
-    f1 = os.path.join(args.source1, f + '.s.txt')
-    f2 = os.path.join(args.source2, f + '.s.txt')
+def print_diff(filename, source1, source2):
+    f1 = os.path.join(args.source1, filename + '.s.txt')
+    f2 = os.path.join(args.source2, filename + '.s.txt')
 
     with open(f1, 'w+') as f:
         f.write(source1)
     with open(f2, 'w+') as f:
         f.write(source2)
 
-    subprocess.run('diff -u %s %s' % (f1, f2), shell = True)
+    diff_path = (filename + '.diff').replace('/', '_')
+    with open(diff_path, 'w') as diff:
+        subprocess.run('diff -u %s %s' % (f1, f2), shell=True, stdout=diff)
+        print(f'  saving diff to {diff_path}')
 
 source_files1 = list(sorted(get_files(args.source1)))
 source_files2 = list(sorted(get_files(args.source2)))
