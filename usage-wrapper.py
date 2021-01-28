@@ -52,6 +52,8 @@ parser.add_argument('-r', '--ranges',
                     help='Plot only the selected time ranges '
                     '(e.g. 20-30, 0-1000)')
 parser.add_argument('-t', '--title', help='Graph title')
+parser.add_argument('-f', '--frequency', type=float,
+                    default=INTERVAL, help='Frequency of measuring')
 args = parser.parse_args()
 
 
@@ -82,7 +84,7 @@ def record():
     active_pids = {}
     while not done:
         timestamp = time.monotonic() - start_ts
-        used_cpu = psutil.cpu_percent(interval=INTERVAL)
+        used_cpu = psutil.cpu_percent(interval=args.frequency)
         used_memory = to_gigabyte(psutil.virtual_memory().used)
         global_timestamps.append(timestamp)
         global_memory_data.append(used_memory)
