@@ -170,14 +170,14 @@ def generate_graph(time_range):
     local_cpu_average = sum(cpu_data) / len(cpu_data)
     cpu_subplot.set_title('CPU usage')
     cpu_subplot.set_ylabel('%')
-    cpu_subplot.plot(timestamps, cpu_data, c='blue', lw=LW)
+    cpu_subplot.plot(timestamps, cpu_data, c='blue', lw=LW, label='total')
     cpu_subplot.set_ylim([0, 105])
     cpu_subplot.axhline(color='r', alpha=0.5, y=100.0 / cpu_count, lw=LW,
                         linestyle='dotted', label='single core')
     cpu_subplot.set_xlim(left=time_range[0] if time_range else 0)
     cpu_subplot.grid(True)
 
-    mem_subplot.plot(timestamps, memory_data, c='blue', lw=LW)
+    mem_subplot.plot(timestamps, memory_data, c='blue', lw=LW, label='total')
     mem_subplot.set_title('Memory usage')
     mem_subplot.set_ylabel('GB')
     mem_subplot.set_xlabel('time')
