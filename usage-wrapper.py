@@ -4,16 +4,30 @@ import argparse
 import math
 import os
 import subprocess
+import sys
 import threading
 import time
 
-import matplotlib.pyplot as plt
+try:
+    import psutil
+except ImportError:
+    print(f'{sys.argv[0]}: the psutil module is required.', file=sys.stderr)
+    sys.exit(1)
 
-import psutil
-
+try:
+    import matplotlib.pyplot as plt
+except ImportError:
+    plt = None
 
 INTERVAL = 0.33
 LW = 0.5
+
+global_n = 0
+global_cpu_data_sum = 0
+global_memory_data_sum = 0
+global_cpu_data_max = 0
+global_memory_data_min = 0
+global_memory_data_max = 0
 
 global_timestamps = []
 global_cpu_data = []
@@ -42,8 +56,17 @@ for i, k in enumerate(special_processes.keys()):
 
 descr = 'Run command and measure memory and CPU utilization'
 parser = argparse.ArgumentParser(description=descr)
-parser.add_argument('command', metavar='command', help='Command')
+parser.add_argument('command', metavar='command',
+                    help='Command', nargs=argparse.REMAINDER)
+parser.add_argument('-c', '--command', dest='command1',
+                    help='command as a single argument')
 parser.add_argument('-v', '--verbose', action='store_true', help='Verbose')
+parser.add_argument('--summary-only', dest='summary_only',
+                    action='store_true',
+                    help='No plot, just a summary at the end')
+parser.add_argument('--no-base-memory', dest='base_memory_only',
+                    action='store_true',
+                    help='Adjust memory to not include the system load')
 parser.add_argument('-s', '--separate-ltrans', action='store_true',
                     help='Separate LTRANS processes in graph')
 parser.add_argument('-o', '--output', default='usage.svg',
@@ -53,8 +76,19 @@ parser.add_argument('-r', '--ranges',
                     '(e.g. 20-30, 0-1000)')
 parser.add_argument('-t', '--title', help='Graph title')
 parser.add_argument('-f', '--frequency', type=float,
-                    default=INTERVAL, help='Frequency of measuring')
+                    default=INTERVAL,
+                    help='Frequency of measuring (in seconds)')
 args = parser.parse_args()
+
+if args.command1 and args.command:
+    print(f'{sys.argv[0]}: either use -c "<shell command>", '
+          'or append the command', file=sys.stderr)
+    sys.exit(1)
+
+if not args.summary_only and plt is None:
+    print(f'{sys.argv[0]}: use --summary-only, '
+          'or install the matplotlib module', file=sys.stderr)
+    sys.exit(1)
 
 
 def to_gigabyte(value):
@@ -81,14 +115,29 @@ def get_process_name(proc):
 
 
 def record():
+    global global_n, global_cpu_data_sum, global_cpu_data_max
+    global global_memory_data_sum, global_memory_data_min
+    global global_memory_data_max
+
     active_pids = {}
     while not done:
         timestamp = time.monotonic() - start_ts
         used_cpu = psutil.cpu_percent(interval=args.frequency)
         used_memory = to_gigabyte(psutil.virtual_memory().used)
-        global_timestamps.append(timestamp)
-        global_memory_data.append(used_memory)
-        global_cpu_data.append(used_cpu)
+        if not args.summary_only:
+            global_timestamps.append(timestamp)
+            global_memory_data.append(used_memory)
+            global_cpu_data.append(used_cpu)
+
+        global_n += 1
+        global_cpu_data_sum += used_cpu
+        global_memory_data_sum += used_memory
+        if used_cpu > global_cpu_data_max:
+            global_cpu_data_max = used_cpu
+        if used_memory < global_memory_data_min:
+            global_memory_data_min = used_memory
+        if used_memory > global_memory_data_max:
+            global_memory_data_max = used_memory
 
         entry = {}
         seen_pids = set()
@@ -122,7 +171,8 @@ def record():
                 del active_pids[pid]
         if args.verbose:
             print(entry, flush=True)
-        global_process_usage.append(entry)
+        if not args.summary_only:
+            global_process_usage.append(entry)
 
 
 def stack_values(process_usage, key):
@@ -186,6 +236,8 @@ def generate_graph(time_range):
     limit = 1
     while peak_memory > limit:
         limit *= 2
+    if limit > 2 and limit * 0.75 >= peak_memory:
+        limit = int(limit * 0.75)
     mem_subplot.set_ylim([0, 1.1 * limit])
     mem_subplot.set_yticks(range(0, limit + 1, math.ceil(limit / 8)))
     mem_subplot.grid(True)
@@ -221,6 +273,16 @@ def generate_graph(time_range):
         print('Saving plot to %s' % filename)
 
 
+def summary():
+    hostname = os.uname()[1].split('.')[0]
+    cpu_average = global_cpu_data_sum / global_n
+    peak_memory = global_memory_data_max
+    print('SUMMARY:', 'hostname: %s; CPU count: %d, CPU avg: %.1f%%, '
+          'min memory: %.1f GB; peak memory: %.1f GB; total memory: %.1f GB'
+          % (hostname, cpu_count, cpu_average, global_memory_data_min,
+             peak_memory, to_gigabyte(psutil.virtual_memory().total)))
+
+
 thread = threading.Thread(target=record, args=())
 thread.start()
 
@@ -236,16 +298,24 @@ if args.verbose:
     print('Running command', flush=True)
 
 try:
-    subprocess.run(args.command, shell=True)
+    cmd = args.command1 if args.command1 else args.command
+    cp = subprocess.run(cmd, shell=True)
 except KeyboardInterrupt:
-    pass
+    rv = 2
 finally:
     done = True
     thread.join()
+    summary()
     if global_memory_data:
         min_memory = min(global_memory_data)
-        global_memory_data = [x - min_memory for x in global_memory_data]
+        if args.base_memory_only:
+            global_memory_data = [x - min_memory for x in global_memory_data]
 
-        generate_graph(None)
-        for r in ranges:
-            generate_graph(r)
+        if plt:
+            generate_graph(None)
+            for r in ranges:
+                generate_graph(r)
+    if cp:
+        rv = cp.returncode
+
+sys.exit(rv)
