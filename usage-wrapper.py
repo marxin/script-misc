@@ -33,6 +33,7 @@ global_timestamps = []
 global_cpu_data = []
 global_memory_data = []
 global_process_usage = []
+global_process_hogs = {}
 
 process_name_map = {}
 process_labels = []
@@ -75,6 +76,9 @@ parser.add_argument('-r', '--ranges',
                     help='Plot only the selected time ranges '
                     '(e.g. 20-30, 0-1000)')
 parser.add_argument('-t', '--title', help='Graph title')
+parser.add_argument('-m', '--memory-hog-threshold', type=float,
+                    help='Report about processes that consume the amount of '
+                    'memory (in GB)')
 parser.add_argument('-f', '--frequency', type=float,
                     default=INTERVAL,
                     help='Frequency of measuring (in seconds)')
@@ -114,6 +118,17 @@ def get_process_name(proc):
     return None
 
 
+def record_process_memory_hog(proc, memory, timestamp):
+    if args.memory_hog_threshold:
+        if memory >= args.memory_hog_threshold:
+            cmd = ' '.join(proc.cmdline())
+            tpl = (memory, timestamp)
+            if cmd not in global_process_hogs:
+                global_process_hogs[cmd] = tpl
+            elif memory > global_process_hogs[cmd][0]:
+                global_process_hogs[cmd] = tpl
+
+
 def record():
     global global_n, global_cpu_data_sum, global_cpu_data_max
     global global_memory_data_sum, global_memory_data_min
@@ -143,6 +158,8 @@ def record():
         seen_pids = set()
         for proc in psutil.Process().children(recursive=True):
             try:
+                memory = to_gigabyte(proc.memory_info().rss)
+                record_process_memory_hog(proc, memory, timestamp)
                 name = get_process_name(proc)
                 if name:
                     seen_pids.add(proc.pid)
@@ -150,7 +167,6 @@ def record():
                         active_pids[proc.pid] = proc
                     else:
                         proc = active_pids[proc.pid]
-                    memory = to_gigabyte(proc.memory_info().rss)
                     cpu = proc.cpu_percent() / cpu_count
                     if name not in process_name_map:
                         length = len(process_name_map)
@@ -281,6 +297,12 @@ def summary():
           'min memory: %.1f GB; peak memory: %.1f GB; total memory: %.1f GB'
           % (hostname, cpu_count, cpu_average, global_memory_data_min,
              peak_memory, to_gigabyte(psutil.virtual_memory().total)))
+    if global_process_hogs:
+        print(f'PROCESS MEMORY HOGS (>={args.memory_hog_threshold:.1f} GB):')
+        items = sorted(global_process_hogs.items(), key=lambda x: x[1][0],
+                       reverse=True)
+        for cmdline, (memory, ts) in items:
+            print(f'  {memory:.1f} GB: {ts:.1f} s: {cmdline}')
 
 
 thread = threading.Thread(target=record, args=())
