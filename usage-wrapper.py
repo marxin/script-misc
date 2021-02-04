@@ -36,7 +36,7 @@ global_process_usage = []
 global_process_hogs = {}
 
 process_name_map = {}
-process_labels = []
+labels = []
 lock = threading.Lock()
 
 done = False
@@ -56,7 +56,7 @@ special_processes = {'ld': 'gold',
                      'rpm/dpkg': 'plum'}
 for i, k in enumerate(special_processes.keys()):
     process_name_map[k] = i
-    process_labels.append(k)
+    labels.append(k)
 
 
 descr = 'Run command and measure memory and CPU utilization'
@@ -189,7 +189,7 @@ def record():
                         length = len(process_name_map)
                         process_name_map[name] = length
                         if name not in special_processes:
-                            process_labels.append(None)
+                            labels.append(None)
                     if name not in entry:
                         entry[name] = {'memory': 0, 'cpu': 0}
                     entry[name]['cpu'] += cpu
@@ -221,6 +221,16 @@ def stack_values(process_usage, key):
     return stacks
 
 
+def get_footnote():
+    hostname = os.uname()[1].split('.')[0]
+    cpu_average = global_cpu_data_sum / global_n
+    peak_memory = global_memory_data_max
+    total_mem = to_gigabyte(psutil.virtual_memory().total)
+    return (f'hostname: {hostname}; CPU count: ({args.used_cpus}/{cpu_count}),'
+            f' CPU avg: {cpu_average:.1f}%, peak memory:'
+            f' {peak_memory:.1f} GB; total memory: {total_mem:.1f} GB')
+
+
 def generate_graph(time_range):
     timestamps = []
     cpu_data = []
@@ -249,8 +259,6 @@ def generate_graph(time_range):
     fig.suptitle(title, fontsize=17)
     fig.set_figheight(5)
     fig.set_figwidth(10)
-    local_peak_memory = max(memory_data)
-    local_cpu_average = sum(cpu_data) / len(cpu_data)
     # scale cpu axis
     local_peak_cpu = max(cpu_data)
     cpu_ylimit = (local_peak_cpu // 10) * 11 + 5
@@ -288,38 +296,25 @@ def generate_graph(time_range):
     mem_stacks = stack_values(process_usage, 'memory')
     cpu_stacks = stack_values(process_usage, 'cpu')
     if mem_stacks:
-        sp1 = mem_subplot.stackplot(timestamps, mem_stacks, labels=process_labels,
+        sp1 = mem_subplot.stackplot(timestamps, mem_stacks, labels=labels,
+                                    colors=colors)
+        cpu_subplot.stackplot(timestamps, cpu_stacks, labels=labels,
                               colors=colors)
-        sp2 = cpu_subplot.stackplot(timestamps, cpu_stacks, labels=process_labels,
-                              colors=colors)
-        fig.legend(sp1, process_labels, loc='right', prop={'size': 6})
+        fig.legend(sp1, labels, loc='right', prop={'size': 6})
 
     filename = args.output
     if time_range:
         tr = '-%d-%d' % (time_range[0], time_range[1])
         filename = os.path.splitext(args.output)[0] + tr + '.svg'
     plt.subplots_adjust(bottom=0.15)
-    hostname = os.uname()[1].split('.')[0]
-    plt.figtext(0.1, 0.025,
-                'hostname: %s; CPU count: (%d/%d), CPU avg: %.1f%%, '
-                'peak memory: %.1f GB; total memory: %.1f GB'
-                % (hostname, args.used_cpus, cpu_count, local_cpu_average,
-                   local_peak_memory,
-                   to_gigabyte(psutil.virtual_memory().total)))
+    plt.figtext(0.1, 0.025, get_footnote())
     plt.savefig(filename)
     if args.verbose:
         print('Saving plot to %s' % filename)
 
 
 def summary():
-    hostname = os.uname()[1].split('.')[0]
-    cpu_average = global_cpu_data_sum / global_n
-    peak_memory = global_memory_data_max
-    print('SUMMARY:', 'hostname: %s; CPU count: %d/%d, CPU avg: %.1f%%, '
-          'min memory: %.1f GB; peak memory: %.1f GB; total memory: %.1f GB'
-          % (hostname, args.used_cpus, cpu_count, cpu_average,
-             global_memory_data_min, peak_memory,
-             to_gigabyte(psutil.virtual_memory().total)))
+    print(f'SUMMARY: {get_footnote()}')
     if global_process_hogs:
         print(f'PROCESS MEMORY HOGS (>={args.memory_hog_threshold:.1f} GB):')
         items = sorted(global_process_hogs.items(), key=lambda x: x[1][0],
