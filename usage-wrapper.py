@@ -48,8 +48,12 @@ special_processes = {'ld': 'gold',
                      'WPA-stream-out': 'lightblue',
                      'ltrans': 'forestgreen',
                      'as': 'coral',
+                     'GCC': 'gray',
+                     'clang': 'darkgray',
+                     'rust': 'brown',
+                     'go': 'hotpink',
                      'dwz': 'limegreen',
-                     'rpmbuild': 'plum'}
+                     'rpm/dpkg': 'plum'}
 for i, k in enumerate(special_processes.keys()):
     process_name_map[k] = i
     process_labels.append(k)
@@ -81,6 +85,10 @@ parser.add_argument('-m', '--memory-hog-threshold', type=float,
 parser.add_argument('-f', '--frequency', type=float,
                     default=INTERVAL,
                     help='Frequency of measuring (in seconds)')
+parser.add_argument('-j', '--jobs', type=int,
+                    default=cpu_count, dest='used_cpus',
+                    help='Scale up CPU data to used CPUs '
+                    'instead of available CPUs')
 args = parser.parse_args()
 
 if args.command1 and args.command:
@@ -92,6 +100,8 @@ if not args.summary_only and plt is None:
     print(f'{sys.argv[0]}: use --summary-only, '
           'or install the matplotlib module', file=sys.stderr)
     sys.exit(1)
+
+cpu_scale = cpu_count / args.used_cpus
 
 
 def to_gigabyte(value):
@@ -107,8 +117,16 @@ def get_process_name(proc):
         return 'WPA'
     elif name == 'lto1-wpa-stream':
         return 'WPA-stream-out'
-    elif name == 'as' or name == 'dwz' or name == 'rpmbuild':
+    elif name in ('cc1', 'cc1plus', 'cc1objc', 'f951', 'd21', 'go1', 'gnat1'):
+        return 'GCC'
+    elif name.startswith('clang'):
+        return 'clang'
+    elif name.startswith('rust'):
+        return 'rust'
+    elif name in ('as', 'dwz', 'go'):
         return name
+    elif name == 'rpmbuild' or name.startswith('dpkg'):
+        return 'rpm/dpkg'
     elif '-fltrans' in cmdline:
         if args.separate_ltrans:
             return 'ltrans-%d' % proc.pid
@@ -136,7 +154,7 @@ def record():
     active_pids = {}
     while not done:
         timestamp = time.monotonic() - start_ts
-        used_cpu = psutil.cpu_percent(interval=args.frequency)
+        used_cpu = psutil.cpu_percent(interval=args.frequency) * cpu_scale
         used_memory = to_gigabyte(psutil.virtual_memory().used)
         if not args.summary_only:
             global_timestamps.append(timestamp)
@@ -166,7 +184,7 @@ def record():
                         active_pids[proc.pid] = proc
                     else:
                         proc = active_pids[proc.pid]
-                    cpu = proc.cpu_percent() / cpu_count
+                    cpu = proc.cpu_percent() / args.used_cpus
                     if name not in process_name_map:
                         length = len(process_name_map)
                         process_name_map[name] = length
@@ -233,11 +251,16 @@ def generate_graph(time_range):
     fig.set_figwidth(10)
     local_peak_memory = max(memory_data)
     local_cpu_average = sum(cpu_data) / len(cpu_data)
+    # scale cpu axis
+    local_peak_cpu = max(cpu_data)
+    cpu_ylimit = (local_peak_cpu // 10) * 11 + 5
+    if cpu_ylimit > 200:
+        cpu_ylimit = 200
     cpu_subplot.set_title('CPU usage')
     cpu_subplot.set_ylabel('%')
     cpu_subplot.plot(timestamps, cpu_data, c='blue', lw=LW, label='total')
-    cpu_subplot.set_ylim([0, 105])
-    cpu_subplot.axhline(color='r', alpha=0.5, y=100.0 / cpu_count, lw=LW,
+    cpu_subplot.set_ylim([0, cpu_ylimit])
+    cpu_subplot.axhline(color='r', alpha=0.5, y=100.0 / args.used_cpus, lw=LW,
                         linestyle='dotted', label='single core')
     cpu_subplot.set_xlim(left=time_range[0] if time_range else 0)
     cpu_subplot.grid(True)
@@ -279,9 +302,10 @@ def generate_graph(time_range):
     plt.subplots_adjust(bottom=0.15)
     hostname = os.uname()[1].split('.')[0]
     plt.figtext(0.1, 0.025,
-                'hostname: %s; CPU count: %d, CPU avg: %.1f%%, '
+                'hostname: %s; CPU count: (%d/%d), CPU avg: %.1f%%, '
                 'peak memory: %.1f GB; total memory: %.1f GB'
-                % (hostname, cpu_count, local_cpu_average, local_peak_memory,
+                % (hostname, args.used_cpus, cpu_count, local_cpu_average,
+                   local_peak_memory,
                    to_gigabyte(psutil.virtual_memory().total)))
     plt.savefig(filename)
     if args.verbose:
@@ -292,10 +316,11 @@ def summary():
     hostname = os.uname()[1].split('.')[0]
     cpu_average = global_cpu_data_sum / global_n
     peak_memory = global_memory_data_max
-    print('SUMMARY:', 'hostname: %s; CPU count: %d, CPU avg: %.1f%%, '
+    print('SUMMARY:', 'hostname: %s; CPU count: %d/%d, CPU avg: %.1f%%, '
           'min memory: %.1f GB; peak memory: %.1f GB; total memory: %.1f GB'
-          % (hostname, cpu_count, cpu_average, global_memory_data_min,
-             peak_memory, to_gigabyte(psutil.virtual_memory().total)))
+          % (hostname, args.used_cpus, cpu_count, cpu_average,
+             global_memory_data_min, peak_memory,
+             to_gigabyte(psutil.virtual_memory().total)))
     if global_process_hogs:
         print(f'PROCESS MEMORY HOGS (>={args.memory_hog_threshold:.1f} GB):')
         items = sorted(global_process_hogs.items(), key=lambda x: x[1][0],
