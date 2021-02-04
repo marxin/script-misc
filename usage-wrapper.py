@@ -16,6 +16,7 @@ except ImportError:
 
 try:
     import matplotlib.pyplot as plt
+    from matplotlib.lines import Line2D
 except ImportError:
     plt = None
 
@@ -36,7 +37,6 @@ global_process_usage = []
 global_process_hogs = {}
 
 process_name_map = {}
-labels = []
 lock = threading.Lock()
 
 done = False
@@ -56,7 +56,6 @@ special_processes = {'ld': 'gold',
                      'rpm/dpkg': 'plum'}
 for i, k in enumerate(special_processes.keys()):
     process_name_map[k] = i
-    labels.append(k)
 
 
 descr = 'Run command and measure memory and CPU utilization'
@@ -188,8 +187,6 @@ def record():
                     if name not in process_name_map:
                         length = len(process_name_map)
                         process_name_map[name] = length
-                        if name not in special_processes:
-                            labels.append(None)
                     if name not in entry:
                         entry[name] = {'memory': 0, 'cpu': 0}
                     entry[name]['cpu'] += cpu
@@ -296,11 +293,19 @@ def generate_graph(time_range):
     mem_stacks = stack_values(process_usage, 'memory')
     cpu_stacks = stack_values(process_usage, 'cpu')
     if mem_stacks:
-        sp1 = mem_subplot.stackplot(timestamps, mem_stacks, labels=labels,
-                                    colors=colors)
-        cpu_subplot.stackplot(timestamps, cpu_stacks, labels=labels,
+        mem_subplot.stackplot(timestamps, mem_stacks,
                               colors=colors)
-        fig.legend(sp1, labels, loc='right', prop={'size': 6})
+        cpu_subplot.stackplot(timestamps, cpu_stacks,
+                              colors=colors)
+
+        # generate custom legend
+        colors = special_processes.values()
+        custom_lines = [Line2D([0], [0], color=x) for x in colors]
+        custom_lines.insert(0, Line2D([0], [0], color='b', lw=LW))
+        custom_lines.insert(0, Line2D([0], [0], color='r', alpha=0.5,
+                                      linestyle='dotted', lw=LW))
+        names = ['single core', 'total'] + list(special_processes.keys())
+        fig.legend(custom_lines, names, loc='right', prop={'size': 6})
 
     filename = args.output
     if time_range:
