@@ -65,9 +65,8 @@ parser.add_argument('-v', '--verbose', action='store_true', help='Verbose')
 parser.add_argument('--summary-only', dest='summary_only',
                     action='store_true',
                     help='No plot, just a summary at the end')
-parser.add_argument('--no-base-memory', dest='base_memory_only',
-                    action='store_true',
-                    help='Adjust memory to not include the system load')
+parser.add_argument('--base-memory', action='store_true',
+                    help='Adjust memory to include the system load')
 parser.add_argument('-s', '--separate-ltrans', action='store_true',
                     help='Separate LTRANS processes in graph')
 parser.add_argument('-o', '--output', default='usage.svg',
@@ -331,7 +330,7 @@ finally:
     summary()
     if global_memory_data:
         min_memory = min(global_memory_data)
-        if args.base_memory_only:
+        if not args.base_memory:
             global_memory_data = [x - min_memory for x in global_memory_data]
 
         if plt:
