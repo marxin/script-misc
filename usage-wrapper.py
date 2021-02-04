@@ -288,12 +288,11 @@ def generate_graph(time_range):
     mem_stacks = stack_values(process_usage, 'memory')
     cpu_stacks = stack_values(process_usage, 'cpu')
     if mem_stacks:
-        mem_subplot.stackplot(timestamps, mem_stacks, labels=process_labels,
+        sp1 = mem_subplot.stackplot(timestamps, mem_stacks, labels=process_labels,
                               colors=colors)
-        mem_subplot.legend(loc='best', prop={'size': 6})
-        cpu_subplot.stackplot(timestamps, cpu_stacks, labels=process_labels,
+        sp2 = cpu_subplot.stackplot(timestamps, cpu_stacks, labels=process_labels,
                               colors=colors)
-        cpu_subplot.legend(loc='best', prop={'size': 6})
+        fig.legend(sp1, process_labels, loc='right', prop={'size': 6})
 
     filename = args.output
     if time_range:
