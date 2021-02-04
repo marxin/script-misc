@@ -319,6 +319,7 @@ if args.verbose:
     print('Ranges are %s' % str(ranges))
     print('Running command', flush=True)
 
+cp = None
 try:
     cmd = args.command1 if args.command1 else args.command
     cp = subprocess.run(cmd, shell=True)
