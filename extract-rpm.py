@@ -7,7 +7,7 @@ from pathlib import Path
 
 parser = argparse.ArgumentParser(description='Extract RPM file into a directory')
 parser.add_argument('rpm', metavar = 'rpm', help = 'RPM file locaction')
-parser.add_argument('folder', metavar = 'folder', help = 'Folder where to extract')
+parser.add_argument('-f', '--folder', metavar = 'folder', default='.', help = 'Folder where to extract')
 args = parser.parse_args()
 
 if not os.path.exists(args.folder):
