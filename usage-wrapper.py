@@ -20,6 +20,9 @@ try:
 except ImportError:
     plt = None
 
+def to_gigabyte(value):
+    return value / 1024**3
+
 INTERVAL = 0.33
 LW = 0.5
 
@@ -27,7 +30,7 @@ global_n = 0
 global_cpu_data_sum = 0
 global_memory_data_sum = 0
 global_cpu_data_max = 0
-global_memory_data_min = 0
+global_memory_data_min = to_gigabyte(psutil.virtual_memory().total)
 global_memory_data_max = 0
 
 global_timestamps = []
@@ -101,10 +104,6 @@ if not args.summary_only and plt is None:
     sys.exit(1)
 
 cpu_scale = cpu_count / args.used_cpus
-
-
-def to_gigabyte(value):
-    return value / 1024**3
 
 
 def get_process_name(proc):
@@ -221,11 +220,14 @@ def stack_values(process_usage, key):
 def get_footnote():
     hostname = os.uname()[1].split('.')[0]
     cpu_average = global_cpu_data_sum / global_n
+    base_memory = global_memory_data_min
     peak_memory = global_memory_data_max
     total_mem = to_gigabyte(psutil.virtual_memory().total)
-    return (f'hostname: {hostname}; CPU count: ({args.used_cpus}/{cpu_count}),'
-            f' CPU avg: {cpu_average:.1f}%, peak memory:'
-            f' {peak_memory:.1f} GB; total memory: {total_mem:.1f} GB')
+    return (f'hostname: {hostname}; CPU count: ({args.used_cpus}/{cpu_count});'
+            f' CPU avg: {cpu_average:.1f}%;'
+            f' base memory: {base_memory:.1f} GB;'
+            f' peak memory: {peak_memory:.1f} GB;'
+            f' total memory: {total_mem:.1f} GB')
 
 
 def generate_graph(time_range):
