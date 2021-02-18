@@ -23,4 +23,8 @@ jobs:
 
       - uses: actions/checkout@v2
 
-      - run: flake gcc-bisect.py usage-wrapper.py
+      - run: flake8
+          gcc-bisect.py
+          usage-wrapper.py
+          valgrind-grep.py
+          pretty-number.py
