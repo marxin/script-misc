@@ -193,10 +193,10 @@ class GitRevision:
         return '-'.join(parts)
 
     def description(self, describe=False):
-        hash = colored(self.short_hexsha(), description_color)
+        hashtext = colored(self.short_hexsha(), description_color)
         if describe:
-            hash = colored(self.get_full_hash(), 'green')
-        return '%s(%s)(%s)' % (hash, self.timestamp_str(),
+            hashtext = colored(self.get_full_hash(), 'green')
+        return '%s(%s)(%s)' % (hashtext, self.timestamp_str(),
                                self.commit.author.email)
 
     def patch_name(self):
@@ -212,7 +212,8 @@ class GitRevision:
                               + ':' + my_env['PATH'])
             ld_library_path = my_env['LD_LIBRARY_PATH'] if 'LD_LIBRARY_PATH' in my_env else ''
             my_env['LD_LIBRARY_PATH'] = os.path.join(self.get_install_path(), 'lib64') + ':' + ld_library_path
-            r = subprocess.run(args.command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, env=my_env, encoding='utf8')
+            r = subprocess.run(args.command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                               env=my_env, encoding='utf8')
 
             # handle ICE
             success = r.returncode == args.success_exit_code
@@ -221,15 +222,16 @@ class GitRevision:
                     flush_print(r.stdout, end='')
                 success = input('Retcode: ') == '0'
             elif args.ice:
-                messages = ['internal compiler error', 'Fatal Error', 'Internal compiler error', 'Please submit a full bug report',
-                            'lto-wrapper: fatal error']
+                messages = ['internal compiler error', 'Fatal Error', 'Internal compiler error',
+                            'Please submit a full bug report', 'lto-wrapper: fatal error']
                 success = any(map(lambda m: m in r.stdout, messages))
 
             if args.negate:
                 success = not success
 
             text = colored('OK', 'green') if success else colored('FAILED', 'red') + ' (%d)' % r.returncode
-            flush_print('  %s: [took: %3.3fs] result: %s' % (self.description(describe), (datetime.now() - start).total_seconds(), text))
+            seconds = (datetime.now() - start).total_seconds()
+            flush_print('  %s: [took: %3.3fs] result: %s' % (self.description(describe), seconds, text))
             if not args.silent:
                 flush_print(r.stdout, end='')
 
@@ -261,7 +263,8 @@ class GitRevision:
             self.compress()
             took = datetime.now() - start
             build_times.append(took)
-            flush_print('Build has taken: %s, avg: %s' % (str(took), str(sum(build_times, timedelta(0)) / len(build_times))))
+            flush_print('Build has taken: %s, avg: %s' % (str(took), str(sum(build_times,
+                                                          timedelta(0)) / len(build_times))))
             log(self.commit.hexsha, 'OK')
 
     def build(self):
@@ -389,7 +392,8 @@ class Branch(GitRevision):
 
         built = set(map(lambda x: x.commit.hexsha, filter(lambda x: x.has_binary, g.latest)))
         existing_head_commits = list(filter(lambda x: x.hexsha in built, head_commits))
-        flush_print('%3s-branch: branch commits: %8d, head distance: %8d (have: %d)' % (self.name, len(branch_commits), len(head_commits), len(existing_head_commits)))
+        flush_print('%3s-branch: branch commits: %8d, head distance: %8d (have: %d)' % (self.name, len(branch_commits),
+                    len(head_commits), len(existing_head_commits)))
 
 
 class GitRepository:
@@ -435,7 +439,8 @@ class GitRepository:
             if version.count('.') == 2:
                 self.releases.append(Release(version, repo.commit(r.name)))
 
-        self.releases = sorted(filter(lambda x: x.version >= Version(oldest_release), self.releases), key=lambda x: x.version)
+        self.releases = sorted(filter(lambda x: x.version >= Version(oldest_release), self.releases),
+                               key=lambda x: x.version)
 
     def get_master_branch(self):
         if not self.master_branch:
@@ -465,7 +470,7 @@ class GitRepository:
         r = os.path.splitext(os.path.basename(file))[0].split('..')
         return r
 
-    def print(self):
+    def print_repo(self):
         flush_print(colored('Releases', title_color))
         for r in self.releases:
             r.print_status()
@@ -481,7 +486,8 @@ class GitRepository:
 
         existing_revisions = len(list(filter(lambda x: x.has_binary, self.latest)))
         missing = len(self.latest) - existing_revisions
-        flush_print(colored('\nLatest %d revisions (have: %d, missing: %d):' % (len(self.latest), existing_revisions, missing), title_color))
+        flush_print(colored('\nLatest %d revisions (have: %d, missing: %d):'
+                            % (len(self.latest), existing_revisions, missing), title_color))
         for r in self.latest:
             r.print_status()
 
@@ -565,7 +571,8 @@ class GitRepository:
                     if len(self.failing_branches) and len(self.failing_branches) != len(self.branches):
                         prefix = f'[{"/".join(self.failing_branches)} Regression] '
                 summary = f'{prefix}ICE {m.group("details")} since {revision.get_full_hash()}'
-                url = f'https://gcc.gnu.org/bugzilla/enter_bug.cgi?product=gcc&short_desc={quote(summary)}&cc={revision.commit.author.email}'
+                url = f'https://gcc.gnu.org/bugzilla/enter_bug.cgi?product=gcc&short_desc={quote(summary)}&' \
+                      'cc={revision.commit.author.email}'
                 print(f'{colored("Bugzilla:", "yellow")} \u001b]8;;{url}\u001b\\{summary}\u001b]8;;\u001b\\')
                 return
 
@@ -597,7 +604,7 @@ class GitRepository:
 # MAIN
 g = GitRepository()
 if args.print:
-    g.print()
+    g.print_repo()
 elif args.build:
     g.build()
 elif args.unpack:
