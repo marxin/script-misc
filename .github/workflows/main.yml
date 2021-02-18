@@ -19,6 +19,7 @@ jobs:
               python3-flake8-bugbear
               python3-flake8-import-order
               python3-flake8-quotes
+              tar
 
       - uses: actions/checkout@v2
 
