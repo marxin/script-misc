@@ -20,8 +20,10 @@ try:
 except ImportError:
     plt = None
 
+
 def to_gigabyte(value):
     return value / 1024**3
+
 
 INTERVAL = 0.33
 LW = 0.5
