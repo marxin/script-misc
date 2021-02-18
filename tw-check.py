@@ -15,9 +15,9 @@ days = (datetime.now() - release_date).days
 
 limit = int(sys.argv[-1])
 if days < limit:
-    print('OK', end = '')
+    print('OK', end='')
 else:
-    print('WARNING', end = '')
+    print('WARNING', end='')
 
 print(': last Tumbleweed update before %d days (%s)' % (days, version))
 exit(days >= limit)
