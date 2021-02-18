@@ -8,22 +8,22 @@ if len(sys.argv) < 3:
 function = sys.argv[1]
 
 for filename in sys.argv[2:]:
-    print('Working on: %s' % filename, end = '')
+    print('Working on: %s' % filename, end='')
     lines = []
     in_func = False
-    for l in open(filename).readlines():
-        if ';; Function ' + function + ' ' in l:
-            lines.append(l)
+    for line in open(filename).readlines():
+        if ';; Function ' + function + ' ' in line:
+            lines.append(line)
             in_func = True
-        elif ';; Function ' in l and in_func:
+        elif ';; Function ' in line and in_func:
             break
         elif in_func:
-            lines.append(l)
+            lines.append(line)
 
     if lines:
         with open(filename, 'w+') as w:
-            for l in lines:
-                w.write(l)
+            for line in lines:
+                w.write(line)
         print(': wrote %d lines' % len(lines))
     else:
         print(': not modified')

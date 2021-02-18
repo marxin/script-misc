@@ -3,10 +3,10 @@
 import argparse
 import os
 
-parser = argparse.ArgumentParser(description = 'Exit with zero if size of the file is smaller')
+parser = argparse.ArgumentParser(description='Exit with zero if size of the file is smaller')
 
-parser.add_argument('file', help = 'Path to file')
-parser.add_argument('limit', type = int, help = 'Size limit in bytes')
+parser.add_argument('file', help='Path to file')
+parser.add_argument('limit', type=int, help='Size limit in bytes')
 args = parser.parse_args()
 
 if not os.path.exists(args.file):
