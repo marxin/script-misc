@@ -348,8 +348,10 @@ if args.verbose:
 
 cp = None
 try:
-    cmd = args.command1 if args.command1 else args.command
-    cp = subprocess.run(cmd, shell=True)
+    if args.command1:
+        cp = subprocess.run(args.command1, shell=True)
+    else:
+        cp = subprocess.run(args.command)
 except KeyboardInterrupt:
     rv = 2
 finally:
