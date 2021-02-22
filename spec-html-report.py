@@ -8,7 +8,8 @@ from html import escape
 
 spec_script = 'runcpu --config=spec2017 --size=ref --iterations=1  --no-reportable --tune=peak'
 perf_record_prefix = 'perf record --call-graph dwarf'
-perf_record_regex = re.compile(r'\s+([^\s]*)%\s+(?P<percent>[^\s]*)%\s*(?P<samples>[\d]+)\s*([^\s]*)\s*(?P<shobj>[^\s]*)\s*\[.\]\s(?P<function>.*)')
+perf_record_regex = re.compile(r'\s+([^\s]*)%\s+(?P<percent>[^\s]*)%\s*(?P<samples>[\d]+)'
+                               r'\s*([^\s]*)\s*(?P<shobj>[^\s]*)\s*\[.\]\s(?P<function>.*)')
 threshold_percent = 1
 output_folder = 'html'
 
@@ -18,8 +19,10 @@ fp_benchmarks = ['503.bwaves_r', '507.cactuBSSN_r', '508.namd_r', '510.parest_r'
                  '521.wrf_r', '526.blender_r', '527.cam4_r', '538.imagick_r', '544.nab_r', '549.fotonik3d_r',
                  '554.roms_r']
 
+
 def skip_binary(binary):
     return binary.startswith('spec') or binary in ('runcpu', 'sh')
+
 
 def parse_spec_report(lines):
     functions = {}
