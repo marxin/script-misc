@@ -10,7 +10,10 @@ spec_script = 'runcpu --config=spec2017 --size=ref --iterations=1  --no-reportab
 perf_record_prefix = 'perf record --call-graph dwarf'
 perf_record_regex = re.compile(r'\s+([^\s]*)%\s+(?P<percent>[^\s]*)%\s*(?P<samples>[\d]+)'
                                r'\s*([^\s]*)\s*(?P<shobj>[^\s]*)\s*\[.\]\s(?P<function>.*)')
+perf_annotate_regex = re.compile(r'\s+(?P<percent>[0-9]+\.[0-9]+)\s+:.*')
+context_size = 15
 threshold_percent = 1
+perf_annotate_threshold = 0.3
 output_folder = 'html'
 
 int_benchmarks = ['500.perlbench_r', '502.gcc_r', '505.mcf_r', '520.omnetpp_r', '523.xalancbmk_r',
@@ -60,6 +63,34 @@ def filter_perf_script():
     return '\n\n'.join(output).encode()
 
 
+def write_hot_perf_annotate_hunks(data, data_nocolor):
+    color_lines = data.split('\n')
+    nocolor_lines = data_nocolor.split('\n')
+    assert len(color_lines) == len(nocolor_lines)
+    # add header to interesting spots
+    lines_to_output = set(range(30))
+
+    # investigate interesting spots
+    for i, line in enumerate(nocolor_lines):
+        m = perf_annotate_regex.match(line)
+        if m and float(m.group('percent')) >= perf_annotate_threshold:
+            for x in range(-context_size, context_size):
+                lines_to_output.add(i + x)
+
+    # output interesting hunks
+    output = []
+    last_line = -1
+    for i, line in enumerate(color_lines):
+        if i in lines_to_output:
+            if last_line + 1 != i:
+                output.append(f'... ({i - last_line - 1} lines skipped) ...')
+            output.append(line)
+            last_line = i
+
+    # transform colored output to HTML
+    return subprocess.check_output('aha --no-header', input='\n'.join(output), shell=True, encoding='utf8')
+
+
 os.chdir('/home/marxin/Programming/cpu2017')
 shutil.rmtree(output_folder, ignore_errors=True)
 
@@ -91,10 +122,9 @@ for benchmark in int_benchmarks + fp_benchmarks:
             shutil.rmtree('/home/marxin/.debug/.build-id', ignore_errors=True)
             function = demangle(mangled_function)
             f.write(f'<h3 id="{mangled_function}">{percentage}% ({samples} samples) - {escape(function)}</h3>')
-            cmd = f'perf annotate --no-demangle --symbol={mangled_function} --stdio --stdio-color=always -l |' \
-                  ' aha --no-header'
-            data = subprocess.check_output(cmd, shell=True)
-            data = decode_perf_annotate(data)
+            cmd = f'perf annotate --no-demangle --symbol={mangled_function} --stdio --stdio-color=always -l'
+            data = decode_perf_annotate(subprocess.check_output(cmd, shell=True))
+            data_nocolor = decode_perf_annotate(subprocess.check_output(cmd + ' --stdio-color=never', shell=True))
             f.write('<pre style="font-size: 8pt;">')
-            f.write(data)
+            f.write(write_hot_perf_annotate_hunks(data, data_nocolor))
             f.write('</pre>')
