@@ -129,10 +129,12 @@ for benchmark in int_benchmarks + fp_benchmarks:
     r = subprocess.run(cmd, shell=True, encoding='utf8', stderr=subprocess.PIPE, stdout=subprocess.DEVNULL)
     assert r.returncode == 0
     stats = r.stderr.strip()
+    print('  ... perf stat done')
     cmd = f'source ./shrc && perf record -F150 -o perf.data --call-graph dwarf {spec_script} --action run {benchmark}'
     subprocess.check_output(cmd, shell=True, stderr=subprocess.DEVNULL)
     r = subprocess.check_output('perf report --no-demangle --stdio -g none --show-nr-samples',
                                 shell=True, encoding='utf8')
+    print('  ... perf report done')
     report = parse_spec_report(r.splitlines())
     filename = f'{benchmark}-{args.machine}-{args.compiler}-{args.options.replace(" ", "").replace("-", "_")}'
     flamegraph = os.path.join(output_folder, f'{filename}.svg')
