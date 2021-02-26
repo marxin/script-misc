@@ -117,8 +117,8 @@ def write_hot_perf_annotate_hunks(data, data_nocolor):
 
 
 os.chdir('/home/marxin/Programming/cpu2017')
-shutil.rmtree(output_folder, ignore_errors=True)
-os.mkdir(output_folder)
+if not os.path.exists(output_folder):
+    os.mkdir(output_folder)
 
 for benchmark in int_benchmarks + fp_benchmarks:
     title = f'{benchmark} - {args.machine} - {args.compiler} {args.options}'
