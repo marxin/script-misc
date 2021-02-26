@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+import argparse
+import datetime
 import os
 import re
 import shutil
@@ -21,6 +23,29 @@ int_benchmarks = ['500.perlbench_r', '502.gcc_r', '505.mcf_r', '520.omnetpp_r', 
 fp_benchmarks = ['503.bwaves_r', '507.cactuBSSN_r', '508.namd_r', '510.parest_r', '511.povray_r', '519.lbm_r',
                  '521.wrf_r', '526.blender_r', '527.cam4_r', '538.imagick_r', '544.nab_r', '549.fotonik3d_r',
                  '554.roms_r']
+
+HTML_HEADER = """
+    <html><head>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta2/dist/css/bootstrap.min.css"
+            rel="stylesheet" integrity="sha384-BmbxuPwQa2lc/FVzBcNJ7UAyJxM6wuqIj61tLrc4wSX0szH/Ev+nYRRuWlolflfl"
+            crossorigin="anonymous">
+        <title>%s</title>
+    </head>
+    <body>
+    <main>
+    <div class="container">
+    <h1>%s</h1>
+"""
+
+HTML_FOOTER = """
+    </main></div><footer><div class="container">%s</div></footer></body></html>
+"""
+
+parser = argparse.ArgumentParser(description='SPEC perf analysis HTML report generator')
+parser.add_argument('machine', help='Machine name')
+parser.add_argument('compiler', help='Compiler name')
+parser.add_argument('options', help='Compiler options')
+args = parser.parse_args()
 
 
 def skip_binary(binary):
@@ -93,38 +118,52 @@ def write_hot_perf_annotate_hunks(data, data_nocolor):
 
 os.chdir('/home/marxin/Programming/cpu2017')
 shutil.rmtree(output_folder, ignore_errors=True)
+os.mkdir(output_folder)
 
 for benchmark in int_benchmarks + fp_benchmarks:
-    print(f'== {benchmark} ==')
+    title = f'{benchmark} - {args.machine} - {args.compiler} {args.options}'
+    print(f'== {title} ==')
     subprocess.check_output('source ./shrc && runcpu --action trash --config=spec2017 all', shell=True)
     subprocess.check_output(f'source ./shrc && {spec_script}  --action build -D {benchmark}', shell=True)
+    cmd = f'source ./shrc && perf stat -- {spec_script} --action run {benchmark}'
+    r = subprocess.run(cmd, shell=True, encoding='utf8', stderr=subprocess.PIPE, stdout=subprocess.DEVNULL)
+    assert r.returncode == 0
+    stats = r.stderr.strip()
     cmd = f'source ./shrc && perf record -F150 -o perf.data --call-graph dwarf {spec_script} --action run {benchmark}'
-    subprocess.check_output(cmd, shell=True)
+    subprocess.check_output(cmd, shell=True, stderr=subprocess.DEVNULL)
     r = subprocess.check_output('perf report --no-demangle --stdio -g none --show-nr-samples',
                                 shell=True, encoding='utf8')
     report = parse_spec_report(r.splitlines())
-    folder = os.path.join(output_folder, benchmark)
-    os.makedirs(folder)
-    flamegraph = os.path.join(folder, f'{benchmark}.svg')
+    filename = f'{benchmark}-{args.machine}-{args.compiler}-{args.options.replace(" ", "").replace("-", "_")}'
+    flamegraph = os.path.join(output_folder, f'{filename}.svg')
     perf_script_output = filter_perf_script()
     cmd = f'~/Programming/FlameGraph/stackcollapse-perf.pl --context > tmp.txt ' \
           f'&& ~/Programming/FlameGraph/flamegraph.pl --title {benchmark} --minwidth 3 tmp.txt > {flamegraph}'
     subprocess.check_output(cmd, input=perf_script_output, shell=True)
 
-    with open(os.path.join(folder, 'index.html'), 'w+') as f:
-        f.write(f'<object class="p" data="{benchmark}.svg" type="image/svg+xml">'
-                f'<img src="{benchmark}.svg" \\></object>')
+    with open(os.path.join(output_folder, filename + '.html'), 'w+') as f:
+        f.write(HTML_HEADER % (title, title))
+        f.write('<h2>Flame graph</h2>')
+        f.write(f'<object class="p" data="{filename}.svg" type="image/svg+xml">'
+                f'<img src="{flamegraph}.svg" \\></object>')
+        f.write('<h2>Perf stat</h2>')
+        f.write(f'<pre style="font-size: 8pt;">{stats}</pre>')
+        f.write('<h2>Perf annotate</h2>')
+        f.write('<table class="table"><thead><th>Function</th><th class="text-end">Samples</th>'
+                '<th class="text-end">Percentage</th></thead><tbody>')
         for mangled_function, (percentage, samples) in sorted(report.items(), key=lambda x: x[1], reverse=True):
             function = demangle(mangled_function)
-            f.write(f'<h4><a href="index.html#{mangled_function}">{percentage}% ({samples} samples) - '
-                    f'{escape(function)}</a></h4>')
+            f.write(f'<tr><td><a href="#{mangled_function}">{escape(function)}</a></td>'
+                    f'<td class="text-end">{samples}</td><td class="text-end">{percentage:.2f} %</td></tr>')
+        f.write('<tbody></table>')
         for mangled_function, (percentage, samples) in sorted(report.items(), key=lambda x: x[1], reverse=True):
             shutil.rmtree('/home/marxin/.debug/.build-id', ignore_errors=True)
             function = demangle(mangled_function)
-            f.write(f'<h3 id="{mangled_function}">{percentage}% ({samples} samples) - {escape(function)}</h3>')
+            f.write(f'<h5 id="{mangled_function}">{percentage:.2f}% ({samples} samples) - {escape(function)}</h5>')
             cmd = f'perf annotate --no-demangle --symbol={mangled_function} --stdio --stdio-color=always -l'
             data = decode_perf_annotate(subprocess.check_output(cmd, shell=True))
             data_nocolor = decode_perf_annotate(subprocess.check_output(cmd + ' --stdio-color=never', shell=True))
             f.write('<pre style="font-size: 8pt;">')
             f.write(write_hot_perf_annotate_hunks(data, data_nocolor))
             f.write('</pre>')
+        f.write(HTML_FOOTER % f'Generated {datetime.datetime.now()}')
