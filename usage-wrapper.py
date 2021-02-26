@@ -222,11 +222,13 @@ def stack_values(process_usage, key):
 def get_footnote():
     hostname = os.uname()[1].split('.')[0]
     cpu_average = global_cpu_data_sum / global_n
+    cpu_max = global_cpu_data_max
     base_memory = global_memory_data_min
     peak_memory = global_memory_data_max
     total_mem = to_gigabyte(psutil.virtual_memory().total)
     return (f'hostname: {hostname}; CPU count: ({args.used_cpus}/{cpu_count});'
             f' CPU avg: {cpu_average:.1f}%;'
+            f' CPU max: {cpu_max:.1f}%;'
             f' base memory: {base_memory:.1f} GB;'
             f' peak memory: {peak_memory:.1f} GB;'
             f' total memory: {total_mem:.1f} GB')
