@@ -144,7 +144,7 @@ for benchmark in int_benchmarks + fp_benchmarks:
     with open(os.path.join(output_folder, filename + '.html'), 'w+') as f:
         f.write(HTML_HEADER % (title, title))
         f.write('<h2>Flame graph</h2>')
-        f.write(f'<object class="p" data="{filename}.svg" type="image/svg+xml">'
+        f.write(f'<object class="p" data="{flamegraph}.svg" type="image/svg+xml">'
                 f'<img src="{flamegraph}.svg" \\></object>')
         f.write('<h2>Perf stat</h2>')
         f.write(f'<pre style="font-size: 8pt;">{stats}</pre>')
