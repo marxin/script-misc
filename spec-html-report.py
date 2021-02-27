@@ -116,7 +116,7 @@ def write_hot_perf_annotate_hunks(data, data_nocolor):
     return subprocess.check_output('aha --no-header', input='\n'.join(output), shell=True, encoding='utf8')
 
 
-os.chdir('/home/marxin/Programming/cpu2017')
+os.chdir(os.path.expanduser('~/Programming/cpu2017'))
 if not os.path.exists(output_folder):
     os.mkdir(output_folder)
 
@@ -159,7 +159,7 @@ for benchmark in int_benchmarks + fp_benchmarks:
                     f'<td class="text-end">{samples}</td><td class="text-end">{percentage:.2f} %</td></tr>')
         f.write('<tbody></table>')
         for mangled_function, (percentage, samples) in sorted(report.items(), key=lambda x: x[1], reverse=True):
-            shutil.rmtree('/home/marxin/.debug/.build-id', ignore_errors=True)
+            shutil.rmtree(os.path.expanduser('~/.debug/.build-id'), ignore_errors=True)
             function = demangle(mangled_function)
             f.write(f'<h5 id="{mangled_function}">{percentage:.2f}% ({samples} samples) - {escape(function)}</h5>')
             cmd = f'perf annotate --no-demangle --symbol={mangled_function} --stdio --stdio-color=always -l'
