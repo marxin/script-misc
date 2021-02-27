@@ -34,7 +34,7 @@ HTML_HEADER = """
     <body>
     <main>
     <div class="container">
-    <h1>%s</h1>
+    <h2>%s</h2>
 """
 
 HTML_FOOTER = """
@@ -146,12 +146,12 @@ for benchmark in int_benchmarks + fp_benchmarks:
 
     with open(os.path.join(output_folder, filename + '.html'), 'w+') as f:
         f.write(HTML_HEADER % (title, title))
-        f.write('<h2>Flame graph</h2>')
+        f.write('<h3>Flame graph</h3>')
         f.write(f'<object class="p" data="{filename}.svg" type="image/svg+xml">'
                 f'<img src="{filename}.svg" \\></object>')
-        f.write('<h2>Perf stat</h2>')
+        f.write('<h3>Perf stat</h3>')
         f.write(f'<pre style="font-size: 8pt;">{stats}</pre>')
-        f.write('<h2>Perf annotate</h2>')
+        f.write('<h3>Perf annotate</h3>')
         f.write('<table class="table"><thead><th>Function</th><th class="text-end">Samples</th>'
                 '<th class="text-end">Percentage</th></thead><tbody>')
         for mangled_function, (percentage, samples) in sorted(report.items(), key=lambda x: x[1], reverse=True):
