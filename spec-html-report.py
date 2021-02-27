@@ -137,7 +137,7 @@ for benchmark in int_benchmarks + fp_benchmarks:
     print('  ... perf report done')
     report = parse_spec_report(r.splitlines())
     filename = f'{benchmark}-{args.machine}-{args.compiler}-{args.options}'
-    filename = filename.replace(' ', '').replace('-', '_')
+    filename = filename.replace(' ', '_').replace('-', '_')
     flamegraph = os.path.join(output_folder, f'{filename}.svg')
     perf_script_output = filter_perf_script()
     cmd = f'~/Programming/FlameGraph/stackcollapse-perf.pl --context > tmp.txt ' \
