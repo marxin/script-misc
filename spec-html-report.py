@@ -119,7 +119,7 @@ def write_hot_perf_annotate_hunks(data, data_nocolor):
 
 r = subprocess.check_output('ulimit -s', shell=True, encoding='utf8')
 if 'unlimited' not in r:
-    print('Please set ulimit -s unlimited')
+    print("Please set 'ulimit -s unlimited'")
     sys.exit(1)
 
 os.chdir(os.path.expanduser('~/Programming/cpu2017'))
