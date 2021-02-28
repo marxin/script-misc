@@ -6,6 +6,7 @@ import os
 import re
 import shutil
 import subprocess
+import sys
 from html import escape
 
 spec_script = 'runcpu --config=spec2017 --size=ref --iterations=1  --no-reportable --tune=peak'
@@ -115,6 +116,11 @@ def write_hot_perf_annotate_hunks(data, data_nocolor):
     # transform colored output to HTML
     return subprocess.check_output('aha --no-header', input='\n'.join(output), shell=True, encoding='utf8')
 
+
+r = subprocess.check_output('ulimit -s', shell=True, encoding='utf8')
+if 'unlimited' not in r:
+    print('Please set ulimit -s unlimited')
+    sys.exit(1)
 
 os.chdir(os.path.expanduser('~/Programming/cpu2017'))
 if not os.path.exists(output_folder):
