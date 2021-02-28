@@ -9,7 +9,6 @@ import subprocess
 import sys
 from html import escape
 
-spec_script = 'runcpu --config=spec2017 --size=ref --iterations=1  --no-reportable --tune=peak'
 perf_record_prefix = 'perf record --call-graph dwarf'
 perf_record_regex = re.compile(r'\s+([^\s]*)%\s+(?P<percent>[^\s]*)%\s*(?P<samples>[\d]+)'
                                r'\s*([^\s]*)\s*(?P<shobj>[^\s]*)\s*\[.\]\s(?P<function>.*)')
@@ -46,7 +45,10 @@ parser = argparse.ArgumentParser(description='SPEC perf analysis HTML report gen
 parser.add_argument('machine', help='Machine name')
 parser.add_argument('compiler', help='Compiler name')
 parser.add_argument('options', help='Compiler options')
+parser.add_argument('spec_config', help='SPEC configuration file')
 args = parser.parse_args()
+
+spec_script = f'runcpu --config={args.spec_config} --size=ref --iterations=1  --no-reportable --tune=peak'
 
 
 def skip_binary(binary):
