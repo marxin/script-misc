@@ -46,9 +46,13 @@ parser.add_argument('machine', help='Machine name')
 parser.add_argument('compiler', help='Compiler name')
 parser.add_argument('options', help='Compiler options')
 parser.add_argument('spec_config', help='SPEC configuration file')
+parser.add_argument('--benchmarks', help='List of benchmarks to run (all by default)')
 args = parser.parse_args()
 
 spec_script = f'runcpu --config={args.spec_config} --size=ref --iterations=1  --no-reportable --tune=peak'
+benchmarks = int_benchmarks + fp_benchmarks
+if args.benchmarks:
+    benchmarks = args.benchmarks.split(',')
 
 
 def skip_binary(binary):
@@ -128,7 +132,7 @@ os.chdir(os.path.expanduser('~/Programming/cpu2017'))
 if not os.path.exists(output_folder):
     os.mkdir(output_folder)
 
-for benchmark in int_benchmarks + fp_benchmarks:
+for benchmark in benchmarks:
     title = f'{benchmark} - {args.machine} - {args.compiler} {args.options}'
     print(f'== {title} ==')
     subprocess.check_output('source ./shrc && runcpu --action trash --config=spec2017 all', shell=True)
