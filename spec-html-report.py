@@ -152,7 +152,6 @@ if not os.path.exists(output_folder):
 for benchmark in benchmarks:
     title = f'{benchmark} - {args.machine} - {args.compiler} {args.options}'
     print(f'== {title} ==')
-    subprocess.check_output('source ./shrc && runcpu --action trash --config=spec2017 all', shell=True)
     subprocess.check_output(f'source ./shrc && {spec_script}  --action build -D {benchmark}', shell=True)
     cmd = f'source ./shrc && perf stat -- {spec_script} --action run {benchmark}'
     r = subprocess.run(cmd, shell=True, encoding='utf8', stderr=subprocess.PIPE, stdout=subprocess.DEVNULL)
