@@ -153,6 +153,7 @@ for benchmark in benchmarks:
     title = f'{benchmark} - {args.machine} - {args.compiler} {args.options}'
     print(f'== {title} ==')
     subprocess.check_output(f'source ./shrc && {spec_script}  --action build -D {benchmark}', shell=True)
+    print('  ... build done')
     cmd = f'source ./shrc && perf stat -- {spec_script} --action run {benchmark}'
     r = subprocess.run(cmd, shell=True, encoding='utf8', stderr=subprocess.PIPE, stdout=subprocess.DEVNULL)
     assert r.returncode == 0
