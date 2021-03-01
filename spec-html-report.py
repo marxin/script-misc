@@ -123,11 +123,29 @@ def write_hot_perf_annotate_hunks(data, data_nocolor):
     return subprocess.check_output('aha --no-header', input='\n'.join(output), shell=True, encoding='utf8')
 
 
-r = subprocess.check_output('ulimit -s', shell=True, encoding='utf8')
-if 'unlimited' not in r:
-    print("Please set 'ulimit -s unlimited'")
-    sys.exit(1)
+def check_dependencies():
+    # check ulimit -s
+    r = subprocess.check_output('ulimit -s', shell=True, encoding='utf8')
+    if 'unlimited' not in r:
+        print("Please set 'ulimit -s unlimited'")
+        sys.exit(1)
 
+    # check perf features
+    lines = subprocess.check_output('perf version --build-options', shell=True, encoding='utf8').splitlines()[1:]
+    features = set()
+    for line in lines:
+        parts = line.split(':')
+        feature = parts[0].strip()
+        if 'on' in parts[1]:
+            features.add(feature)
+
+    diff = {'dwarf', 'libelf', 'libunwind'} - features
+    if diff:
+        print(f'Missing perf features: {diff}')
+        sys.exit(2)
+
+
+check_dependencies()
 os.chdir(os.path.expanduser('~/Programming/cpu2017'))
 if not os.path.exists(output_folder):
     os.mkdir(output_folder)
