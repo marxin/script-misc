@@ -4,7 +4,6 @@ import argparse
 import datetime
 import os
 import re
-import shutil
 import subprocess
 import sys
 from html import escape
@@ -190,10 +189,10 @@ for benchmark in benchmarks:
                     f'<td class="text-end">{samples}</td><td class="text-end">{percentage:.2f} %</td></tr>')
         f.write('<tbody></table>')
         for mangled_function, (percentage, samples) in sorted(report.items(), key=lambda x: x[1], reverse=True):
-            shutil.rmtree(os.path.expanduser('~/.debug/.build-id'), ignore_errors=True)
             function = demangle(mangled_function)
             f.write(f'<h5 id="{mangled_function}">{percentage:.2f}% ({samples} samples) - {escape(function)}</h5>')
-            cmd = f'perf annotate --no-demangle --symbol={mangled_function} --stdio --stdio-color=always -l'
+            cmd = f'perf --buildid-dir none annotate --no-demangle --symbol={mangled_function} ' \
+                  f'--stdio --stdio-color=always -l'
             data = decode_perf_annotate(subprocess.check_output(cmd, shell=True))
             data_nocolor = decode_perf_annotate(subprocess.check_output(cmd + ' --stdio-color=never', shell=True))
             f.write('<pre style="font-size: 8pt;">')
