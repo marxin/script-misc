@@ -149,9 +149,9 @@ os.chdir(os.path.expanduser('~/Programming/cpu2017'))
 if not os.path.exists(output_folder):
     os.mkdir(output_folder)
 
-for benchmark in benchmarks:
+for i, benchmark in enumerate(benchmarks):
     title = f'{benchmark} - {args.machine} - {args.compiler} {args.options}'
-    print(f'== {title} ==')
+    print(f'== {i + 1}/{len(benchmark)}: {title} ==')
     subprocess.check_output(f'source ./shrc && {spec_script}  --action build -D {benchmark}', shell=True)
     print('  ... build done')
     cmd = f'source ./shrc && perf stat -- {spec_script} --action run {benchmark}'
