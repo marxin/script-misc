@@ -80,7 +80,7 @@ def decode_perf_annotate(data):
 
 
 def demangle(function):
-    return subprocess.check_output(f'c++filt {function}', shell=True, encoding='utf8').strip()
+    return subprocess.check_output(f'c++filt "{function}"', shell=True, encoding='utf8').strip()
 
 
 def filter_perf_script():
