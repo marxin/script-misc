@@ -151,7 +151,7 @@ if not os.path.exists(output_folder):
 
 for i, benchmark in enumerate(benchmarks):
     title = f'{benchmark} - {args.machine} - {args.compiler} {args.options}'
-    print(f'== {i + 1}/{len(benchmark)}: {title} ==')
+    print(f'== {i + 1}/{len(benchmarks)}: {title} ==')
     subprocess.check_output(f'source ./shrc && {spec_script}  --action build -D {benchmark}', shell=True)
     print('  ... build done')
     cmd = f'source ./shrc && perf stat -- {spec_script} --action run {benchmark}'
