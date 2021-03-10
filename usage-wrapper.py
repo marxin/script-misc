@@ -226,9 +226,9 @@ def get_footnote():
     base_memory = global_memory_data_min
     peak_memory = global_memory_data_max
     total_mem = to_gigabyte(psutil.virtual_memory().total)
-    return (f'hostname: {hostname}; CPUs: {args.used_cpus}/{cpu_count};'
-            f' CPU avg: {cpu_average:.1f}%;'
-            f' CPU max: {cpu_max:.1f}%;'
+    return (f'host: {hostname}; CPUs: {args.used_cpus}/{cpu_count};'
+            f' CPU avg: {cpu_average:.0f}%;'
+            f' CPU max: {cpu_max:.0f}%;'
             f' base memory: {base_memory:.1f} GB;'
             f' peak memory: {peak_memory:.1f} GB;'
             f' total memory: {total_mem:.1f} GB')
@@ -318,7 +318,7 @@ def generate_graph(time_range):
         tr = '-%d-%d' % (time_range[0], time_range[1])
         filename = os.path.splitext(args.output)[0] + tr + '.svg'
     plt.subplots_adjust(bottom=0.15)
-    plt.figtext(0.1, 0.025, get_footnote())
+    plt.figtext(0.1, 0.025, get_footnote(), fontsize='small')
     plt.savefig(filename)
     if args.verbose:
         print('Saving plot to %s' % filename)
