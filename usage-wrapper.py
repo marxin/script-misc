@@ -226,7 +226,7 @@ def get_footnote():
     base_memory = global_memory_data_min
     peak_memory = global_memory_data_max
     total_mem = to_gigabyte(psutil.virtual_memory().total)
-    return (f'hostname: {hostname}; CPU count: ({args.used_cpus}/{cpu_count});'
+    return (f'hostname: {hostname}; CPUs: {args.used_cpus}/{cpu_count};'
             f' CPU avg: {cpu_average:.1f}%;'
             f' CPU max: {cpu_max:.1f}%;'
             f' base memory: {base_memory:.1f} GB;'
