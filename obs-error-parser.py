@@ -21,7 +21,11 @@ parser.add_argument('project', help = 'OBS project name')
 parser.add_argument('repository', help = 'Repository name')
 parser.add_argument('archs', nargs = '+', help = 'Architectures')
 parser.add_argument('-a', '--all', action = 'store_true', help = 'Get all, not only failing')
+parser.add_argument('-t', '--threads', type=int, help = 'Limit threads to N')
 args = parser.parse_args()
+
+if not args.threads:
+    args.threads = 64
 
 shutil.rmtree(args.folder, ignore_errors = True)
 
@@ -43,7 +47,7 @@ def process_arch(arch):
     print('Packages: %d' % len(packages))
 
     create_dir(arch_dir)
-    with concurrent.futures.ProcessPoolExecutor(max_workers=64) as executor:
+    with concurrent.futures.ProcessPoolExecutor(max_workers=args.threads) as executor:
         futures = []
         for package in packages:
             log_file = os.path.join(arch_dir, package + '.log')
