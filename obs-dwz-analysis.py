@@ -15,10 +15,10 @@ def get_time(l):
 
 def print_package(p):
     size_comparison = 100.0 * p[6] / p[5] if p[5] else 0
-    print('%30s%6d / %6ds%10.2f%% %10s / %10s %10.2f%%' % (p[0], p[1], p[3], p[4], sizeof_fmt(p[5]), sizeof_fmt(p[6]), size_comparison))
+    print('%40s%6d / %6d s%10.2f%% %10s / %10s %10.2f%%' % (p[0], p[1], p[3], p[4], sizeof_fmt(p[5]), sizeof_fmt(p[6]), size_comparison))
 
 def print_header():
-    print('%30s%6s / %6s%11s %10s / %10s %10s' % ('Package', 'dwz', 'Total', 'Ratio', 'Size before', 'Size after', 'Ratio'))
+    print('%40s%6s / %6s%11s %10s / %10s %10s' % ('Package', 'dwz', 'Total', 'Ratio', 'Size before', 'Size after', 'Ratio'))
 
 def sizeof_fmt(num):
     for x in ['B','KB','MB','GB','TB']:
@@ -27,7 +27,7 @@ def sizeof_fmt(num):
         num /= 1024.0
 
 d = sys.argv[1]
-files = os.listdir(d)
+files = sorted(os.listdir(d))
 
 have_dwz_size = 0
 for f in files:
