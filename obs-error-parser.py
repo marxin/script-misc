@@ -22,6 +22,7 @@ parser.add_argument('repository', help = 'Repository name')
 parser.add_argument('archs', nargs = '+', help = 'Architectures')
 parser.add_argument('-a', '--all', action = 'store_true', help = 'Get all, not only failing')
 parser.add_argument('-t', '--threads', type=int, help = 'Limit threads to N')
+parser.add_argument('-p', '--progress', action='store_true', help = 'Show progress')
 args = parser.parse_args()
 
 if not args.threads:
@@ -32,6 +33,8 @@ shutil.rmtree(args.folder, ignore_errors = True)
 def download_build_log(package, log_file):
     global done
     result = subprocess.check_output('osc -A %s remotebuildlog %s %s %s %s' % (args.url, args.project, package, args.repository, arch), shell = True, encoding='utf8')
+    if args.progress:
+        print(package[0], end='', flush=True)
     with open(log_file, 'w+') as w:
         w.write(result)
 
