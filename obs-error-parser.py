@@ -59,6 +59,7 @@ def process_arch(arch):
         for future in futures:
             if future.exception():
                 print(future.exception())
+        print()
 
 for arch in args.archs:
     process_arch(arch)
