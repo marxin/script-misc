@@ -32,9 +32,9 @@ shutil.rmtree(args.folder, ignore_errors = True)
 
 def download_build_log(package, log_file):
     global done
-    result = subprocess.check_output('osc -A %s remotebuildlog %s %s %s %s' % (args.url, args.project, package, args.repository, arch), shell = True, encoding='utf8')
     if args.progress:
         print(package[0], end='', flush=True)
+    result = subprocess.check_output('osc -A %s remotebuildlog %s %s %s %s' % (args.url, args.project, package, args.repository, arch), shell = True, encoding='utf8')
     with open(log_file, 'w+') as w:
         w.write(result)
 
