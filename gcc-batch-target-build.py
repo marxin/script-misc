@@ -83,6 +83,8 @@ default_targets = """aarch64-elf aarch64-linux-gnu aarch64-rtems
   xtensa-linux
 """
 
+JOBS = 4
+
 parser = argparse.ArgumentParser(description='Batch build of GCC binaries')
 parser.add_argument('repository', metavar='repository', help='GCC repository')
 parser.add_argument('folder', metavar='folder', help='Folder where to build')
@@ -130,7 +132,7 @@ def build_target(full_target):
             err.write(r.stderr.decode('utf-8'))
 
             # 2) build
-            cmd = 'nice make all-host CXXFLAGS="-O0 -g" CFLAGS="-O0 -g"'
+            cmd = f'nice make -j{JOBS} all-host CXXFLAGS="-O0 -g" CFLAGS="-O0 -g"'
             r = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, encoding='utf8')
             print(f'Done target {full_target} with result {"OK" if r.returncode == 0 else "FAILED"}')
 
