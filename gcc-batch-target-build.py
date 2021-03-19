@@ -83,14 +83,6 @@ default_targets = """aarch64-elf aarch64-linux-gnu aarch64-rtems
   xtensa-linux
 """
 
-KNOWN_TO_FAIL = (
-        'i686-wrs-vxworksae',
-        'powerpc-darwin8',
-        'powerpc-wrs-vxworksae',
-        'powerpc-wrs-vxworksmils',
-        'tilegx-linux-gnuOPT-enable-obsolete'
-        )
-
 JOBS = 4
 
 parser = argparse.ArgumentParser(description='Batch build of GCC binaries')
@@ -142,7 +134,7 @@ def build_target(full_target):
             # 2) build
             cmd = f'nice make -j{JOBS} all-host CXXFLAGS="-O0 -g" CFLAGS="-O0 -g"'
             r = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, encoding='utf8')
-            if r.returncode != 0 and full_target not in KNOWN_TO_FAIL:
+            if r.returncode != 0:
                 print(f'Target failed: {full_target}')
 
             out.write(r.stdout)
