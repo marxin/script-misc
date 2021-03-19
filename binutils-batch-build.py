@@ -4,6 +4,7 @@ import subprocess
 import tempfile
 import psutil
 import os
+import sys
 import concurrent.futures
 
 targets = '''
@@ -176,8 +177,8 @@ def build_and_test_target(target):
     try:
         folder = tempfile.TemporaryDirectory(prefix='/dev/shm/')
         os.chdir(folder.name)
-        subprocess.check_output('~/Programming/binutils/configure --build=x86_64-linux --disable-nls --disable-gdb --disable-gdbserver --disable-sim --disable-readline --disable-libdecnumber --enable-obsolete --target=%s'
-                % target, shell=True, stderr=subprocess.DEVNULL)
+        subprocess.check_output('%s/configure --build=x86_64-linux --disable-nls --disable-gdb --disable-gdbserver --disable-sim --disable-readline --disable-libdecnumber --enable-obsolete --target=%s'
+                % (sys.argv[1], target), shell=True, stderr=subprocess.DEVNULL)
         r = subprocess.run('make -j8', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, encoding='utf8')
         if r.returncode != 0:
             errors = [l for l in r.stderr.split('\n') if 'error:' in l]
