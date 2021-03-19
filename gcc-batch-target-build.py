@@ -143,7 +143,7 @@ def build_target(full_target):
 
 
 print(f'Total targets: {len(targets)}')
-with concurrent.futures.ProcessPoolExecutor(max_workers=32) as executor:
+with concurrent.futures.ProcessPoolExecutor() as executor:
     futures = []
     for t in targets:
         futures.append(executor.submit(build_target, t))
