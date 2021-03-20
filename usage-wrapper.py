@@ -54,7 +54,7 @@ cpu_count = psutil.cpu_count()
 
 special_processes = {'ld': 'gold',
                      'WPA': 'deepskyblue',
-                     'WPA-stream-out': 'lightblue',
+                     'WPA-stream': 'lightblue',
                      'ltrans': 'forestgreen',
                      'as': 'coral',
                      'GCC': 'gray',
@@ -335,8 +335,8 @@ def generate_graph(time_range):
         tr = '-%d-%d' % (time_range[0], time_range[1])
         filename = os.path.splitext(args.output)[0] + tr + '.svg'
     plt.subplots_adjust(bottom=0.15)
-    plt.figtext(0.1, 0.055, get_footnote(), fontsize='small')
-    plt.figtext(0.1, 0.025, get_footnote2(), fontsize='small')
+    plt.figtext(0.1, 0.04, get_footnote(), fontsize='small')
+    plt.figtext(0.1, 0.01, get_footnote2(), fontsize='small')
     plt.savefig(filename)
     if args.verbose:
         print('Saving plot to %s' % filename)
