@@ -34,6 +34,10 @@ global_memory_data_sum = 0
 global_cpu_data_max = 0
 global_memory_data_min = to_gigabyte(psutil.virtual_memory().total)
 global_memory_data_max = 0
+global_swap_data_min = to_gigabyte(psutil.swap_memory().total)
+global_swap_data_max = 0
+global_disk_data_total = to_gigabyte(psutil.disk_usage('.').total)
+global_disk_data_start = to_gigabyte(psutil.disk_usage('.').used)
 
 global_timestamps = []
 global_cpu_data = []
@@ -150,12 +154,14 @@ def record():
     global global_n, global_cpu_data_sum, global_cpu_data_max
     global global_memory_data_sum, global_memory_data_min
     global global_memory_data_max
+    global global_swap_data_min, global_swap_data_max
 
     active_pids = {}
     while not done:
         timestamp = time.monotonic() - start_ts
         used_cpu = psutil.cpu_percent(interval=args.frequency) * cpu_scale
         used_memory = to_gigabyte(psutil.virtual_memory().used)
+        used_swap = to_gigabyte(psutil.swap_memory().used)
         if not args.summary_only:
             global_timestamps.append(timestamp)
             global_memory_data.append(used_memory)
@@ -170,6 +176,10 @@ def record():
             global_memory_data_min = used_memory
         if used_memory > global_memory_data_max:
             global_memory_data_max = used_memory
+        if used_swap < global_swap_data_min:
+            global_swap_data_min = used_swap
+        if used_swap > global_swap_data_max:
+            global_swap_data_max = used_swap
 
         entry = {}
         seen_pids = set()
@@ -232,6 +242,19 @@ def get_footnote():
             f' base memory: {base_memory:.1f} GB;'
             f' peak memory: {peak_memory:.1f} GB;'
             f' total memory: {total_mem:.1f} GB')
+
+
+def get_footnote2():
+    hostname = os.uname()[1].split('.')[0]
+    peak_swap = global_swap_data_max
+    total_swap = to_gigabyte(psutil.swap_memory().total)
+    disk_total = global_disk_data_total
+    disk_start = global_disk_data_start
+    disk_end = to_gigabyte(psutil.disk_usage('.').used)
+    disk_delta = disk_end - disk_start
+    return (f'swap peak/total: {peak_swap:.1f}/{total_swap:.1f} GB;'
+            f' disk start/end/total: {disk_start:.1f}/{disk_end:.1f}/{disk_total:.1f} GB;'
+            f' disk delta: {disk_delta:.1f} GB;')
 
 
 def generate_graph(time_range):
@@ -326,6 +349,7 @@ def generate_graph(time_range):
 
 def summary():
     print(f'SUMMARY: {get_footnote()}')
+    print(f'SUMMARY: {get_footnote2()}')
     if global_process_hogs:
         print(f'PROCESS MEMORY HOGS (>={args.memory_hog_threshold:.1f} GB):')
         items = sorted(global_process_hogs.items(), key=lambda x: x[1][0],
