@@ -248,7 +248,7 @@ def get_footnote2():
     disk_delta = disk_end - disk_start
     return (f'swap peak/total: {peak_swap:.1f}/{total_swap:.1f} GB;'
             f' disk start/end/total: {disk_start:.1f}/{disk_end:.1f}/{disk_total:.1f} GB;'
-            f' disk delta: {disk_delta:.1f} GB;')
+            f' disk delta: {disk_delta:.1f} GB')
 
 
 def generate_graph(time_range):
@@ -335,7 +335,8 @@ def generate_graph(time_range):
         tr = '-%d-%d' % (time_range[0], time_range[1])
         filename = os.path.splitext(args.output)[0] + tr + '.svg'
     plt.subplots_adjust(bottom=0.15)
-    plt.figtext(0.1, 0.025, get_footnote(), fontsize='small')
+    plt.figtext(0.1, 0.055, get_footnote(), fontsize='small')
+    plt.figtext(0.1, 0.025, get_footnote2(), fontsize='small')
     plt.savefig(filename)
     if args.verbose:
         print('Saving plot to %s' % filename)
