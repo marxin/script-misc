@@ -170,16 +170,11 @@ def record():
         global_n += 1
         global_cpu_data_sum += used_cpu
         global_memory_data_sum += used_memory
-        if used_cpu > global_cpu_data_max:
-            global_cpu_data_max = used_cpu
-        if used_memory < global_memory_data_min:
-            global_memory_data_min = used_memory
-        if used_memory > global_memory_data_max:
-            global_memory_data_max = used_memory
-        if used_swap < global_swap_data_min:
-            global_swap_data_min = used_swap
-        if used_swap > global_swap_data_max:
-            global_swap_data_max = used_swap
+        global_cpu_data_max = max(global_cpu_data_max, used_cpu)
+        global_memory_data_min = min(global_memory_data_min, used_memory)
+        global_memory_data_max = max(global_memory_data_max, used_memory)
+        global_swap_data_min = min(global_swap_data_min, used_swap)
+        global_swap_data_max = max(global_swap_data_max, used_swap)
 
         entry = {}
         seen_pids = set()
@@ -245,7 +240,6 @@ def get_footnote():
 
 
 def get_footnote2():
-    hostname = os.uname()[1].split('.')[0]
     peak_swap = global_swap_data_max
     total_swap = to_gigabyte(psutil.swap_memory().total)
     disk_total = global_disk_data_total
