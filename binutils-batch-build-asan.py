@@ -176,7 +176,7 @@ def build_and_test_target(target):
     try:
         folder = tempfile.TemporaryDirectory(prefix='/dev/shm/')
         os.chdir(folder.name)
-        subprocess.check_output('~/Programming/binutils/configure --build=x86_64-linux --disable-nls --disable-gdb --disable-gdbserver --disable-sim --disable-readline --disable-libdecnumber --enable-obsolete --target=%s CFLAGS="-g -O2 -fsanitize=address,undefined -Wno-error" CXXLAGS="-g -O2 -fsanitize=address,undefined -Wno-error" LDFLAGS="-ldl"'
+        subprocess.check_output('~/Programming/binutils/configure --build=x86_64-linux --disable-gdb --disable-gdbserver --enable-obsolete --target=%s CFLAGS="-g -O2 -fsanitize=address,undefined -Wno-error" CXXLAGS="-g -O2 -fsanitize=address,undefined -Wno-error" LDFLAGS="-ldl"'
                 % target, shell=True, stderr=subprocess.DEVNULL)
         r = subprocess.run('make -j8', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, encoding='utf8')
         if r.returncode != 0:
@@ -200,7 +200,7 @@ def report_error(command, test_case, location, full_line, target):
         print('-' * 80)
         print(prefix + location)
         print('The following fails when I build binutils with:')
-        print('configure --build=x86_64-linux --disable-nls --disable-gdb --disable-gdbserver --disable-sim --disable-readline --disable-libdecnumber --enable-obsolete --target=%s CFLAGS="-g -O2 -fsanitize=address,undefined -Wno-error" CXXLAGS="-g -O2 -fsanitize=address,undefined -Wno-error" LDFLAGS="-ldl"' % target)
+        print('configure --build=x86_64-linux --disable-gdb --disable-gdbserver --enable-obsolete --target=%s CFLAGS="-g -O2 -fsanitize=address,undefined -Wno-error" CXXLAGS="-g -O2 -fsanitize=address,undefined -Wno-error" LDFLAGS="-ldl"' % target)
         print('Target: %s' % target)
         print(test_case)
         print(command)
