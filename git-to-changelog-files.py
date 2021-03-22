@@ -23,6 +23,7 @@ while lines:
     data = open(changelog).read()
     with open(changelog, 'w') as f:
         date = datetime.datetime.now().strftime('%Y-%m-%d')
-        f.write(f'{date}  Martin Liska  <mliska@suse.cz>')
-        f.write('\n' + '\n'.join(chunk) + '\n')
+        author = subprocess.check_output('git show -s --format="%an  <%ae>"', shell=True, encoding='utf8')
+        f.write(f'{date}  {author}')
+        f.write('\n'.join(chunk) + '\n')
         f.write(data)
