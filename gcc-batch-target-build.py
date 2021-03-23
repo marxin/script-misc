@@ -143,9 +143,11 @@ def build_target(full_target):
             # remove objdir if OK
             if r.returncode == 0 and not args.preserve:
                 shutil.rmtree(d)
+            print('D', end='', flush=True)
 
 
 print(f'Total targets: {len(targets)}')
+print('.' * len(targets))
 with concurrent.futures.ProcessPoolExecutor() as executor:
     futures = []
     for t in targets:
