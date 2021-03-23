@@ -177,7 +177,7 @@ def build_and_test_target(target):
     try:
         folder = tempfile.TemporaryDirectory(prefix='/dev/shm/')
         os.chdir(folder.name)
-        subprocess.check_output('%s/configure --build=x86_64-linux --disable-gdb --disable-gdbserver --enable-obsolete --target=%s CFLAGS="-g -O2 -fsanitize=address,undefined -Wno-error" CXXLAGS="-g -O2 -fsanitize=address,undefined -Wno-error" LDFLAGS="-ldl"'
+        subprocess.check_output('%s/configure --build=x86_64-linux --disable-gdb --disable-gdbserver --disable-sim --enable-obsolete --target=%s CFLAGS="-g -O2 -fsanitize=address,undefined -Wno-error" CXXLAGS="-g -O2 -fsanitize=address,undefined -Wno-error" LDFLAGS="-ldl"'
                 % (sys.argv[1], target), shell=True, stderr=subprocess.DEVNULL)
         env = os.environ.copy()
         env['ASAN_OPTIONS'] = 'detect_leaks=0'
