@@ -179,7 +179,9 @@ def build_and_test_target(target):
         os.chdir(folder.name)
         subprocess.check_output('%s/configure --build=x86_64-linux --disable-gdb --disable-gdbserver --enable-obsolete --target=%s CFLAGS="-g -O2 -fsanitize=address,undefined -Wno-error" CXXLAGS="-g -O2 -fsanitize=address,undefined -Wno-error" LDFLAGS="-ldl"'
                 % (sys.argv[1], target), shell=True, stderr=subprocess.DEVNULL)
-        r = subprocess.run('make -j8', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, encoding='utf8')
+        env = os.environ.copy()
+        env['ASAN_OPTIONS'] = 'detect_leaks=0'
+        r = subprocess.run('make -j8', shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, encoding='utf8', env=env)
         if r.returncode != 0:
             errors = [l for l in r.stderr.split('\n') if 'error:' in l]
             assert errors
