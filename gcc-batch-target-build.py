@@ -156,3 +156,4 @@ with concurrent.futures.ProcessPoolExecutor() as executor:
     for future in futures:
         if future.exception():
             print(future.exception())
+    print()
