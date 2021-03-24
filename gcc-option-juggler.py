@@ -50,18 +50,10 @@ empty = tempfile.NamedTemporaryFile(suffix = '.c', delete = False).name
 def get_compiler_prefix():
     if args.target == 'x86_64':
         return ''
-    elif args.target == 'ppc64':
-        return 'ppc64-linux-gnu-'
-    elif args.target == 'ppc64le':
-        return 'ppc64le-linux-gnu-'
-    elif args.target == 's390x':
-        return 's390x-linux-gnu-'
+    elif args.target in ('ppc64', 'ppc64le', 's390x', 'aarch64', 'riscv64'):
+        return f'{args.target}-linux-gnu-'
     elif args.target == 'arm':
         return 'arm-linux-gnueabi-'
-    elif args.target == 'aarch64':
-        return 'aarch64-linux-gnu-'
-    elif args.target == 'riscv64':
-        return 'riscv64-linux-gnu-'
     else:
         assert False
 
@@ -243,7 +235,7 @@ class MarchFlag:
         self.name = '-mtune='
         self.options = {}
 
-        self.options['x86_64'] = 'native,i386,i486,i586,pentium,lakemont,pentium-mmx,pentiumpro,i686,pentium2,pentium3,pentium3m,pentium-m,pentium4,pentium4m,prescott,nocona,core2,nehalem,westmere,sandybridge,ivybridge,haswell,broadwell,skylake,bonnell,silvermont,knl,skylake-avx512,k6,k6-2,k6-3,athlon,athlon-tbird,athlon-4,athlon-xp,athlon-mp,k8,opteron,athlon64,athlon-fx,k8-sse3,opteron-sse3,athlon64-sse3,amdfam10,barcelona,bdver1,bdver2,bdver3,bdver4,znver1,btver1,btver2,winchip-c6,winchip2,c3,c3-2,geode'.split(',')
+        self.options['x86_64'] = 'i386,i486,i586,pentium,lakemont,pentium-mmx,winchip-c6,winchip2,c3,samuel-2,c3-2,nehemiah,c7,esther,i686,pentiumpro,pentium2,pentium3,pentium3m,pentium-m,pentium4,pentium4m,prescott,nocona,core2,nehalem,corei7,westmere,sandybridge,corei7-avx,ivybridge,core-avx-i,haswell,core-avx2,broadwell,skylake,skylake-avx512,cannonlake,icelake-client,icelake-server,cascadelake,tigerlake,cooperlake,sapphirerapids,alderlake,bonnell,atom,silvermont,slm,goldmont,goldmont-plus,tremont,knl,knm,intel,geode,k6,k6-2,k6-3,athlon,athlon-tbird,athlon-4,athlon-xp,athlon-mp,x86-64,x86-64-v2,x86-64-v3,x86-64-v4,eden-x2,nano,nano-1000,nano-2000,nano-3000,nano-x2,eden-x4,nano-x4,k8,k8-sse3,opteron,opteron-sse3,athlon64,athlon64-sse3,athlon-fx,amdfam10,barcelona,bdver1,bdver2,bdver3,bdver4,znver1,znver2,znver3,btver1,btver2,generic,amd,native'.split(',')
         self.options['ppc64'] = '401,403,405,405fp,440,440fp,464,464fp,476,476fp,505,601,602,603,603e,604,604e,620,630,740,7400,7450,750,801,821,823,860,970,8540,a2,e300c2,e300c3,e500mc,e500mc64,e5500,e6500,ec603e,G3,G4,G5,titan,power3,power4,power5,power5+,power6,power6x,power7,power8,power9,powerpc,powerpc64,powerpc64le,rs64'.split(',')
         self.options['ppc64le'] = self.options['ppc64']
         self.options['aarch64'] = 'generic,cortex-a35,cortex-a53,cortex-a57,cortex-a72,exynos-m1,qdf24xx,thunderx,xgene1'.split(',')
