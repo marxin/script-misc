@@ -21,9 +21,7 @@ from time import time
 from os import path
 from multiprocessing import Pool
 
-known_bugs = {
-        'force_constant_size, at gimplify.c:733': 'PR99122'
-        }
+known_bugs = {}
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 
