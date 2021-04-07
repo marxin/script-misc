@@ -42,6 +42,14 @@ release = ('%s (%s %s%s)'
            % (gcc_BASEVER, gcc_DEVPHASE, gcc_DATESTAMP,
               (' %s' % gcc_REVISION) if gcc_REVISION else ''))
 
+
+# FIXME
+rst_prolog = f'''
+.. |gcc_version| replace:: {gcc_BASEVER}
+.. |package_version| replace:: (GCC)
+.. |bugurl| replace:: https://gcc.gnu.org/bugs/
+'''
+
 # -- General configuration ---------------------------------------------------
 
 # Add any Sphinx extension module names here, as strings. They can be
