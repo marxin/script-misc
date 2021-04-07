@@ -15,3 +15,9 @@ authors = 'The gfortran team'
 latex_documents = [
   ('index', 'gfortran.tex', project, authors, 'manual'),
 ]
+
+# One entry per manual page. List of tuples
+# (source start file, name, description, authors, manual section).
+man_pages = [
+    ('gnu-fortran-command-options', 'gfortran', 'GNU Fortran compiler', [authors], 1),
+]

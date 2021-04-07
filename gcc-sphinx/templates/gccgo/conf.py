@@ -15,3 +15,9 @@ authors = 'Ian Lance Taylor'
 latex_documents = [
   ('index', 'gccgo.tex', project, authors, 'manual'),
 ]
+
+# One entry per manual page. List of tuples
+# (source start file, name, description, authors, manual section).
+man_pages = [
+    ('invoking-gccgo', 'gccgo', 'A GCC-based compiler for the Go language', [authors], 1),
+]
