@@ -20,5 +20,6 @@ for xml in os.listdir(INPUT):
     config = f'templates/{base}/conf.py'
     if os.path.exists(config):
         shutil.copy(config, os.path.join(OUTPUT, base))
+    shutil.copy('templates/Makefile', os.path.join(OUTPUT, base))
     with open(os.path.join(OUTPUT, base, 'index.rst'), 'w') as w:
         w.write(open('templates/index.rst').read().replace('__doc__', base))
