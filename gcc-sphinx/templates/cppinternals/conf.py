@@ -13,5 +13,5 @@ authors = 'Neil Booth'
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 latex_documents = [
-  ('index', 'gcc.tex', project, authors, 'manual'),
+  ('index', 'cppinternals.tex', project, authors, 'manual'),
 ]
