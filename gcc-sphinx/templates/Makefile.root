@@ -1,0 +1,11 @@
+FOLDERS = cpp cppinternals gcc gccgo gccint gfortran libgomp libitm libquadmath
+
+.PHONY: latexpdf
+latexpdf:
+	for dir in $(FOLDERS); do $(MAKE) -C $$dir latexpdf; done
+
+.PHONY: html
+html:
+	for dir in $(FOLDERS); do $(MAKE) -C $$dir html; done
+
+all: html latexpdf

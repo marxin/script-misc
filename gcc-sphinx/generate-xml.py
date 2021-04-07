@@ -20,7 +20,6 @@ subprocess.check_output(f'{cmd} {includes} {SRCDIR}/gcc/doc/cpp.texi -o {OUTPUT}
 for lib in ('libgomp', 'libquadmath', 'libitm'):
     subprocess.check_output(f'{cmd} {includes} -I{OBJDIR}/x86_64-pc-linux-gnu/libquadmath/ {SRCDIR}/{lib}/{lib}.texi '
                             f'-o {OUTPUT}/{lib}.xml', shell=True)
-subprocess.check_output(f'{cmd} {includes} {SRCDIR}/libffi/doc/libffi.texi -o {OUTPUT}/libffi.xml', shell=True)
 
 subprocess.check_output(f'{cmd} {includes} {SRCDIR}/gcc/doc/gccint.texi -o {OUTPUT}/gccint.xml', shell=True)
 subprocess.check_output(f'{cmd} {includes} {SRCDIR}/gcc/doc/cppinternals.texi -o {OUTPUT}/cppinternals.xml', shell=True)

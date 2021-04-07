@@ -10,6 +10,7 @@ OUTPUT = '/tmp/gcc-rst'
 shutil.rmtree(OUTPUT, ignore_errors=True)
 os.mkdir(OUTPUT)
 shutil.copy('templates/baseconf.py', OUTPUT)
+shutil.copy('templates/Makefile.root', os.path.join(OUTPUT, 'Makefile'))
 
 for xml in os.listdir(INPUT):
     base, _ = os.path.splitext(xml)
@@ -18,8 +19,7 @@ for xml in os.listdir(INPUT):
                                 encoding='utf8')
     shutil.move('output', os.path.join(OUTPUT, base))
     config = f'templates/{base}/conf.py'
-    if os.path.exists(config):
-        shutil.copy(config, os.path.join(OUTPUT, base))
+    shutil.copy(config, os.path.join(OUTPUT, base))
     shutil.copy('templates/Makefile', os.path.join(OUTPUT, base))
     with open(os.path.join(OUTPUT, base, 'index.rst'), 'w') as w:
         w.write(open('templates/index.rst').read().replace('__doc__', base))
