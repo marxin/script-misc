@@ -10,6 +10,7 @@ OUTPUT = '/tmp/gcc-xml'
 includes = f'-I{SRCDIR}/gcc/doc -I{SRCDIR}/gcc/doc/include -I{OBJDIR}/gcc'
 cmd = 'makeinfo --xml'
 
+subprocess.check_output(f'{cmd} {includes} {SRCDIR}/gcc/doc/install.texi -o {OUTPUT}/install.xml', shell=True)
 subprocess.check_output(f'{cmd} {includes} {SRCDIR}/gcc/doc/gcc.texi -o {OUTPUT}/gcc.xml', shell=True)
 subprocess.check_output(f'{cmd} {includes} {SRCDIR}/gcc/fortran/gfortran.texi -I{SRCDIR}/gcc/fortran -o '
                         f'{OUTPUT}/gfortran.xml', shell=True)
