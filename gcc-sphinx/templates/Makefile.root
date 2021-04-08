@@ -1,4 +1,4 @@
-FOLDERS = cpp cppinternals gcc gccgo gccint gfortran libgomp libitm libquadmath install
+FOLDERS = cpp cppinternals gcc gccgo gccint gfortran libgomp libitm libquadmath install gfc-internals
 
 default: html man latexpdf
 

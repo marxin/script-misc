@@ -24,3 +24,4 @@ for lib in ('libgomp', 'libquadmath', 'libitm'):
 
 subprocess.check_output(f'{cmd} {includes} {SRCDIR}/gcc/doc/gccint.texi -o {OUTPUT}/gccint.xml', shell=True)
 subprocess.check_output(f'{cmd} {includes} {SRCDIR}/gcc/doc/cppinternals.texi -o {OUTPUT}/cppinternals.xml', shell=True)
+subprocess.check_output(f'{cmd} {includes} {SRCDIR}/gcc/fortran/gfc-internals.texi -o {OUTPUT}/gfc-internals.xml', shell=True)
