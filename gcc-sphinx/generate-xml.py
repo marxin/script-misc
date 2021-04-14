@@ -26,5 +26,4 @@ subprocess.check_output(f'{cmd} {includes} {SRCDIR}/gcc/doc/gccint.texi -o {OUTP
 subprocess.check_output(f'{cmd} {includes} {SRCDIR}/gcc/doc/cppinternals.texi -o {OUTPUT}/cppinternals.xml', shell=True)
 subprocess.check_output(f'{cmd} {includes} {SRCDIR}/gcc/fortran/gfc-internals.texi -o {OUTPUT}/gfc-internals.xml',
                         shell=True)
-subprocess.check_output(f'{cmd} {includes} {SRCDIR}/gcc/ada/gnat-style.texi -o {OUTPUT}/gnat-style.xml', shell=True)
 subprocess.check_output(f'{cmd} {includes} {SRCDIR}/libiberty/libiberty.texi -o {OUTPUT}/libiberty.xml', shell=True)
