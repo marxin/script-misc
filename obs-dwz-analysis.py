@@ -26,7 +26,7 @@ def sizeof_fmt(num):
             return "%3.1f %s" % (num, x)
         num /= 1024.0
 
-d = sys.argv[1]
+d = sys.argv[1] if len(sys.argv) >= 2 else '.'
 files = sorted(os.listdir(d))
 
 have_dwz_size = 0
