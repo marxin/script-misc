@@ -36,7 +36,7 @@ description_color = 'blue'
 title_color = 'cyan'
 
 oldest_release = '4.8.0'
-oldest_active_branch = 8
+oldest_active_branch = 9
 
 # Other locations should not by set up by a script consumer
 lock_path = os.path.join(script_dirname, '.gcc_build_binary.lock')
