@@ -494,6 +494,7 @@ class OptimizationLevel:
             skipped_options.add('-maltivec')
             skipped_options.add('-mfprnd')
             skipped_options.add('-mno-power8-vector')
+            skipped_options.add('-mrop-protect')
 
         if args.target != 'x86_64':
             skipped_options.add('-freorder-blocks-and-partition')
