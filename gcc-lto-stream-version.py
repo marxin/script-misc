@@ -44,7 +44,7 @@ for branch in reversed(branches):
                 commit = change[0]
                 if not last_bump or commit.committed_datetime > last_bump.committed_datetime:
                     last_bump = commit
-    print(f'gcc-{branch}', last_bump)
+    print(f'gcc-{branch}', last_bump, flush=True)
     build_compiler(tip)
     subprocess.check_output(f'./gcc/xg++ -Bgcc -O2 -c -flto=16 {source} -o {obj}', shell=True)
     build_compiler(last_bump)
