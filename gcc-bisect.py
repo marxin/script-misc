@@ -609,7 +609,7 @@ elif args.build:
     g.build()
 elif args.unpack:
     try:
-        commit = g.find_commit(args.unpack, g.latest)
+        commit = g.find_commit(args.unpack, g.latest + g.branches)
         with lock:
             commit.decompress()
             print(f'Revision extracted to: {commit.get_install_path() + "/bin"}')
