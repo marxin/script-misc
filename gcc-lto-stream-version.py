@@ -5,9 +5,11 @@ import shutil
 import subprocess
 import sys
 
+from pathlib import Path
+
 from git import Repo
 
-git = sys.argv[1]
+git = Path(sys.argv[1]).resolve()
 repo = Repo(git)
 branches = [9, 10, 11]
 objdir = '/dev/shm/myobjdir'
