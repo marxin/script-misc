@@ -495,6 +495,8 @@ class OptimizationLevel:
             skipped_options.add('-mfprnd')
             skipped_options.add('-mno-power8-vector')
             skipped_options.add('-mrop-protect')
+        elif args.target == 'aarch64':
+            skipped_options.add('-mabi=ilp32')
 
         if args.target != 'x86_64':
             skipped_options.add('-freorder-blocks-and-partition')
