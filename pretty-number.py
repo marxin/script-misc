@@ -12,15 +12,15 @@ def pad_string(s, n, prefix=''):
 
 number = int(eval(sys.argv[1]))
 
-print('%-16s: %d' % ('Integer', number))
+print('%-20s: %d' % ('Integer', number))
 
 hexadecimal = hex(abs(number))
 assert hexadecimal.startswith('0x')
 hexadecimal = hexadecimal[2:]
-print('%-16s: %s' % ('Hexadecimal', pad_string(hexadecimal, 2, '0x')))
+print('%-20s: %s' % ('Hexadecimal', pad_string(hexadecimal, 2, '0x')))
 if len(hexadecimal) % 2:
     hexadecimal = '0' + hexadecimal
-print('%-16s: ' % 'Integer by byte', end='')
+print('%-20s: ' % 'Integer by byte', end='')
 for b in wrap(hexadecimal, 2):
     print('%8s ' % str(int(b, 16)), end='')
 print()
@@ -28,9 +28,9 @@ print()
 binary = bin(abs(number))
 assert binary.startswith('0b')
 binary = binary[2:]
-print('%-16s: %s' % ('Binary', pad_string(binary, 8)))
+print('%-20s: %s' % ('Binary', pad_string(binary, 8)))
 
-print('%-16s: ' % 'Bits set', end='')
+print('%-20s: ' % 'Bits set (0-based)', end='')
 for i, v in enumerate(reversed(binary)):
     if v == '1':
         print('%d ' % i, end='')
