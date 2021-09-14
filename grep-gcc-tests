@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+
+import os
+
+from termcolor import colored
+
+FAIL_KEYWORDS = ('FAIL', 'XPASS', 'ERROR', 'UNRESOLVED')
+logs = []
+
+for root, _, files in os.walk('gcc/testsuite'):
+    for file in files:
+        if file.endswith('.log'):
+            logs.append((file, os.path.join(root, file)))
+
+pass_count = 0
+xfail_count = 0
+fail_count = 0
+
+for file in logs:
+    lines = open(file[1]).read().splitlines()
+    for line in lines:
+        for kw in FAIL_KEYWORDS:
+            prefix = f'{kw}:'
+            if line.startswith(prefix):
+                print(colored(file[0], 'magenta') + ': ' + colored(prefix, 'red', attrs=['bold']) + line[len(prefix):])
+                fail_count += 1
+            elif line.startswith('PASS:'):
+                pass_count += 1
+            elif line.startswith('XFAIL:'):
+                xfail_count += 1
+
+if not fail_count:
+    print(colored('All is fine!', 'green', attrs=['bold']))
+
+print(f'\nPASS: {pass_count}, FAIL: {fail_count}, XFAIL: {xfail_count}')
