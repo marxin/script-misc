@@ -7,6 +7,8 @@ import shutil
 import subprocess
 from itertools import dropwhile, takewhile
 
+IGNORED_TARGETS = ('cr16-elfOPT-enable-obsolete')
+
 
 def parse_default_targets(gcc_root):
     lines = open(os.path.join(gcc_root, 'contrib/config-list.mk')).read().splitlines()
@@ -16,7 +18,7 @@ def parse_default_targets(gcc_root):
     targets = ' '.join(lines)
     targets = targets.replace('\\', '')
     for t in targets.split(' ')[2:]:
-        if t:
+        if t and t not in IGNORED_TARGETS:
             yield t
 
 
