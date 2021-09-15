@@ -7,7 +7,7 @@ import shutil
 import subprocess
 from itertools import dropwhile, takewhile
 
-IGNORED_TARGETS = ('cr16-elfOPT-enable-obsolete')
+IGNORED_TARGETS = ('cr16-elfOPT-enable-obsolete', 'mips-netbsd')
 
 
 def parse_default_targets(gcc_root):
