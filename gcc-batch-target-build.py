@@ -5,6 +5,7 @@ import concurrent.futures
 import os
 import shutil
 import subprocess
+import sys
 from itertools import dropwhile, takewhile
 
 IGNORED_TARGETS = ('cr16-elfOPT-enable-obsolete', 'amdgcn-amdhsa')
@@ -65,7 +66,7 @@ def build_target(full_target):
             r = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
             if r.returncode != 0:
                 print(f'Configure FAILED for {full_target}')
-                return
+                return 1
 
             out.write(r.stdout.decode('utf-8'))
             err.write(r.stderr.decode('utf-8'))
@@ -83,7 +84,10 @@ def build_target(full_target):
             if r.returncode == 0 and not args.preserve:
                 shutil.rmtree(d)
             print('D', end='', flush=True)
+            return r.returncode
 
+
+retcode = 0
 
 print(f'Total targets: {len(targets)}')
 print('.' * len(targets))
@@ -95,4 +99,11 @@ with concurrent.futures.ProcessPoolExecutor() as executor:
     for future in futures:
         if future.exception():
             print(future.exception())
+        else:
+            ret = future.result()
+            if ret > retcode:
+                retcode = ret
+
     print()
+
+sys.exit(retcode)
