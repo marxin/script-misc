@@ -10,7 +10,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    container: opensuse/tumbleweed
+    container:
+      image: opensuse/tumbleweed
+      options: --privileged
 
     steps:
       - run: zypper -n install
