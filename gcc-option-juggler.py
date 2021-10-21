@@ -481,7 +481,8 @@ class OptimizationLevel:
 
     def filter_options(self, l):
         filtered = []
-        skipped_options = set(['-fselective-scheduling', '-fselective-scheduling2', '-mlra', '-fsave-optimization-record', '-Werror', '-fmodulo-sched'])
+        skipped_options = {'-fselective-scheduling', '-fselective-scheduling2', '-mlra', '-fsave-optimization-record',
+                '-Werror', '-fmodulo-sched', '--param=destructive-interference-size', '--param=constructive-interference-size'}
 
         if args.target == 'x86_64':
             skipped_options.add('-mforce-indirect-call')
