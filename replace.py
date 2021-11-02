@@ -58,10 +58,10 @@ for root, _, files in os.walk(sys.argv[1]):
                     modified_line = modify_line(line)
                     if line != modified_line:
                         modified = True
-                    modified_lines.append(line)
+                    modified_lines.append(modified_line)
             if modified:
                 with open(full, 'w') as w:
-                    w.write('\n'.join(modified_lines))
+                    w.write(''.join(modified_lines))
                 modified_files += 1
                 if args.verbose:
                     print(f'File modified: {full}')
