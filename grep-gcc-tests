@@ -25,7 +25,7 @@ for file in logs:
     for line in lines:
         for kw in FAIL_KEYWORDS:
             prefix = f'{kw}:'
-            if line.startswith(prefix):
+            if line.startswith(prefix) and not line.startswith('ERROR: Failed to mmap'):
                 print(colored(file[0], 'magenta') + ': ' + colored(prefix, 'red', attrs=['bold']) + line[len(prefix):])
                 fail_count += 1
             elif line.startswith('PASS:'):
