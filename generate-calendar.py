@@ -6,7 +6,10 @@ from icalendar import Calendar, Event
 
 import pytz
 
-events = [x.split(';') for x in open('data').read().splitlines()]
+data = """
+"""
+
+events = [x.split(';') for x in data.strip().splitlines()]
 
 cal = Calendar()
 for e in events:
