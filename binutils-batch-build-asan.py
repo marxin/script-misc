@@ -264,3 +264,5 @@ for target in targets:
             report_error(command, test_case, location, err, target)
 
     errors = [l for l in errors if 'runtime error:' in l or '' in l]
+
+sys.exit(0 if not seen else 1)
