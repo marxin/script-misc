@@ -250,7 +250,7 @@ for target in targets:
                 n -= 1
             test_case = errors[n]
             report_error(command, test_case, location, '\n'.join([err] + bt), target)
-        elif 'runtime error' in err:
+        elif 'runtime error' in err and 'conftest.c' not in err:
             n = i - 1
             while not 'Executing on host' in errors[n]:
                 n -= 1
