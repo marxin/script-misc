@@ -20,7 +20,7 @@ def handle_file_p(filename):
     return True
 
 
-def modify_line(line):
+def modify_line(line, index, lines):
     # Example replacement:
     # m = re.match(r'.*time_function\(&([^,]*),', line)
     # if m:
@@ -54,8 +54,8 @@ for root, _, files in os.walk(sys.argv[1]):
             modified_lines = []
             with open(full) as f:
                 lines = f.readlines()
-                for line in lines:
-                    modified_line = modify_line(line)
+                for index, line in enumerate(lines):
+                    modified_line = modify_line(line, index, lines)
                     if line != modified_line:
                         modified = True
                     modified_lines.append(modified_line)
