@@ -8,7 +8,7 @@ import argparse
 import os
 import sys
 
-EXTENSIONS = ('.h', '.c', '.cc', '.C')
+EXTENSIONS = ('.h', '.c', '.cc', '.C', '.rst')
 
 
 def handle_file_p(filename):
@@ -20,7 +20,7 @@ def handle_file_p(filename):
     return True
 
 
-def modify_line(line, index, lines):
+def modify_line(line, index, lines, filename):
     # Example replacement:
     # m = re.match(r'.*time_function\(&([^,]*),', line)
     # if m:
@@ -55,7 +55,7 @@ for root, _, files in os.walk(sys.argv[1]):
             with open(full) as f:
                 lines = f.readlines()
                 for index, line in enumerate(lines):
-                    modified_line = modify_line(line, index, lines)
+                    modified_line = modify_line(line, index, lines, full)
                     if line != modified_line:
                         modified = True
                     modified_lines.append(modified_line)
