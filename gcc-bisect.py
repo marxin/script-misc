@@ -75,6 +75,7 @@ parser.add_argument('--print', action='store_true',
 parser.add_argument('--success-exit-code', type=int, default=0,
                     help='Success exit code')
 parser.add_argument('-u', '--unpack', help='Only unpack the revision and exit')
+parser.add_argument('-t', '--timeout', type=float, help='Time out command')
 
 args = parser.parse_args()
 
@@ -212,30 +213,38 @@ class GitRevision:
                               + ':' + my_env['PATH'])
             ld_library_path = my_env['LD_LIBRARY_PATH'] if 'LD_LIBRARY_PATH' in my_env else ''
             my_env['LD_LIBRARY_PATH'] = os.path.join(self.get_install_path(), 'lib64') + ':' + ld_library_path
-            r = subprocess.run(args.command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
-                               env=my_env, encoding='utf8')
 
-            # handle ICE
-            success = r.returncode == args.success_exit_code
-            if success and args.ask:
+            try:
+                r = subprocess.run(args.command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                                   env=my_env, encoding='utf8', timeout=args.timeout)
+                returncode = r.returncode
+                stdout = r.stdout
+
+            except subprocess.TimeoutExpired:
+                returncode = 124
+                stdout = ''
+            finally:
+                # handle ICE
+                success = r.returncode == args.success_exit_code
+                if success and args.ask:
+                    if not args.silent:
+                        flush_print(stdout, end='')
+                    success = input('Retcode: ') == '0'
+                elif args.ice:
+                    messages = ['internal compiler error', 'Fatal Error', 'Internal compiler error',
+                                'Please submit a full bug report', 'lto-wrapper: fatal error']
+                    success = any(map(lambda m: m in stdout, messages))
+
+                if args.negate:
+                    success = not success
+
+                text = colored('OK', 'green') if success else colored('FAILED', 'red') + ' (%d)' % returncode
+                seconds = (datetime.now() - start).total_seconds()
+                flush_print('  %s: [took: %3.3fs] result: %s' % (self.description(describe), seconds, text))
                 if not args.silent:
-                    flush_print(r.stdout, end='')
-                success = input('Retcode: ') == '0'
-            elif args.ice:
-                messages = ['internal compiler error', 'Fatal Error', 'Internal compiler error',
-                            'Please submit a full bug report', 'lto-wrapper: fatal error']
-                success = any(map(lambda m: m in r.stdout, messages))
+                    flush_print(stdout, end='')
 
-            if args.negate:
-                success = not success
-
-            text = colored('OK', 'green') if success else colored('FAILED', 'red') + ' (%d)' % r.returncode
-            seconds = (datetime.now() - start).total_seconds()
-            flush_print('  %s: [took: %3.3fs] result: %s' % (self.description(describe), seconds, text))
-            if not args.silent:
-                flush_print(r.stdout, end='')
-
-        return (success, r.stdout)
+            return (success, stdout)
 
     def test(self, describe=False):
         if not self.has_binary:
