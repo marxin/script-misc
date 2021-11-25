@@ -225,7 +225,7 @@ class GitRevision:
                 stdout = ''
             finally:
                 # handle ICE
-                success = r.returncode == args.success_exit_code
+                success = returncode == args.success_exit_code
                 if success and args.ask:
                     if not args.silent:
                         flush_print(stdout, end='')
