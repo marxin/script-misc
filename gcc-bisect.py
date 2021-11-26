@@ -587,7 +587,7 @@ class GitRepository:
 
     def bisect_recursive(self, candidates, r1, r2):
         if len(candidates) == 2:
-            flush_print('\nFirst change is:')
+            flush_print(f'\nFirst change is ({candidates[0].short_hexsha()}):')
             output = candidates[0].test(describe=True)
             print(candidates[0].commit.message)
             candidates[1].test(describe=True)
