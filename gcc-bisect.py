@@ -51,7 +51,7 @@ DESC = 'Bisect by prebuilt GCC binaries.'
 parser = argparse.ArgumentParser(description=DESC)
 parser.add_argument('command', nargs='?', metavar='command',
                     help='GCC command')
-parser.add_argument('-s', '--silent', action='store_true',
+parser.add_argument('--silent', action='store_true',
                     help='Do not print stderr and stdout output')
 parser.add_argument('-x', '--negate', action='store_true',
                     help='FAIL if result code is equal to zero')
