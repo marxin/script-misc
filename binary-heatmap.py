@@ -58,7 +58,54 @@ def get_symbol_for_sample(symbols, address):
         return get_symbol_for_sample(symbols[mid:], address)
 
 def parse_gold_mapfile(filename, sample_addresses):
-    return []
+    text_start = None
+    text_unlikely_start = None
+    text_startup_start = None
+    text_hot_start = None
+    text_hot_last = None
+    text_end = None
+
+    lines = open(filename).read().splitlines()
+    for i, line in enumerate(lines):
+        parts = line.split()
+
+        if line.startswith('.text '):
+            text_start = int(parts[1], 16)
+        elif line.startswith(' .text.unlikely.') and not text_unlikely_start:
+            text_unlikely_start = int(lines[i + 1].split()[0], 16)
+        elif line.startswith(' .text.startup.') and not text_startup_start:
+            text_startup_start = int(lines[i + 1].split()[0], 16)
+        elif line.startswith(' .text.hot.'):
+            addr = int(lines[i + 1].split()[0], 16)
+            if not text_hot_start:
+                text_hot_start = addr
+            text_hot_end = addr
+        elif line.startswith('.fini '):
+            text_end = int(parts[1], 16)
+            break
+
+    result = []
+    c = MapComponent('.text.unlikely', [])
+    c.start = text_unlikely_start
+    c.end = text_startup_start
+    result.append(c)
+
+    c = MapComponent('.text.startup', [])
+    c.start = text_startup_start
+    c.end = text_hot_start
+    result.append(c)
+
+    c = MapComponent('.text.hot', [])
+    c.start = text_hot_start
+    c.end = text_hot_end
+    result.append(c)
+
+    c = MapComponent('.text', [])
+    c.start = text_hot_end
+    c.end = text_end
+    result.append(c)
+
+    return [c.get_address_range() for c in result if c.get_address_range()]
 
 def parse_bfd_mapfile(filename, sample_addresses):
     components = []
