@@ -62,7 +62,7 @@ def parse_gold_mapfile(filename, sample_addresses):
     text_unlikely_start = None
     text_startup_start = None
     text_hot_start = None
-    text_hot_last = None
+    text_hot_end = None
     text_end = None
 
     lines = open(filename).read().splitlines()
@@ -95,13 +95,14 @@ def parse_gold_mapfile(filename, sample_addresses):
     c.end = text_hot_start
     result.append(c)
 
-    c = MapComponent('.text.hot', [])
-    c.start = text_hot_start
-    c.end = text_hot_end
-    result.append(c)
+    if text_hot_start:
+        c = MapComponent('.text.hot', [])
+        c.start = text_hot_start
+        c.end = text_hot_end
+        result.append(c)
 
     c = MapComponent('.text', [])
-    c.start = text_hot_end
+    c.start = text_hot_end if text_hot_end else text_startup_start
     c.end = text_end
     result.append(c)
 
