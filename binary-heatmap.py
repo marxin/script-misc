@@ -24,21 +24,6 @@ from itertools import chain
 from matplotlib.lines import Line2D
 from itertools import dropwhile, takewhile
 
-class SectionPlaceholder:
-    def __init__(self, line):
-        parts = [l for l in line.split(' ') if l]
-        self.address = int(parts[0], 16)
-        parts = parts[2].split('_')
-        self.name = parts[-2]
-        self.start = parts[-1] == 'start'
-
-    def get_range(self, placeholders):
-        if self.start:
-            for p in placeholders:
-                if self.name == p.name and not p.start and self.address != p.address:
-                    return (self.name, self.address, p.address)
-        return None
-
 class MapComponent:
     def __init__(self, name, lines):
         self.name = name
@@ -72,7 +57,10 @@ def get_symbol_for_sample(symbols, address):
     else:
         return get_symbol_for_sample(symbols[mid:], address)
 
-def parse_mapfile(filename, sample_addresses):
+def parse_gold_mapfile(filename, sample_addresses):
+    return []
+
+def parse_bfd_mapfile(filename, sample_addresses):
     components = []
     map_components = [
         (' *(.text.unlikely .text.*_unlikely .text.unlikely.*)', '.text.unlikely'),
@@ -139,6 +127,14 @@ def parse_mapfile(filename, sample_addresses):
         print('  %s: %d' % (k, v))
 
     return [c.get_address_range() for c in components if c.get_address_range()]
+
+def parse_mapfile(filename, sample_addresses):
+    if '.note.gnu.gold-version' in open(filename).read():
+        print('Parsing ld.gold format mapfile')
+        return parse_gold_mapfile(filename, sample_addresses)
+    else:
+        print('Parsing ld.bfd format mapfile')
+        return parse_bfd_mapfile(filename, sample_addresses)
 
 @ticker.FuncFormatter
 def major_formatter(x, pos):
