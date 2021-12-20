@@ -618,7 +618,7 @@ exit 0"""
             print('CREDUCE timed out!')
 
 os.chdir('/tmp/')
-levels = [OptimizationLevel(x) for x in ['', '-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os', '-Og']]
+levels = [OptimizationLevel(x) for x in ['', '-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os', '-Oz', '-Og']]
 
 threads = 20
 counter = 1000 * args.iterations
