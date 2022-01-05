@@ -21,7 +21,7 @@ from time import time
 from os import path
 from multiprocessing import Pool
 
-known_bugs = {}
+known_bugs = {'clear_padding_type, at gimple-fold.c': 'PRxxx'}
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
 
