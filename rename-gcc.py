@@ -30,19 +30,15 @@ FILES = [
 FILES += open('/tmp/files.txt').read().splitlines()
 FILES.remove('main.c')
 
-LOADED_FILES = [re.compile(fr'\b{re.escape(x)}\b') for x in FILES]
+LOADED_FILES = [(re.compile(fr'\b{re.escape(x)}\b'), x + 'c') for x in FILES]
 print(f'Have {len(LOADED_FILES)} files.')
 
 
 def modify_line(line, index, lines, filename):
-    for x in LOADED_FILES:
-        for match in reversed(list(re.finditer(x, line))):
-            start = match.start()
-            end = match.end()
-            text = match.group()
-            if text == 'gcc.c' and '-torture' in line:
-                continue
-            line = line[:start] + text + 'c' + line[end:]
+    for needle, replacement in LOADED_FILES:
+        if replacement == 'gcc.cc' and '-torture' in line:
+            continue
+        line = re.sub(needle, replacement, line)
 
     return line
 
