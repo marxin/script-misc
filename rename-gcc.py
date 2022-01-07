@@ -31,6 +31,7 @@ FILES += open('/tmp/files.txt').read().splitlines()
 FILES.remove('main.c')
 
 LOADED_FILES = [re.compile(fr'\b{re.escape(x)}\b') for x in FILES]
+print(f'Have {len(LOADED_FILES)} files.')
 
 
 def modify_line(line, index, lines, filename):
