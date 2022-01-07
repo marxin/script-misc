@@ -21,22 +21,28 @@ def handle_file_p(filename):
     return True
 
 
+"""
+Example replacement:
+LOADED_FILES = [re.compile(fr'\b{re.escape(x)}\b') for x in open('/tmp/files.txt').read().splitlines()]
+
+m = re.match(r'.*time_function\\(&([^,]*),', line)
+if m:
+    e = m.end(1)
+    name = m.group(1)
+    line = line[:e + 1] + f' "{name}",' + line[e + 1:]
+
+for x in LOADED_FILES:
+    for match in reversed(list(re.finditer(x, line))):
+        start = match.start()
+        end = match.end()
+        text = match.group()
+        line = line[:start] + text + 'c' + line[end:]
+
+return line
+"""
+
+
 def modify_line(line, index, lines, filename):
-    # Example replacement:
-    # m = re.match(r'.*time_function\(&([^,]*),', line)
-    # if m:
-    #    e = m.end(1)
-    #    name = m.group(1)
-    #    line = line[:e + 1] + f' "{name}",' + line[e + 1:]
-
-    # Example replacement for filenames
-    # for x in FILES:
-    #    for match in reversed(list(re.finditer(x, line))):
-    #        start = match.start()
-    #        end = match.end()
-    #        text = match.group()
-    #        line = line[:start] + text + 'c' + line[end:]
-
     return line
 
 
@@ -61,7 +67,6 @@ for root, _, files in os.walk(sys.argv[1]):
 
 
 def replace_file(full, i, n):
-    global modified_files
     if args.vv:
         print(f'.. {i + 1}/{len(files_worklist)}: {full}')
 
@@ -78,20 +83,22 @@ def replace_file(full, i, n):
         if modified:
             with open(full, 'w') as w:
                 w.write(''.join(modified_lines))
-            modified_files += 1
             if args.v:
                 print(f'File modified: {full}')
+            return True
     except UnicodeDecodeError as e:
         print(f'Skipping file: {full} ({e})')
 
 
-with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+with concurrent.futures.ProcessPoolExecutor() as executor:
     futures = []
     for i, full in enumerate(files_worklist):
         futures.append(executor.submit(replace_file, full, i, len(files_worklist)))
 
     for future in futures:
-        future.result()
+        r = future.result()
+        if r:
+            modified_files += 1
 
 if args.vv:
     print()
