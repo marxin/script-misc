@@ -5,6 +5,7 @@
 #
 
 import argparse
+import concurrent.futures
 import os
 import sys
 
@@ -58,7 +59,9 @@ for root, _, files in os.walk(sys.argv[1]):
         if handle_file_p(full):
             files_worklist.append(full)
 
-for i, full in enumerate(files_worklist):
+
+def replace_file(full, i, n):
+    global modified_files
     if args.vv:
         print(f'.. {i + 1}/{len(files_worklist)}: {full}')
 
@@ -81,8 +84,16 @@ for i, full in enumerate(files_worklist):
     except UnicodeDecodeError as e:
         print(f'Skipping file: {full} ({e})')
 
+
+with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+    futures = []
+    for i, full in enumerate(files_worklist):
+        futures.append(executor.submit(replace_file, full, i, len(files_worklist)))
+
+    for future in futures:
+        future.result()
+
 if args.vv:
     print()
-
 print(f'Visited files: {len(files_worklist)}')
 print(f'Modified files: {modified_files}')
