@@ -21,13 +21,17 @@ def handle_file_p(filename):
 
     return True
 
-FILES = ['insn-output.c', 'insn-recog.c', 'insn-emit.c', 'insn-extract.c', 'insn-peep.c',
-        'insn-attrtab.c', 'insn-dfatab.c', 'insn-latencytab.c', 'insn-opinit.c', 'insn-preds.c',
-        'insn-modes.c', 'insn-enums.c', 'insn-automata.c', '-checksum.c']
+
+FILES = [
+    'insn-output.c', 'insn-recog.c', 'insn-emit.c', 'insn-extract.c', 'insn-peep.c',
+    'insn-attrtab.c', 'insn-dfatab.c', 'insn-latencytab.c', 'insn-opinit.c', 'insn-preds.c',
+    'insn-modes.c', 'insn-enums.c', 'insn-automata.c', '-checksum.c']
+
 FILES += open('/tmp/files.txt').read().splitlines()
 FILES.remove('main.c')
 
 LOADED_FILES = [re.compile(fr'\b{re.escape(x)}\b') for x in FILES]
+
 
 def modify_line(line, index, lines, filename):
     for x in LOADED_FILES:
@@ -35,6 +39,8 @@ def modify_line(line, index, lines, filename):
             start = match.start()
             end = match.end()
             text = match.group()
+            if text == 'gcc.c' and '-torture' in line:
+                continue
             line = line[:start] + text + 'c' + line[end:]
 
     return line
