@@ -10,7 +10,7 @@ import os
 import re
 import sys
 
-EXTENSIONS = ('.h', '.c', '.cc', '.C', '.rst')
+EXTENSIONS = ('.h', '.c', '.cc', '.C', '.rst', '.texi', '.ac', '.in')
 
 
 def handle_file_p(filename):
@@ -84,7 +84,7 @@ def replace_file(full, i, n):
         if modified:
             with open(full, 'w') as w:
                 w.write(''.join(modified_lines))
-            if args.v:
+            if args.v or args.vv:
                 print(f'File modified: {full}')
             return True
     except UnicodeDecodeError as e:
