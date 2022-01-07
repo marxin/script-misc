@@ -28,46 +28,61 @@ def modify_line(line, index, lines, filename):
     #    name = m.group(1)
     #    line = line[:e + 1] + f' "{name}",' + line[e + 1:]
 
+    # Example replacement for filenames
+    # for x in FILES:
+    #    for match in reversed(list(re.finditer(x, line))):
+    #        start = match.start()
+    #        end = match.end()
+    #        text = match.group()
+    #        line = line[:start] + text + 'c' + line[end:]
+
     return line
 
 
 parser = argparse.ArgumentParser(description='Make a custom replacements '
                                              'for source files')
 parser.add_argument('directory', help='Root directory')
-parser.add_argument('-v', '--verbose', action='store_true',
+parser.add_argument('-v', action='store_true',
                     help='Verbose output')
+parser.add_argument('-vv', action='store_true',
+                    help='More verbose output')
 args = parser.parse_args()
 
-visited_files = 0
 modified_files = 0
+
+files_worklist = []
 
 for root, _, files in os.walk(sys.argv[1]):
     for file in files:
         full = os.path.join(root, file)
-        if not handle_file_p(full):
-            continue
+        if handle_file_p(full):
+            files_worklist.append(full)
 
-        visited_files += 1
+for i, full in enumerate(files_worklist):
+    if args.vv:
+        print(f'.. {i + 1}/{len(files_worklist)}: {full}')
 
-        modified = False
-        try:
-            modified_lines = []
-            with open(full) as f:
-                lines = f.readlines()
-                for index, line in enumerate(lines):
-                    modified_line = modify_line(line, index, lines, full)
-                    if line != modified_line:
-                        modified = True
-                    modified_lines.append(modified_line)
-            if modified:
-                with open(full, 'w') as w:
-                    w.write(''.join(modified_lines))
-                modified_files += 1
-                if args.verbose:
-                    print(f'File modified: {full}')
-        except UnicodeDecodeError as e:
-            print(f'Skipping file: {full} ({e})')
+    modified = False
+    try:
+        modified_lines = []
+        with open(full) as f:
+            lines = f.readlines()
+            for index, line in enumerate(lines):
+                modified_line = modify_line(line, index, lines, full)
+                if line != modified_line:
+                    modified = True
+                modified_lines.append(modified_line)
+        if modified:
+            with open(full, 'w') as w:
+                w.write(''.join(modified_lines))
+            modified_files += 1
+            if args.v:
+                print(f'File modified: {full}')
+    except UnicodeDecodeError as e:
+        print(f'Skipping file: {full} ({e})')
 
+if args.vv:
+    print()
 
-print(f'Visited files: {visited_files}')
+print(f'Visited files: {len(files_worklist)}')
 print(f'Modified files: {modified_files}')
