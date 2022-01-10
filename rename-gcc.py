@@ -14,7 +14,7 @@ EXTENSIONS = ('.h', '.c', '.cc', '.C', '.rst', '.texi', '.ac', '.in', '.gcc')
 
 
 def handle_file_p(filename):
-    if 'config' in filename and '/t-' in filename:
+    if 'config' in filename and ('/t-' in filename or '/x-' in filename):
         return True
     if 'testsuite' in filename:
         return False
@@ -29,7 +29,7 @@ FILES = [
     'insn-attrtab.c', 'insn-dfatab.c', 'insn-latencytab.c', 'insn-opinit.c', 'insn-preds.c',
     'insn-modes.c', 'insn-enums.c', 'insn-automata.c', '-checksum.c', 'gencondmd.c',
     'options.c', 'options-save.c', 'gtype-desc.c', 'tmp-opinit.c', 'tmp-attrtab.c', 'tmp-dfatab.c',
-    'tmp-latencytab.c']
+    'tmp-latencytab.c', 'dumpvers.c']
 
 FILES += open('/tmp/files.txt').read().splitlines()
 FILES.remove('main.c')
