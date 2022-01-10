@@ -52,7 +52,6 @@ print(f'Have {len(LOADED_FILES)} files.')
 
 
 def modify_line(line, index, lines, filename):
-    return line
     for needle, replacement in LOADED_FILES:
         if replacement == 'gcc.cc' and '-torture' in line:
             continue
