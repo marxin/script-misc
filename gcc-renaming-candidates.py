@@ -7,7 +7,7 @@ import sys
 OUTPUT = '/tmp/files.txt'
 candidates = []
 
-EXCLUDES = ('s-oscons-tmplt.c', 'raise-gcc.c', 'terminals.c', 'targext.c')
+EXCLUDES = ('s-oscons-tmplt.c', 'raise-gcc.c', 'terminals.c', 'targext.c', 'adaint.c')
 
 for root, _, files in os.walk(sys.argv[1]):
     for file in files:
