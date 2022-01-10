@@ -10,10 +10,17 @@ import os
 import re
 import sys
 
-EXTENSIONS = ('.h', '.c', '.cc', '.C', '.rst', '.texi', '.ac', '.in', '.gcc')
+INCLUDE = ('MAINTAINERS', 'contrib/filter-clang-warnings.py', 'contrib/gcc_update',
+           'contrib/header-tools/README', 'jit/notes.txt', 'gcc/po/EXCLUDES')
+EXTENSIONS = ('.h', '.c', '.cc', '.C', '.ads', '.rst', '.texi', '.ac', '.in',
+              '.gcc', '.def', '.awk', '.md')
 
 
 def handle_file_p(filename):
+    for include in INCLUDE:
+        if include in filename:
+            return True
+
     if 'config' in filename and ('/t-' in filename or '/x-' in filename):
         return True
     if 'testsuite' in filename:
