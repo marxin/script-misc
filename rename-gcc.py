@@ -10,16 +10,22 @@ import os
 import re
 import sys
 
-INCLUDE = ('MAINTAINERS', 'contrib/filter-clang-warnings.py', 'contrib/gcc_update',
-           'contrib/header-tools/README', 'jit/notes.txt', 'gcc/po/EXCLUDES')
+INCLUDES = ('MAINTAINERS', 'contrib/filter-clang-warnings.py', 'contrib/gcc_update',
+            'contrib/header-tools/README', 'jit/notes.txt', 'gcc/po/EXCLUDES')
+EXCLUDES = ('./lib', 'zlib', 'lto-plugin')
+
 EXTENSIONS = ('.h', '.c', '.cc', '.C', '.ads', '.rst', '.texi', '.ac', '.in',
               '.gcc', '.def', '.awk', '.md')
 
 
 def handle_file_p(filename):
-    for include in INCLUDE:
+    for include in INCLUDES:
         if include in filename:
             return True
+
+    for exclude in EXCLUDES:
+        if exclude in filename:
+            return False
 
     if 'config' in filename and ('/t-' in filename or '/x-' in filename):
         return True
@@ -46,6 +52,7 @@ print(f'Have {len(LOADED_FILES)} files.')
 
 
 def modify_line(line, index, lines, filename):
+    return line
     for needle, replacement in LOADED_FILES:
         if replacement == 'gcc.cc' and '-torture' in line:
             continue
