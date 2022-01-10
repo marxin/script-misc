@@ -29,9 +29,9 @@ for root, _, files in os.walk(sys.argv[1]):
 candidates = sorted(candidates)
 filenames = set()
 
-for candidate in candidates:
+for i, candidate in enumerate(candidates):
     filenames.add(candidate.split('/')[-1])
-    print(candidate)
+    print(f'{i + 1}/{len(candidates)}: {candidate}')
     if len(sys.argv) >= 3 and sys.argv[2] == '--rename':
         subprocess.check_output(f'git mv {candidate} {candidate}c', shell=True, encoding='utf8')
 
