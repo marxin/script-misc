@@ -14,6 +14,8 @@ EXTENSIONS = ('.h', '.c', '.cc', '.C', '.rst', '.texi', '.ac', '.in', '.gcc')
 
 
 def handle_file_p(filename):
+    if 'config' in filename and '/t-' in filename:
+        return True
     if 'testsuite' in filename:
         return False
     if all(not filename.endswith(ext) for ext in EXTENSIONS):
