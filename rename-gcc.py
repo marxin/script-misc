@@ -47,11 +47,17 @@ FILES = [
 FILES += open('/tmp/files.txt').read().splitlines()
 FILES.remove('main.c')
 
+for file in FILES:
+    assert file.endswith('.c')
+
 LOADED_FILES = [(re.compile(fr'\b{re.escape(x)}\b'), x + 'c') for x in FILES]
 print(f'Have {len(LOADED_FILES)} files.')
 
 
 def modify_line(line, index, lines, filename):
+    if '.c' not in line:
+        return line
+
     for needle, replacement in LOADED_FILES:
         if replacement == 'gcc.cc' and '-torture' in line:
             continue
