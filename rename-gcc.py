@@ -86,9 +86,9 @@ for root, _, files in os.walk(sys.argv[1]):
             files_worklist.append(full)
 
 
-def replace_file(full, filesize, i, n):
+def replace_file(full, i, n):
     if args.vv:
-        print(f'.. {i + 1}/{len(files_worklist)}: {full}: {filesize}')
+        print(f'.. {i + 1}/{len(files_worklist)}: {full}')
 
     modified = False
     try:
@@ -112,8 +112,8 @@ def replace_file(full, filesize, i, n):
 
 with concurrent.futures.ProcessPoolExecutor() as executor:
     futures = []
-    for i, full in enumerate(sorted(files_worklist, key=os.path.getsize, reverse=True)):
-        futures.append(executor.submit(replace_file, full, os.path.getsize(full), i, len(files_worklist)))
+    for i, full in enumerate(files_worklist):
+        futures.append(executor.submit(replace_file, full, i, len(files_worklist)))
 
     for future in futures:
         r = future.result()
