@@ -10,7 +10,7 @@ import os
 import re
 import sys
 
-EXTENSIONS = ('.h', '.c', '.cc', '.C', '.rst', '.texi', '.ac', '.in')
+EXTENSIONS = ('.h', '.c', '.cc', '.C', '.rst', '.texi', '.ac', '.in', '.gcc')
 
 
 def handle_file_p(filename):
