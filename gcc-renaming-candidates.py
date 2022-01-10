@@ -7,13 +7,16 @@ import sys
 OUTPUT = '/tmp/files.txt'
 candidates = []
 
+EXCLUDES = ('s-oscons-tmplt.c', 'raise-gcc.c', 'terminals.c', 'targext.c')
+
 for root, _, files in os.walk(sys.argv[1]):
     for file in files:
         full = os.path.join(root, file)
         add = True
 
-        if 's-oscons-tmplt.c' in full:
-            add = False
+        for exclude in EXCLUDES:
+            if exclude in full:
+                add = False
         for needle in ('testsuite', 'docs/examples/'):
             if needle in full:
                 add = False
