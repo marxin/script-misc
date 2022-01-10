@@ -29,7 +29,7 @@ FILES = [
     'insn-attrtab.c', 'insn-dfatab.c', 'insn-latencytab.c', 'insn-opinit.c', 'insn-preds.c',
     'insn-modes.c', 'insn-enums.c', 'insn-automata.c', '-checksum.c', 'gencondmd.c',
     'options.c', 'options-save.c', 'gtype-desc.c', 'tmp-opinit.c', 'tmp-attrtab.c', 'tmp-dfatab.c',
-    'tmp-latencytab.c', 'dumpvers.c']
+    'tmp-latencytab.c', 'dumpvers.c', 'gcc-ranlib.c', 'gcc-nm.c']
 
 FILES += open('/tmp/files.txt').read().splitlines()
 FILES.remove('main.c')

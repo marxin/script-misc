@@ -11,6 +11,9 @@ for root, _, files in os.walk(sys.argv[1]):
     for file in files:
         full = os.path.join(root, file)
         add = True
+
+        if 's-oscons-tmplt.c' in full:
+            add = False
         for needle in ('testsuite', 'docs/examples/'):
             if needle in full:
                 add = False
