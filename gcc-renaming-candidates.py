@@ -8,7 +8,7 @@ OUTPUT = '/tmp/files.txt'
 candidates = []
 
 EXCLUDES = ('s-oscons-tmplt.c', 'raise-gcc.c', 'terminals.c', 'targext.c', 'adaint.c',
-            'cal.c', 'errno.c', 'sysdep.c', 'ctrl_c.c')
+            'cal.c', 'errno.c', 'sysdep.c', 'ctrl_c.c', 'vms-ar.c', 'vms-ld.c')
 
 for root, _, files in os.walk(sys.argv[1]):
     for file in files:
