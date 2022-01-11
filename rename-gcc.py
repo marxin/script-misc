@@ -15,7 +15,7 @@ INCLUDES = ('MAINTAINERS', 'contrib/filter-clang-warnings.py', 'contrib/gcc_upda
 EXCLUDES = ('./lib', 'zlib', 'lto-plugin')
 
 EXTENSIONS = ('.h', '.c', '.cc', '.C', '.ads', '.rst', '.texi', '.ac', '.in',
-              '.gcc', '.def', '.awk', '.md')
+              '.gcc', '.def', '.awk', '.md', '.map', '.opt', '.pd')
 
 
 def handle_file_p(filename):
