@@ -24,7 +24,7 @@ def handle_file_p(filename):
             return True
 
     for exclude in EXCLUDES:
-        if exclude in filename:
+        if exclude in filename and 'libcpp' not in filename:
             return False
 
     if 'config' in filename and ('/t-' in filename or '/x-' in filename):
