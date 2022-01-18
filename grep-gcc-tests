@@ -21,17 +21,20 @@ xfail_count = 0
 fail_count = 0
 
 for file in logs:
-    lines = open(file[1]).read().splitlines()
-    for line in lines:
-        for kw in FAIL_KEYWORDS:
-            prefix = f'{kw}:'
-            if line.startswith(prefix) and not line.startswith('ERROR: Failed to mmap'):
-                print(colored(file[0], 'magenta') + ': ' + colored(prefix, 'red', attrs=['bold']) + line[len(prefix):])
-                fail_count += 1
-            elif line.startswith('PASS:'):
-                pass_count += 1
-            elif line.startswith('XFAIL:'):
-                xfail_count += 1
+    try:
+        lines = open(file[1]).read().splitlines()
+        for line in lines:
+            for kw in FAIL_KEYWORDS:
+                prefix = f'{kw}:'
+                if line.startswith(prefix) and not line.startswith('ERROR: Failed to mmap'):
+                    print(colored(file[0], 'magenta') + ': ' + colored(prefix, 'red', attrs=['bold']) + line[len(prefix):])
+                    fail_count += 1
+                elif line.startswith('PASS:'):
+                    pass_count += 1
+                elif line.startswith('XFAIL:'):
+                    xfail_count += 1
+    except UnicodeDecodeError as e:
+        print(f'Skipping {file[0]}: {e}')
 
 if not fail_count:
     print(colored('All is fine!', 'green', attrs=['bold']))
