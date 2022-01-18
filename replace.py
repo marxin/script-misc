@@ -9,7 +9,7 @@ import concurrent.futures
 import os
 import sys
 
-EXTENSIONS = ('.h', '.c', '.cc', '.C', '.rst')
+EXTENSIONS = ('.h', '.c', '.cc', '.C', '.rst', '.f90', '.f', '.f95')
 
 
 def handle_file_p(filename):
