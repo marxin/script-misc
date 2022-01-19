@@ -8,7 +8,7 @@ except ModuleNotFoundError:
     def colored(text, color, **kwargs):
         return text
 
-FAIL_KEYWORDS = ('FAIL', 'XPASS', 'ERROR', 'UNRESOLVED')
+FAIL_KEYWORDS = ('FAIL', 'XPASS', 'ERROR', 'UNRESOLVED', 'UNSUPPORTED')
 logs = []
 
 for root, _, files in os.walk('gcc/testsuite'):
