@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import sys
 
 try:
     from termcolor import colored
@@ -8,7 +9,10 @@ except ModuleNotFoundError:
     def colored(text, color, **kwargs):
         return text
 
-FAIL_KEYWORDS = ('FAIL', 'XPASS', 'ERROR', 'UNRESOLVED', 'UNSUPPORTED')
+FAIL_KEYWORDS = ['FAIL', 'XPASS', 'ERROR', 'UNRESOLVED']
+if '--all' in sys.argv[1:]:
+    FAIL_KEYWORDS.append('UNSUPPORTED')
+
 logs = []
 
 for root, _, files in os.walk('gcc/testsuite'):
