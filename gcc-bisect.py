@@ -204,9 +204,9 @@ class GitRevision:
         return self.commit.hexsha + '.patch'
 
     def run(self, describe):
-        start = datetime.now()
         with lock:
             self.decompress()
+            start = datetime.now()
 
             my_env = os.environ.copy()
             my_env['PATH'] = (os.path.join(self.get_install_path(), 'bin')
