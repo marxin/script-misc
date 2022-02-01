@@ -240,7 +240,7 @@ class GitRevision:
 
                 text = colored('OK', 'green') if success else colored('FAILED', 'red') + ' (%d)' % returncode
                 seconds = (datetime.now() - start).total_seconds()
-                flush_print('  %s: [took: %3.3fs] result: %s' % (self.description(describe), seconds, text))
+                flush_print('  %s: [took: %3.2f s] result: %s' % (self.description(describe), seconds, text))
                 if not args.silent:
                     flush_print(stdout, end='')
 
