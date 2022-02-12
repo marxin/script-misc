@@ -105,8 +105,6 @@ mt-elf
 nds32be-elf
 nds32le-linux
 nios2-linux
-ns32k-netbsd
-ns32k-pc532-mach
 or1k-elf
 or1k-linux
 pdp11-dec-aout
