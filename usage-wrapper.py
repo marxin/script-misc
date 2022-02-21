@@ -62,7 +62,7 @@ special_processes = {'ld': 'gold',
                      'rust': 'brown',
                      'go': 'hotpink',
                      'dwz': 'limegreen',
-                     'rpm/dpkg': 'plum'}
+                     'rpm/rpm2cpio/dpkg': 'plum'}
 for i, k in enumerate(special_processes.keys()):
     process_name_map[k] = i
 
@@ -129,7 +129,7 @@ def get_process_name(proc):
         return 'rust'
     elif name in ('as', 'dwz', 'go'):
         return name
-    elif name == 'rpmbuild' or name.startswith('dpkg'):
+    elif name in ('rpmbuild', 'rpm2cpio') or name.startswith('dpkg'):
         return 'rpm/dpkg'
     elif '-fltrans' in cmdline:
         if args.separate_ltrans:
