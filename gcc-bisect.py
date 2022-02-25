@@ -76,6 +76,7 @@ parser.add_argument('--success-exit-code', type=int, default=0,
                     help='Success exit code')
 parser.add_argument('-u', '--unpack', help='Only unpack the revision and exit')
 parser.add_argument('-t', '--timeout', type=float, help='Time out command')
+parser.add_argument('--soft-timeout', type=float, help='Time out command (after it finishes)')
 
 args = parser.parse_args()
 
@@ -235,11 +236,14 @@ class GitRevision:
                                 'Please submit a full bug report', 'lto-wrapper: fatal error']
                     success = any(map(lambda m: m in stdout, messages))
 
+                seconds = (datetime.now() - start).total_seconds()
+                if args.soft_timeout and success:
+                    success = seconds <= args.soft_timeout
+
                 if args.negate:
                     success = not success
 
                 text = colored('OK', 'green') if success else colored('FAILED', 'red') + ' (%d)' % returncode
-                seconds = (datetime.now() - start).total_seconds()
                 flush_print('  %s: [took: %3.2f s] result: %s' % (self.description(describe), seconds, text))
                 if not args.silent:
                     flush_print(stdout, end='')
