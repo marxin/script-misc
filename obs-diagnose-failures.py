@@ -25,6 +25,7 @@ categories = [
         ('segfault', ['Segmentation fault', 'internal compiler error', 'Killed signal', 'lto1: fatal error']),
         ('multiple definition', ['multiple definition of']),
         ('Werror', ['[-Werror=']),
+        ('FORTIFY_SOURCE', ['buffer overflow detected']),
         ('error', ['error:']),
         ('test-failure', ['test-suite.log] Error', 'test] Error', 'The following tests FAILED']),
         ('broken-build-system', ['No buildstatus set, either the base system is broken'])]
