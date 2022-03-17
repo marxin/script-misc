@@ -163,11 +163,14 @@ def run_cmd(command, strict=False):
         return (True, None)
     else:
         flush_print('Command failed with return code %d' % r.returncode)
-        lines = r.stderr.decode('utf-8').split('\n')
-        error = ';'.join([x for x in lines if 'error: ' in x]).strip()
-        if error != '':
-            flush_print(error)
-        assert not strict
+        try:
+            lines = r.stderr.decode('utf-8').split('\n')
+            error = ';'.join([x for x in lines if 'error: ' in x]).strip()
+            if error != '':
+                flush_print(error)
+            assert not strict
+        except UnicodeDecodeError as e:
+            return (False, str(e))
         return (False, error)
 
 
