@@ -22,7 +22,7 @@ def clean_temp():
 
 
 def build_compiler(revision):
-    print(f'Building {revision}')
+    print(f'Building {revision}', flush=True)
     repo.git.checkout(revision)
     clean_temp()
     os.mkdir(objdir)
