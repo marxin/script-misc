@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import fileinput
 
@@ -9,4 +9,4 @@ for line in fileinput.input():
     e = line.find(']')
     cmd = line[s:e]
     cmd = cmd.replace('"', '').replace(',', '')
-    print(cmd)
+    print(cmd, flush=True)
