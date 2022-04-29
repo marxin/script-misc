@@ -35,7 +35,10 @@ def build_compiler(revision):
 
 for branch in reversed(branches):
     tip = f'origin/releases/gcc-{branch}'
-    changes = repo.blame(f'basepoints/gcc-{branch}..{tip}', 'gcc/lto-streamer.h')
+    basepoint = f'basepoints/gcc-{branch}'
+    basepoint_next = f'basepoints/gcc-{branch + 1}'
+    interval = f'{basepoint}..{tip}'
+    changes = repo.blame(interval, 'gcc/lto-streamer.h')
     last_bump = None
     for change in changes:
         for line in change[1]:
@@ -43,6 +46,9 @@ for branch in reversed(branches):
                 commit = change[0]
                 if not last_bump or commit.committed_datetime > last_bump.committed_datetime:
                     last_bump = commit
+    basepoint = repo.commit(basepoint_next)
+    if basepoint.committed_datetime > last_bump.committed_datetime:
+        last_bump = basepoint
     print(f'gcc-{branch} last time bumped in {last_bump}', flush=True)
     build_compiler(tip)
     subprocess.check_output(f'./gcc/xg++ -Bgcc -O2 -c -flto=16 {source} -o {obj}', shell=True)
