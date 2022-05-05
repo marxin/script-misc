@@ -499,6 +499,8 @@ class OptimizationLevel:
             skipped_options.add('-mrop-protect')
         elif args.target == 'aarch64':
             skipped_options.add('-mabi')
+            skipped_options.add('-ftrivial-auto-var-init')
+
 
         if args.target != 'x86_64':
             skipped_options.add('-freorder-blocks-and-partition')
