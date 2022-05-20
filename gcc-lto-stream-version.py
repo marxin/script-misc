@@ -10,7 +10,7 @@ from git import Repo
 
 git = Path(sys.argv[1]).resolve()
 repo = Repo(git)
-branches = [9, 10, 11, 12]
+branches = [10, 11, 12]
 objdir = '/dev/shm/myobjdir'
 source = '/home/marxin/Programming/tramp3d/tramp3d-v4.ii'
 obj = '/tmp/tramp.o'
