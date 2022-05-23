@@ -8,7 +8,11 @@ import subprocess
 import sys
 from itertools import dropwhile, takewhile
 
-IGNORED_TARGETS = ('cr16-elfOPT-enable-obsolete', 'amdgcn-amdhsa')
+IGNORED_TARGETS = ('cr16-elfOPT-enable-obsolete',
+                   'amdgcn-amdhsa',
+                   'tilegxbe-linux-gnuOPT-enable-obsolete',
+                   'tilepro-linux-gnuOPT-enable-obsolete',
+                   'tilegx-linux-gnuOPT-enable-obsolete')
 
 
 def parse_default_targets(gcc_root):
