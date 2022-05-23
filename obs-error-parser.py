@@ -23,6 +23,8 @@ parser.add_argument('archs', nargs = '+', help = 'Architectures')
 parser.add_argument('-a', '--all', action = 'store_true', help = 'Get all, not only failing')
 parser.add_argument('-t', '--threads', type=int, help = 'Limit threads to N')
 parser.add_argument('-p', '--progress', action='store_true', help = 'Show progress')
+parser.add_argument('-s', '--staging', action='store_true', help = 'Filter out only Staging packages')
+
 args = parser.parse_args()
 
 if not args.threads:
@@ -38,6 +40,12 @@ def download_build_log(package, log_file):
     with open(log_file, 'w+') as w:
         w.write(result)
 
+
+def get_staging_packages():
+    packages = subprocess.check_output('osc ls openSUSE:Factory:Staging:A --expand', shell=True, encoding='utf8')
+    return set(packages.splitlines())
+
+
 def process_arch(arch):
     create_dir(os.path.join(args.folder, args.repository))
     arch_dir = os.path.join(args.folder, args.repository, arch)
@@ -48,6 +56,11 @@ def process_arch(arch):
     packages = [x for x in packages if x != '_']
 
     print('Packages: %d' % len(packages))
+
+    if args.staging:
+        staging_packages = get_staging_packages()
+        packages = [p for p in packages if p in staging_packages]
+        print(f'Filtered packages: {len(packages)} (Staging contains {len(staging_packages)})')
 
     create_dir(arch_dir)
     with concurrent.futures.ProcessPoolExecutor(max_workers=args.threads) as executor:
