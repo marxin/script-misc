@@ -522,7 +522,7 @@ class OptimizationLevel:
 
     def test(self, option_count):
         options = [random.choice(self.options) for option in range(option_count)]
-        source_file = random.sample(source_files, 1)[0]
+        source_file = random.sample(list(source_files), 1)[0]
         compiler = get_compiler_by_extension(source_file)
         options = [o.select_nondefault() for o in options]
 
