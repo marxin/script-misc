@@ -52,7 +52,7 @@ done = False
 start_ts = time.monotonic()
 cpu_count = psutil.cpu_count()
 
-special_processes = {'ld': 'gold',
+special_processes = {'linker': 'gold',
                      'WPA': 'deepskyblue',
                      'WPA-stream': 'lightblue',
                      'ltrans': 'forestgreen',
@@ -115,8 +115,8 @@ cpu_scale = cpu_count / args.used_cpus
 def get_process_name(proc):
     name = proc.name()
     cmdline = proc.cmdline()
-    if name == 'ld' or name == 'ld.gold':
-        return 'ld'
+    if name in ('ld', 'ld.gold', 'ld.lld', 'mold'):
+        return 'linker'
     elif name == 'lto1-wpa':
         return 'WPA'
     elif name == 'lto1-wpa-stream':
