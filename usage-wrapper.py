@@ -97,6 +97,9 @@ parser.add_argument('-j', '--jobs', type=int,
                     default=cpu_count, dest='used_cpus',
                     help='Scale up CPU data to used CPUs '
                     'instead of available CPUs')
+parser.add_argument('--y-scale', type=int,
+                    help='Minimal y-scale (in GB)')
+
 args = parser.parse_args()
 
 if args.command1 and args.command:
@@ -304,6 +307,10 @@ def generate_graph(time_range):
         limit *= 2
     if limit > 2 and limit * 0.75 >= peak_memory:
         limit = int(limit * 0.75)
+
+    if args.y_scale and limit < args.y_scale:
+        limit = args.y_scale
+
     mem_subplot.set_ylim([0, 1.1 * limit])
     mem_subplot.set_yticks(range(0, limit + 1, math.ceil(limit / 8)))
     mem_subplot.grid(True)
