@@ -398,4 +398,6 @@ finally:
     if cp:
         rv = cp.returncode
 
+if rv != 0:
+    print(f'\nWARNING: non-zero return code returned: {rv}')
 sys.exit(rv)
