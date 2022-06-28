@@ -17,6 +17,7 @@ git fetch || exit 1
 git rev-parse $toplevel || exit 1
 rev=`git rev-parse $toplevel`
 
+# NOTE: git repository must point to HEAD, otherwise HEAD^ will not work!!!
 # use gcc-BASE-VER+r<number of commits on the branch>
 # ??? does rev-list as follows works when taring up HEAD?  Maybe somehow
 # use commits since stage1 start instead
