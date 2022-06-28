@@ -473,8 +473,8 @@ class GitRepository:
             branch_commit = repo.commit(b.name)
             if name and int(name) >= oldest_active_branch:
                 self.branches.append(Branch(name, branch_commit))
-                base = repo.merge_base(head, branch_commit)[0]
-                self.branch_bases.append(Release(name + '-base', base))
+            base = repo.merge_base(head, branch_commit)[0]
+            self.branch_bases.append(Release(name + '-base', base))
         self.branches.append(Branch(self.get_master_branch(), head))
 
     def parse_latest_revisions(self):
