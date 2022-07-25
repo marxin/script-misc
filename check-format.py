@@ -20,5 +20,6 @@ else:
 subprocess.run('git diff -U0 --no-color %s | clang-format-diff -p1 %s | colordiff'
                % (args.revision, '-i' if args.inplace else ''), shell=True, encoding='utf8')
 
+print()
 print('check_GNU_style.py:')
 subprocess.run('%s/check_GNU_style.py %s' % (contrib, tmp), shell=True, encoding='utf8')
