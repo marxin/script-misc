@@ -1,0 +1,3 @@
+#!/bin/bash
+
+ssh -f mliska@cocker.arch.suse.de "screen -dm gcc_testsuite_runner.py -f /home/marxin/Programming/gcc -x -l c,c++,lto,fortran -t /dev/shm/mliska/gcc -j64 -r $@"
