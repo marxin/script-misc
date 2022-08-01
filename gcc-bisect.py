@@ -236,7 +236,8 @@ class GitRevision:
                     success = input('Retcode: ') == '0'
                 elif args.ice:
                     messages = ['internal compiler error', 'Fatal Error', 'Internal compiler error',
-                                'Please submit a full bug report', 'lto-wrapper: fatal error']
+                                'Please submit a full bug report', 'lto-wrapper: fatal error',
+                                'Internal Error at ']
                     success = any(map(lambda m: m in stdout, messages))
 
                 seconds = (datetime.now() - start).total_seconds()
