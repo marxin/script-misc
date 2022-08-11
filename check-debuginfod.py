@@ -32,8 +32,7 @@ def get_debuginfo(binary, buildid):
     url = f'https://debuginfod.opensuse.org/buildid/{buildid}/debuginfo'
     response = requests.get(url)
     if response.status_code != 200:
-        r = subprocess.run(f'wget {url} -O /dev/null -q', shell=True, encoding='utf8')
-        print(binary, url, r.returncode)
+        print('\n', binary, url, r.returncode, '\n')
     print('.', end='', flush=True)
     return (binary, response)
 
