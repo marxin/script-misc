@@ -1,8 +1,10 @@
 #!/usr/bin/env python3
 
+import argparse
 import concurrent.futures
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import requests
@@ -10,6 +12,10 @@ import requests
 CHUNK = 200
 THRESHOLD = 90
 SIZE_THRESHOLD = 10 * 1024 * 1024
+
+parser = argparse.ArgumentParser(description='Check debuginfod based on system binaries')
+parser.add_argument('--verbose', '-v', action='store_true', help='Verbose')
+args = parser.parse_args()
 
 
 def get_buildid(binary):
@@ -28,13 +34,13 @@ def get_buildid(binary):
     return (binary, buildid)
 
 
-def get_debuginfo(binary, buildid):
+def get_debuginfo(binary, buildid, verbose):
     url = f'https://debuginfod.opensuse.org/buildid/{buildid}/debuginfo'
-    response = requests.get(url)
+    start = time.monotonic()
+    response = requests.get(url, stream=True)
     if response.status_code != 200:
-        print('\n', binary, url, r.returncode, '\n')
-    print('.', end='', flush=True)
-    return (binary, response)
+        print(binary, url, response.status_code)
+    return (binary, response, len(response.content), time.monotonic() - start)
 
 
 def is_small(item):
@@ -58,26 +64,30 @@ with concurrent.futures.ProcessPoolExecutor() as executor:
             buildids[r[0]] = r[1]
 
 print(f'Out of {len(files)} found {len(buildids)} with a Build ID')
-print(f'Checking {CHUNK} packages:')
 
 failures = 0
+total_size = 0
 
 with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
     futures = []
     files = sorted(filter(is_small, buildids.items()))
-    files = files[len(files) // 2:]
-    files = files[:CHUNK]
+    fraction = len(files) // CHUNK
+    files = files[::fraction]
+    print(f'Checking {len(files)} packages:')
     for file, buildid in files:
-        futures.append(executor.submit(get_debuginfo, file, buildid))
+        futures.append(executor.submit(get_debuginfo, file, buildid, args.verbose))
     concurrent.futures.wait(futures)
     print()
 
     for future in futures:
-        binary, response = future.result()
+        binary, response, size, duration = future.result()
         if response.status_code != 200:
             failures += 1
             print('WARNING:', binary, buildids[binary], response.status_code)
+        else:
+            total_size += size
 
 success_rate = 100.0 * (CHUNK - failures) / CHUNK
+print(f'Transfered {total_size // (1024 ** 2)} MB')
 print(f'Success rate: {success_rate:.2f}%, threshold: {THRESHOLD} %')
 sys.exit(1 if success_rate < THRESHOLD else 0)
