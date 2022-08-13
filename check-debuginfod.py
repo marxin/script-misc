@@ -44,7 +44,7 @@ def get_debuginfo(binary, buildid, verbose):
     duration = time.monotonic() - start
     size = len(response.content)
     if duration > TIME_THRESHOLD:
-        print(f'WARNING: long request for {binary} taken {duration:.1f} s of size {size} B')
+        print(f'WARNING: long request for {binary} taken {duration:.1f} s of size {size}B')
     return (binary, response, size, duration)
 
 
