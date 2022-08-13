@@ -9,12 +9,12 @@ from pathlib import Path
 
 import requests
 
-CHUNK = 200
 THRESHOLD = 90
 SIZE_THRESHOLD = 10 * 1024 * 1024
 
 parser = argparse.ArgumentParser(description='Check debuginfod based on system binaries')
 parser.add_argument('--verbose', '-v', action='store_true', help='Verbose')
+parser.add_argument('-n', type=int, default=100, help='Number of checked packages')
 args = parser.parse_args()
 
 
@@ -71,7 +71,7 @@ total_size = 0
 with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
     futures = []
     files = sorted(filter(is_small, buildids.items()))
-    fraction = len(files) // CHUNK
+    fraction = len(files) // args.n
     files = files[::fraction]
     print(f'Checking {len(files)} packages:')
     for file, buildid in files:
@@ -87,7 +87,7 @@ with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
         else:
             total_size += size
 
-success_rate = 100.0 * (CHUNK - failures) / CHUNK
-print(f'Transfered {total_size // (1024 ** 2)} MB')
-print(f'Success rate: {success_rate:.2f}%, threshold: {THRESHOLD} %')
-sys.exit(1 if success_rate < THRESHOLD else 0)
+    success_rate = 100.0 * (len(files) - failures) / len(files)
+    print(f'Transfered {total_size // (1024 ** 2)} MB')
+    print(f'Success rate: {success_rate:.2f}%, threshold: {THRESHOLD} %')
+    sys.exit(1 if success_rate < THRESHOLD else 0)
