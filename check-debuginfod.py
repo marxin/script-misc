@@ -11,6 +11,7 @@ import requests
 
 THRESHOLD = 90
 SIZE_THRESHOLD = 10 * 1024 * 1024
+TIME_THRESHOLD = 30
 
 parser = argparse.ArgumentParser(description='Check debuginfod based on system binaries')
 parser.add_argument('--verbose', '-v', action='store_true', help='Verbose')
@@ -40,19 +41,21 @@ def get_debuginfo(binary, buildid, verbose):
     response = requests.get(url, stream=True)
     if response.status_code != 200:
         print(binary, url, response.status_code)
-    return (binary, response, len(response.content), time.monotonic() - start)
+    duration = time.monotonic() - start
+    size = len(response.content)
+    if duration > TIME_THRESHOLD:
+        print(f'WARNING: long request for {binary} taken {duration:.1f} s of size {size} B')
+    return (binary, response, size, duration)
 
 
 def is_small(item):
     return Path(item[0]).stat().st_size <= SIZE_THRESHOLD
 
 
-folder = Path('/usr/bin')
-
-print(f'Analyzing {folder} file types')
+print('Analyzing file types')
 buildids = {}
 
-files = list(folder.iterdir())
+files = list(Path('/usr/bin').iterdir()) + list(Path('/usr/lib64').iterdir())
 with concurrent.futures.ProcessPoolExecutor() as executor:
     futures = []
     for file in files:
