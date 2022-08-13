@@ -2,6 +2,7 @@
 
 import argparse
 import concurrent.futures
+import random
 import subprocess
 import sys
 import time
@@ -67,6 +68,9 @@ with concurrent.futures.ProcessPoolExecutor() as executor:
             buildids[r[0]] = r[1]
 
 print(f'Out of {len(files)} found {len(buildids)} with a Build ID')
+seed = int(time.monotonic())
+random.seed(seed)
+print(f'Using random seed {seed}')
 
 failures = 0
 total_size = 0
@@ -74,8 +78,7 @@ total_size = 0
 with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
     futures = []
     files = sorted(filter(is_small, buildids.items()))
-    fraction = len(files) // args.n
-    files = files[::fraction]
+    files = random.sample(files, args.n)
     print(f'Checking {len(files)} packages:')
     for file, buildid in files:
         futures.append(executor.submit(get_debuginfo, file, buildid, args.verbose))
