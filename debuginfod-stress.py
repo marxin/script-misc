@@ -14,6 +14,7 @@ def get_debuginfo(binary, buildid, verbose):
 
     for i in range(ATTEMPTS):
         response = requests.get(url)
+        # print(response.headers)
         if response.status_code != 200 or i != 0:
             print(f'Attemp #{i}', binary, buildid, response)
             time.sleep(1)
