@@ -70,6 +70,7 @@ parser.add_argument('-o', '--old', action='store_true',
 parser.add_argument('-v', '--verbose', action='store_true',
                     help='Verbose output')
 parser.add_argument('--build', action='store_true', help='Build revisions')
+parser.add_argument('--gc', action='store_true', help='GC unused revisions')
 parser.add_argument('--print', action='store_true',
                     help='Print built revisions')
 parser.add_argument('--success-exit-code', type=int, default=0,
@@ -105,11 +106,7 @@ build_times = []
 
 
 def single_or_default(fn, items):
-    r = list(filter(fn, items))
-    if len(r) == 1:
-        return r[0]
-    else:
-        raise Exception('Single cannot be called for an empty sequence')
+    return next(filter(fn, items), None)
 
 
 def revisions_in_range(source, target):
@@ -617,6 +614,20 @@ class GitRepository:
                 assert middle == r2
                 self.bisect_recursive(candidates[:index+1], r1, middle)
 
+    def gc(self):
+        candidates = {r.commit.hexsha for r in self.latest + self.branches + self.releases}
+        folders = {folder.split('.')[0] for folder in os.listdir(binaries_location)}
+        todelete = folders - candidates
+        print(f'Builds found: {len(candidates)}, can be removed: {len(todelete)}')
+        if not todelete:
+            return
+        answer = input('Do you want to remove it (yes/no)?')
+        if answer == 'yes':
+            for file in todelete:
+                path = Path(binaries_location, file + '.tar.zst')
+                print(f'Removing {path}')
+                path.unlink()
+
 
 # MAIN
 g = GitRepository()
@@ -633,6 +644,8 @@ elif args.unpack:
     except Exception as e:
         print(f'Cannot find revision: {e}')
         exit(1)
+elif args.gc:
+    g.gc()
 else:
     if not args.command:
         print('Missing command for bisection!')
