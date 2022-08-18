@@ -628,9 +628,16 @@ class GitRepository:
                 print(f'Removing {path}')
                 path.unlink()
 
+    def check_disk_usage(self):
+        total, used, _ = shutil.disk_usage(binaries_location)
+        usage = 100 * used / total
+        if usage > 95:
+            print(colored(f'WARNING: binary folder usage is {usage:.2f}% !!!\n', 'red'))
+
 
 # MAIN
 g = GitRepository()
+g.check_disk_usage()
 if args.print:
     g.print_repo()
 elif args.build:
