@@ -340,6 +340,7 @@ def generate_graph(time_range):
         # generate custom legend
         colors = special_processes.values()
         custom_lines = [Line2D([0], [0], color=x, lw=5) for x in colors]
+        custom_lines.insert(0, Line2D([0], [0], color='cyan', lw=LW))
         custom_lines.insert(0, Line2D([0], [0], color='b', lw=LW))
         custom_lines.insert(0, Line2D([0], [0], color='r', alpha=0.5,
                                       linestyle='dotted', lw=LW))
