@@ -32,6 +32,7 @@ global_n = 0
 global_cpu_data_sum = 0
 global_memory_data_sum = 0
 global_cpu_data_max = 0
+global_load_data_max = 0
 global_memory_data_min = to_gigabyte(psutil.virtual_memory().total)
 global_memory_data_max = 0
 global_swap_data_min = to_gigabyte(psutil.swap_memory().total)
@@ -41,6 +42,7 @@ global_disk_data_start = to_gigabyte(psutil.disk_usage('.').used)
 
 global_timestamps = []
 global_cpu_data = []
+global_load_data = []
 global_memory_data = []
 global_process_usage = []
 global_process_hogs = {}
@@ -154,7 +156,7 @@ def record_process_memory_hog(proc, memory, timestamp):
 
 
 def record():
-    global global_n, global_cpu_data_sum, global_cpu_data_max
+    global global_n, global_cpu_data_sum, global_cpu_data_max, global_load_data_max
     global global_memory_data_sum, global_memory_data_min
     global global_memory_data_max
     global global_swap_data_min, global_swap_data_max
@@ -163,17 +165,20 @@ def record():
     while not done:
         timestamp = time.monotonic() - start_ts
         used_cpu = psutil.cpu_percent(interval=args.frequency) * cpu_scale
+        used_load = 100 * psutil.getloadavg()[0] / cpu_count
         used_memory = to_gigabyte(psutil.virtual_memory().used)
         used_swap = to_gigabyte(psutil.swap_memory().used)
         if not args.summary_only:
             global_timestamps.append(timestamp)
             global_memory_data.append(used_memory)
             global_cpu_data.append(used_cpu)
+            global_load_data.append(used_load)
 
         global_n += 1
         global_cpu_data_sum += used_cpu
         global_memory_data_sum += used_memory
         global_cpu_data_max = max(global_cpu_data_max, used_cpu)
+        global_load_data_max = max(global_load_data_max, used_load)
         global_memory_data_min = min(global_memory_data_min, used_memory)
         global_memory_data_max = max(global_memory_data_max, used_memory)
         global_swap_data_min = min(global_swap_data_min, used_swap)
@@ -249,7 +254,8 @@ def get_footnote2():
     disk_start = global_disk_data_start
     disk_end = to_gigabyte(psutil.disk_usage('.').used)
     disk_delta = disk_end - disk_start
-    return (f'swap peak/total: {peak_swap:.1f}/{total_swap:.1f} GB;'
+    load_max = global_load_data_max
+    return (f'load max (1m): {load_max:.0f}%; swap peak/total: {peak_swap:.1f}/{total_swap:.1f} GB;'
             f' disk start/end/total: {disk_start:.1f}/{disk_end:.1f}/{disk_total:.1f} GB;'
             f' disk delta: {disk_delta:.1f} GB')
 
@@ -257,6 +263,7 @@ def get_footnote2():
 def generate_graph(time_range):
     timestamps = []
     cpu_data = []
+    load_data = []
     memory_data = []
     process_usage = []
 
@@ -265,6 +272,7 @@ def generate_graph(time_range):
         if not time_range or time_range[0] <= ts and ts <= time_range[1]:
             timestamps.append(ts)
             cpu_data.append(global_cpu_data[i])
+            load_data.append(global_load_data[i])
             memory_data.append(global_memory_data[i])
             process_usage.append(global_process_usage[i])
 
@@ -283,13 +291,14 @@ def generate_graph(time_range):
     fig.set_figheight(5)
     fig.set_figwidth(10)
     # scale cpu axis
-    local_peak_cpu = max(cpu_data)
+    local_peak_cpu = max(cpu_data + load_data)
     cpu_ylimit = (local_peak_cpu // 10) * 11 + 5
-    if cpu_ylimit > 200:
-        cpu_ylimit = 200
+    if cpu_ylimit > 300:
+        cpu_ylimit = 300
     cpu_subplot.set_title('CPU usage')
     cpu_subplot.set_ylabel('%')
     cpu_subplot.plot(timestamps, cpu_data, c='blue', lw=LW, label='total')
+    cpu_subplot.plot(timestamps, load_data, c='cyan', lw=LW, label='load')
     cpu_subplot.set_ylim([0, cpu_ylimit])
     cpu_subplot.axhline(color='r', alpha=0.5, y=100.0 / args.used_cpus, lw=LW,
                         linestyle='dotted', label='single core')
@@ -334,7 +343,7 @@ def generate_graph(time_range):
         custom_lines.insert(0, Line2D([0], [0], color='b', lw=LW))
         custom_lines.insert(0, Line2D([0], [0], color='r', alpha=0.5,
                                       linestyle='dotted', lw=LW))
-        names = ['single core', 'total'] + list(special_processes.keys())
+        names = ['single core', 'total', 'load'] + list(special_processes.keys())
         fig.legend(custom_lines, names, loc='right', prop={'size': 6})
 
     filename = args.output
