@@ -36,6 +36,8 @@ parser.add_argument('-t', '--targets', help='Targets to be built (comma separate
 parser.add_argument('-p', '--preserve', action='store_true', help='Preserve built binaries')
 args = parser.parse_args()
 
+args.repository = os.path.abspath(args.repository)
+
 targets = list(parse_default_targets(args.repository))
 if args.targets:
     targets = args.targets.split(',')
