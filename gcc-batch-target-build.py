@@ -8,7 +8,7 @@ import subprocess
 import sys
 from itertools import dropwhile, takewhile
 
-IGNORED_TARGETS = ('amdgcn-amdhsa')
+IGNORED_TARGETS = ()
 
 
 def parse_default_targets(gcc_root):
