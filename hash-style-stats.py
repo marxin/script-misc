@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
-from pathlib import Path
-
 import subprocess
+from pathlib import Path
 
 
 def parse_readelf(file, stdout):

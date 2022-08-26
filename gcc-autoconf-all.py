@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import os
-from pathlib import Path
 import subprocess
+from pathlib import Path
 
 ENV = 'AUTOCONF=autoconf-2.69 ACLOCAL=~/bin/automake-1.15.1/bin/aclocal  AUTOMAKE=~/bin/automake-1.15.1/bin/automake'
 

@@ -33,14 +33,14 @@ while lines:
 assert not filenames
 
 shutil.rmtree(OUTPUT)
-for filename, data in data.items():
+for filename, content in data.items():
     path = Path(OUTPUT, filename)
     parent = path.parent
     if not parent.exists():
         parent.mkdir(parents=True)
 
     with tempfile.NamedTemporaryFile('w', delete=False) as fp:
-        fp.write(data)
+        fp.write(content)
         fp.close()
         subprocess.check_output(f'xxd -r {fp.name} > {path}', shell=True)
         os.unlink(fp.name)

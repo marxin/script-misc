@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
 import argparse
-import subprocess
 import os
+import subprocess
 import tempfile
 
 parser = argparse.ArgumentParser(description='Simple jobserver using FIFO')

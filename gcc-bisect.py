@@ -183,7 +183,7 @@ class GitRevision:
         return self.commit.hexsha + ':' + self.timestamp_str()
 
     def short_hexsha(self):
-        return self.commit.hexsha[0:16]
+        return self.commit.hexsha[0:160]
 
     def get_full_hash(self):
         cmd = 'git gcc-descr --full %s' % self.commit.hexsha
