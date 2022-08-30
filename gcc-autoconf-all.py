@@ -21,5 +21,6 @@ for folder in sorted(config_folders):
         subprocess.check_output(f'{ENV} autoheader-2.69 -f', shell=True, encoding='utf8')
     # apparently automake is somehow unstable
     # if any(map(lambda line: line.startswith('AM_INIT_AUTOMAKE'), configure_lines)):
-    #     subprocess.check_output(f'{ENV} /home/marxin/bin/automake-1.15.1/bin/automake -f', shell=True, encoding='utf8')
+    #     subprocess.check_output(f'{ENV} /home/marxin/bin/automake-1.15.1/bin/automake -f',
+    #     shell=True, encoding='utf8')
     subprocess.check_output(f'{ENV} autoconf-2.69 -f', shell=True, encoding='utf8')
