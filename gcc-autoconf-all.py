@@ -13,8 +13,8 @@ for root, _, files in os.walk('.'):
         if file == 'configure':
             config_folders.append(Path(root).resolve())
 
-for folder in config_folders:
-    print(folder)
+for folder in sorted(config_folders):
+    print(folder, flush=True)
     os.chdir(folder)
     configure_lines = open('configure.ac').read().splitlines()
     if any(map(lambda line: line.startswith('AC_CONFIG_HEADERS'), configure_lines)):
