@@ -16,6 +16,9 @@ for root, _, files in os.walk('.'):
 for folder in config_folders:
     print(folder)
     os.chdir(folder)
-    if 'AC_CONFIG_HEADERS' in open('configure.ac').read():
+    configure_lines = open('configure.ac').read().splitlines()
+    if any(map(lambda line: line.startswith('AC_CONFIG_HEADERS'), configure_lines)):
         subprocess.check_output(f'{ENV} autoheader-2.69 -f', shell=True, encoding='utf8')
+    if any(map(lambda line: line.startswith('AM_INIT_AUTOMAKE'), configure_lines)):
+        subprocess.check_output(f'{ENV} /home/marxin/bin/automake-1.15.1/bin/automake -f', shell=True, encoding='utf8')
     subprocess.check_output(f'{ENV} autoconf-2.69 -f', shell=True, encoding='utf8')
