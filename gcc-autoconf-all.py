@@ -19,8 +19,9 @@ for folder in sorted(config_folders):
     configure_lines = open('configure.ac').read().splitlines()
     if any(map(lambda line: line.startswith('AC_CONFIG_HEADERS'), configure_lines)):
         subprocess.check_output(f'{ENV} autoheader-2.69 -f', shell=True, encoding='utf8')
-    # apparently automake is somehow unstable
-    # if any(map(lambda line: line.startswith('AM_INIT_AUTOMAKE'), configure_lines)):
-    #     subprocess.check_output(f'{ENV} /home/marxin/bin/automake-1.15.1/bin/automake -f',
-    #     shell=True, encoding='utf8')
+    # apparently automake is somehow unstable -> skip it for gotools
+    if (any(map(lambda line: line.startswith('AM_INIT_AUTOMAKE'), configure_lines))
+            and not str(folder).endswith('gotools')):
+        subprocess.check_output(f'{ENV} /home/marxin/bin/automake-1.15.1/bin/automake -f',
+                                shell=True, encoding='utf8')
     subprocess.check_output(f'{ENV} autoconf-2.69 -f', shell=True, encoding='utf8')
