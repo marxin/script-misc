@@ -180,7 +180,7 @@ pts/vosk
 pts/vpxenc
 pts/webp
 pts/webp2 # https://github.com/phoronix-test-suite/test-profiles/issues/240
-pts/x264
+pts/x264 # clang: ERROR: ld-temp.o:(.text.close_file.917+0x10): undefined reference to `x264_10_threadpool_delete'
 pts/x265
 pts/xmrig
 pts/y-cruncher
