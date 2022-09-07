@@ -29,7 +29,7 @@ pts/build-python
 pts/build-wasmer
 pts/build2
 pts/bullet
-pts/byte
+pts/byte # https://github.com/phoronix-test-suite/test-profiles/issues/236
 pts/c-ray
 pts/cachebench
 pts/chia-vdf
@@ -38,13 +38,13 @@ pts/cloverleaf
 pts/compress-7zip
 pts/compress-gzip
 pts/compress-lz4
-pts/compress-pbzip2
+pts/compress-pbzip2 # https://github.com/phoronix-test-suite/test-profiles/issues/237
 pts/compress-xz
 pts/compress-zstd
 pts/core-latency
 pts/coremark
 pts/cp2k
-pts/cpuminer-opt
+pts/cpuminer-opt # https://github.com/phoronix-test-suite/test-profiles/issues/238
 pts/crafty
 pts/cryptopp
 pts/cython-bench
@@ -78,7 +78,7 @@ pts/ipc-benchmark
 pts/java-gradle-perf
 pts/java-scimark2
 pts/jgfxbat
-pts/john-the-ripper
+pts/john-the-ripper # https://github.com/phoronix-test-suite/test-profiles/issues/235
 pts/jpegxl
 pts/jpegxl-decode
 pts/kvazaar
@@ -96,15 +96,15 @@ pts/m-queens
 pts/mafft
 pts/mencoder
 pts/minife
-pts/minion
+pts/minion # https://github.com/phoronix-test-suite/test-profiles/issues/234
 pts/mkl-dnn
 pts/mocassin
-pts/montage
+pts/montage # https://github.com/phoronix-test-suite/test-profiles/issues/233
 pts/mpcbench
 pts/mrbayes
 pts/mt-dgemm
 pts/multichase
-pts/n-queens
+pts/n-queens # https://github.com/phoronix-test-suite/test-profiles/issues/232
 pts/namd
 pts/neat
 pts/nero2d
@@ -133,7 +133,7 @@ pts/pjsip
 pts/polybench-c
 pts/polyhedron
 pts/povray
-pts/powertop-wakeups
+pts/powertop-wakeups # https://github.com/phoronix-test-suite/test-profiles/issues/230
 pts/primesieve
 pts/qe
 pts/qmcpack
@@ -153,9 +153,9 @@ pts/securemark
 pts/simdjson
 pts/smallpt
 pts/smhasher
-pts/srslte
+pts/srslte # https://github.com/phoronix-test-suite/test-profiles/issues/231
 pts/srsran
-pts/stargate
+pts/stargate # https://github.com/phoronix-test-suite/test-profiles/issues/239
 pts/stockfish
 pts/sudokut
 pts/svt-av1
@@ -179,7 +179,7 @@ pts/tungsten
 pts/vosk
 pts/vpxenc
 pts/webp
-pts/webp2
+pts/webp2 # https://github.com/phoronix-test-suite/test-profiles/issues/240
 pts/x264
 pts/x265
 pts/xmrig
