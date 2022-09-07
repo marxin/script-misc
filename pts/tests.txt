@@ -142,7 +142,7 @@ pts/radiance
 pts/rav1e
 pts/rays1bench
 pts/rbenchmark
-pts/relion
+pts/relion # ERROR: CUDA_TOOLKIT_ROOT_DIR not found or specified; downloads huge test data (50GB)
 pts/renaissance
 pts/rnnoise
 pts/rodinia
@@ -163,14 +163,14 @@ pts/svt-hevc
 pts/svt-vp9
 pts/swet
 pts/synthmark
-pts/system-decompress-bzip2
-pts/system-decompress-gzip
-pts/system-decompress-tiff
-pts/system-decompress-xz
-pts/system-libjpeg
-pts/system-libxml2
-pts/systemd-boot-kernel
-pts/systemd-boot-userspace
+pts/system-decompress-bzip2 # skip system tests
+pts/system-decompress-gzip # skip system tests
+pts/system-decompress-tiff # skip system tests
+pts/system-decompress-xz # skip system tests
+pts/system-libjpeg # skip system tests
+pts/system-libxml2 # skip system tests
+pts/systemd-boot-kernel # skip system tests
+pts/systemd-boot-userspace # skip system tests
 pts/tachyon
 pts/toybrot
 pts/tscp
