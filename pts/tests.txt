@@ -70,10 +70,10 @@ pts/graphics-magick
 pts/hackbench
 pts/helsing
 pts/himeno
-pts/hmmer
-pts/hpcc
-pts/hpcg
-pts/incompact3d
+pts/hmmer # MPI test
+pts/hpcc # MPI test
+pts/hpcg # MPI test
+pts/incompact3d # MPI test
 pts/ipc-benchmark
 pts/java-gradle-perf
 pts/java-scimark2
@@ -89,16 +89,16 @@ pts/libraw
 pts/liquid-dsp
 pts/luajit
 pts/luaradio
-pts/lulesh
+pts/lulesh # MPI test
 pts/luxcorerender
 pts/lzbench
 pts/m-queens
 pts/mafft
 pts/mencoder
-pts/minife
+pts/minife # MPI test
 pts/minion # https://github.com/phoronix-test-suite/test-profiles/issues/234
 pts/mkl-dnn
-pts/mocassin
+pts/mocassin # MPI test
 pts/montage # https://github.com/phoronix-test-suite/test-profiles/issues/233
 pts/mpcbench
 pts/mrbayes
@@ -107,27 +107,27 @@ pts/multichase
 pts/n-queens # https://github.com/phoronix-test-suite/test-profiles/issues/232
 pts/namd
 pts/neat
-pts/nero2d
+pts/nero2d # MPI test
 pts/nettle
 pts/ngspice
 pts/node-express-loadtest
 pts/node-octane
 pts/node-web-tooling
-pts/npb
+pts/npb # MPI test
 pts/numpy
 pts/nwchem
 pts/oidn
 pts/onednn
-pts/open-porous-media
-pts/opencv-bench
-pts/openfoam
+pts/open-porous-media # https://github.com/phoronix-test-suite/test-profiles/issues/241
+pts/opencv-bench # https://github.com/phoronix-test-suite/test-profiles/issues/242
+pts/openfoam # MPI test
 pts/openjpeg
 pts/openssl
 pts/openvkl
 pts/ospray
 pts/ospray-studio
 pts/parboil
-pts/pennant
+pts/pennant # MPI test
 pts/perl-benchmark
 pts/pjsip
 pts/polybench-c
@@ -136,7 +136,7 @@ pts/povray
 pts/powertop-wakeups # https://github.com/phoronix-test-suite/test-profiles/issues/230
 pts/primesieve
 pts/qe
-pts/qmcpack
+pts/qmcpack # MPI test
 pts/quantlib
 pts/radiance
 pts/rav1e
@@ -150,11 +150,11 @@ pts/rust-mandel
 pts/rust-prime
 pts/scimark2
 pts/securemark
-pts/simdjson
+pts/simdjson # Missing google_benchmarks_SOURCE_DIR variable
 pts/smallpt
 pts/smhasher
 pts/srslte # https://github.com/phoronix-test-suite/test-profiles/issues/231
-pts/srsran
+pts/srsran # Package 'sctp', required by 'virtual:world', not found
 pts/stargate # https://github.com/phoronix-test-suite/test-profiles/issues/239
 pts/stockfish
 pts/sudokut
@@ -184,4 +184,4 @@ pts/x264
 pts/x265
 pts/xmrig
 pts/y-cruncher
-pts/yafaray
+pts/yafaray # https://github.com/phoronix-test-suite/test-profiles/issues/243
