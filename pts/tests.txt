@@ -33,9 +33,9 @@ pts/byte # https://github.com/phoronix-test-suite/test-profiles/issues/236
 pts/c-ray
 pts/cachebench
 pts/chia-vdf
-pts/clomp
+pts/clomp # clang failure: /usr/bin/ld: cannot find -lomp: No such file or directory
 pts/cloverleaf
-pts/compress-7zip
+pts/compress-7zip # https://github.com/phoronix-test-suite/test-profiles/issues/244
 pts/compress-gzip
 pts/compress-lz4
 pts/compress-pbzip2 # https://github.com/phoronix-test-suite/test-profiles/issues/237
@@ -45,7 +45,7 @@ pts/core-latency
 pts/coremark
 pts/cp2k
 pts/cpuminer-opt # https://github.com/phoronix-test-suite/test-profiles/issues/238
-pts/crafty
+pts/crafty # ERROR: error: Could not read profile default.profdata: No such file or directory
 pts/cryptopp
 pts/cython-bench
 pts/dacapobench
@@ -61,7 +61,7 @@ pts/espeak
 pts/etcpak
 pts/ffmpeg
 pts/ffte
-pts/fftw
+pts/fftw # clang: configure: error: don't know how to enable OpenMP
 pts/fhourstones
 pts/gcrypt
 pts/gmpbench
