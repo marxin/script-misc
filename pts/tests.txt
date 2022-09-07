@@ -92,24 +92,24 @@ pts/luaradio
 pts/lulesh # MPI test
 pts/luxcorerender
 pts/lzbench
-pts/m-queens
+pts/m-queens # clang: ERROR: /usr/bin/ld: cannot find -lomp: No such file or directory
 pts/mafft
 pts/mencoder
 pts/minife # MPI test
 pts/minion # https://github.com/phoronix-test-suite/test-profiles/issues/234
-pts/mkl-dnn
+pts/mkl-dnn # clang: OpenMP library could not be found.  Proceeding might lead to highly
 pts/mocassin # MPI test
 pts/montage # https://github.com/phoronix-test-suite/test-profiles/issues/233
 pts/mpcbench
 pts/mrbayes
-pts/mt-dgemm
+pts/mt-dgemm # clang: /usr/bin/ld: cannot find -lomp: No such file or directory
 pts/multichase
 pts/n-queens # https://github.com/phoronix-test-suite/test-profiles/issues/232
 pts/namd
 pts/neat
 pts/nero2d # MPI test
 pts/nettle
-pts/ngspice
+pts/ngspice # clang: ERROR: cktsetup.c:(.text+0xc5): undefined reference to `omp_set_num_threads'
 pts/node-express-loadtest
 pts/node-octane
 pts/node-web-tooling
@@ -117,7 +117,7 @@ pts/npb # MPI test
 pts/numpy
 pts/nwchem
 pts/oidn
-pts/onednn
+pts/onednn # clang: OpenMP library could not be found.  Proceeding might lead to highly
 pts/open-porous-media # https://github.com/phoronix-test-suite/test-profiles/issues/241
 pts/opencv-bench # https://github.com/phoronix-test-suite/test-profiles/issues/242
 pts/openfoam # MPI test
@@ -145,13 +145,13 @@ pts/rbenchmark
 pts/relion # ERROR: CUDA_TOOLKIT_ROOT_DIR not found or specified; downloads huge test data (50GB)
 pts/renaissance
 pts/rnnoise
-pts/rodinia
+pts/rodinia # clang: ERROR: ex_particle_OCL_naive_seq.cpp:15:10: fatal error: 'CL/cl.h' file not found
 pts/rust-mandel
 pts/rust-prime
 pts/scimark2
 pts/securemark
 pts/simdjson # Missing google_benchmarks_SOURCE_DIR variable
-pts/smallpt
+pts/smallpt # https://github.com/phoronix-test-suite/test-profiles/issues/245
 pts/smhasher
 pts/srslte # https://github.com/phoronix-test-suite/test-profiles/issues/231
 pts/srsran # Package 'sctp', required by 'virtual:world', not found
