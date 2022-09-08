@@ -34,7 +34,7 @@ pts/c-ray
 pts/cachebench
 pts/chia-vdf
 pts/clomp # clang failure: /usr/bin/ld: cannot find -lomp: No such file or directory
-pts/cloverleaf
+pts/cloverleaf # MPI linking failure: undefined reference to `__kmpc_for_static_fini'
 pts/compress-7zip # https://github.com/phoronix-test-suite/test-profiles/issues/244
 pts/compress-gzip
 pts/compress-lz4

@@ -7,4 +7,4 @@ zypper in -y phoronix-test-suite cmake libtool 7zip openssl-devel nasm libyuv-de
         libtiff-devel libopus-devel libXinerama-devel fftw3-devel libsndfile-devel \
         SDL2-devel yasm opusfile-devel mbedtls-devel sdl12_compat-devel libopusenc-devel \
         lksctp-tools-devel libxml2-devel hwloc-devel libXcursor-devel portmidi-devel \
-        portaudio-devel libuv-devel libXaw-devel benchmark-devel freetype2-devel swig
+        portaudio-devel libuv-devel libXaw-devel benchmark-devel freetype2-devel swig gcc-go
