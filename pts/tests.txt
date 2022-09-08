@@ -110,9 +110,9 @@ pts/neat
 pts/nero2d # MPI test
 pts/nettle
 pts/ngspice # clang: ERROR: cktsetup.c:(.text+0xc5): undefined reference to `omp_set_num_threads'
-pts/node-express-loadtest
-pts/node-octane
-pts/node-web-tooling
+pts/node-express-loadtest # skip: testing nodejs
+pts/node-octane # skip: testing nodejs
+pts/node-web-tooling # skip: testing nodejs
 pts/npb # MPI test
 pts/numpy
 pts/nwchem
