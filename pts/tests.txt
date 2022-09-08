@@ -1,5 +1,5 @@
 pts/aircrack-ng
-pts/amg
+pts/amg # MPI tets
 pts/aobench
 pts/aom-av1
 pts/arrayfire
@@ -75,14 +75,14 @@ pts/hpcc # MPI test
 pts/hpcg # MPI test
 pts/incompact3d # MPI test
 pts/ipc-benchmark
-pts/java-gradle-perf
+pts/java-gradle-perf # E:     java.lang.NoClassDefFoundError: Could not initialize class reactor.tools.agent.ReactorDebugAgentTest
 pts/java-scimark2
 pts/jgfxbat
 pts/john-the-ripper # https://github.com/phoronix-test-suite/test-profiles/issues/235
 pts/jpegxl
 pts/jpegxl-decode
 pts/kvazaar
-pts/lammps
+pts/lammps # MPI test
 pts/lczero
 pts/libgav1
 pts/libraw
@@ -90,7 +90,7 @@ pts/liquid-dsp
 pts/luajit
 pts/luaradio
 pts/lulesh # MPI test
-pts/luxcorerender
+pts/luxcorerender # E: RUNTIME ERROR: No hardware device selected or available - likely GPU benchmark
 pts/lzbench
 pts/m-queens # clang: ERROR: /usr/bin/ld: cannot find -lomp: No such file or directory
 pts/mafft
@@ -115,7 +115,7 @@ pts/node-octane # skip: testing nodejs
 pts/node-web-tooling # skip: testing nodejs
 pts/npb # MPI test
 pts/numpy
-pts/nwchem
+pts/nwchem # MPI test
 pts/oidn
 pts/onednn # clang: OpenMP library could not be found.  Proceeding might lead to highly
 pts/open-porous-media # https://github.com/phoronix-test-suite/test-profiles/issues/241
@@ -135,7 +135,7 @@ pts/polyhedron
 pts/povray
 pts/powertop-wakeups # https://github.com/phoronix-test-suite/test-profiles/issues/230
 pts/primesieve
-pts/qe
+pts/qe # MPI test
 pts/qmcpack # MPI test
 pts/quantlib
 pts/radiance
