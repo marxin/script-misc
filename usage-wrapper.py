@@ -135,7 +135,7 @@ def get_process_name(proc):
     elif name in ('as', 'dwz', 'go'):
         return name
     elif name in ('rpmbuild', 'rpm2cpio') or name.startswith('dpkg'):
-        return 'rpm/dpkg'
+        return 'rpm/rpm2cpio/dpkg'
     elif '-fltrans' in cmdline:
         if args.separate_ltrans:
             return 'ltrans-%d' % proc.pid
