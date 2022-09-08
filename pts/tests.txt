@@ -9,24 +9,24 @@ pts/blake2
 pts/blosc
 pts/bork
 pts/botan
-pts/build-apache
-pts/build-clash
-pts/build-eigen
-pts/build-erlang
-pts/build-ffmpeg
-pts/build-gcc
-pts/build-gdb
-pts/build-gem5
-pts/build-godot
-pts/build-imagemagick
-pts/build-linux-kernel
-pts/build-llvm
-pts/build-mesa
-pts/build-mplayer
-pts/build-nodejs
-pts/build-php
-pts/build-python
-pts/build-wasmer
+pts/build-apache # skip build tests
+pts/build-clash # skip build tests
+pts/build-eigen # skip build tests
+pts/build-erlang # skip build tests
+pts/build-ffmpeg # skip build tests
+pts/build-gcc # skip build tests
+pts/build-gdb # skip build tests
+pts/build-gem5 # skip build tests
+pts/build-godot # skip build tests
+pts/build-imagemagick # skip build tests
+pts/build-linux-kernel # skip build tests
+pts/build-llvm # skip build tests
+pts/build-mesa # skip build tests
+pts/build-mplayer # skip build tests
+pts/build-nodejs # skip build tests
+pts/build-php # skip build tests
+pts/build-python # skip build tests
+pts/build-wasmer # skip build tests
 pts/build2
 pts/bullet
 pts/byte # https://github.com/phoronix-test-suite/test-profiles/issues/236
