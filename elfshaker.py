@@ -6,7 +6,7 @@ import subprocess
 
 hashes = open('/tmp/list.txt').read().splitlines()
 
-for i, h in enumerate(hashes[:1000]):
+for i, h in enumerate(hashes[:100]):
     print(i, '/', len(hashes), h)
     archive = f'{h}.tar'
     zstd_archive = f'{archive}.zst'
