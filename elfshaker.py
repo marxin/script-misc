@@ -3,6 +3,7 @@
 import os
 import shutil
 import subprocess
+from pathlib import Path
 
 hashes = open('/tmp/list.txt').read().splitlines()
 
@@ -15,5 +16,6 @@ for i, h in enumerate(hashes[:100]):
     subprocess.check_output(f'tar xvf {archive}', shell=True)
     os.remove(archive)
     os.remove(zstd_archive)
-    print(subprocess.check_output('du -hs usr', shell=True))
+    print(subprocess.check_output('du -hs usr', shell=True, encoding='utf8').strip())
+    assert Path('usr/local/share/man/man1/gcov-tool.1').exists()
     subprocess.check_output(f'/home/marxin/Programming/elfshaker/target/release/elfshaker store {h}', shell=True)
