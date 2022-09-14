@@ -8,4 +8,4 @@ zypper in -y phoronix-test-suite cmake libtool 7zip openssl-devel nasm libyuv-de
         SDL2-devel yasm opusfile-devel mbedtls-devel sdl12_compat-devel libopusenc-devel \
         lksctp-tools-devel libxml2-devel hwloc-devel libXcursor-devel portmidi-devel \
         portaudio-devel libuv-devel libXaw-devel benchmark-devel freetype2-devel swig gcc-go \
-        jq
+        jq glibc-devel-static

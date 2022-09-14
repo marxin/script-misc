@@ -104,7 +104,7 @@ pts/mpcbench
 pts/mrbayes
 pts/mt-dgemm # clang: /usr/bin/ld: cannot find -lomp: No such file or directory
 pts/multichase
-pts/n-queens # https://github.com/phoronix-test-suite/test-profiles/issues/232
+pts/n-queens
 pts/namd
 pts/neat
 pts/nero2d # MPI test
@@ -141,7 +141,7 @@ pts/quantlib
 pts/radiance
 pts/rav1e
 pts/rays1bench
-pts/rbenchmark
+pts/rbenchmark # Testing R
 pts/relion # ERROR: CUDA_TOOLKIT_ROOT_DIR not found or specified; downloads huge test data (50GB)
 pts/renaissance
 pts/rnnoise
