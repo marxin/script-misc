@@ -101,7 +101,7 @@ pts/mkl-dnn # clang: OpenMP library could not be found.  Proceeding might lead t
 pts/mocassin # MPI test
 pts/montage # https://github.com/phoronix-test-suite/test-profiles/issues/233
 pts/mpcbench
-pts/mrbayes
+pts/mrbayes # MPI test
 pts/mt-dgemm # clang: /usr/bin/ld: cannot find -lomp: No such file or directory
 pts/multichase
 pts/n-queens
