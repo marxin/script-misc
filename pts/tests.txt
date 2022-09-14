@@ -152,7 +152,7 @@ pts/scimark2
 pts/securemark
 pts/simdjson # Missing google_benchmarks_SOURCE_DIR variable
 pts/smallpt # https://github.com/phoronix-test-suite/test-profiles/issues/245
-pts/smhasher
+pts/smhasher # error: ‘__int64’ undeclared here (not in a function); did you mean ‘__int64_t’?
 pts/srslte # https://github.com/phoronix-test-suite/test-profiles/issues/231
 pts/srsran # Package 'sctp', required by 'virtual:world', not found
 pts/stargate # https://github.com/phoronix-test-suite/test-profiles/issues/239
