@@ -35,7 +35,7 @@ for i in range(revcount // CHUNK_SIZE):
         mbsize /= 1024
         print(f'Size {mbsize / (i * CHUNK_SIZE):.2f} MiB per revision')
     chunk = revisions[:CHUNK_SIZE]
-    print('  ' + '#' * CHUNK_SIZE)
+    print('  ' + '.' * CHUNK_SIZE)
     print('  ', end='')
 
     start = time.monotonic()
@@ -44,7 +44,7 @@ for i in range(revcount // CHUNK_SIZE):
         zstd_archive = f'{archive}.zst'
         abs_zstd_archive = f'/home/marxin/DATA/gcc-binaries/{zstd_archive}'
         if Path(abs_zstd_archive).exists():
-            print('.', end='', flush=True)
+            print('#', end='', flush=True)
             shutil.copyfile(abs_zstd_archive, zstd_archive)
             subprocess.check_output(f'zstd -T0 -d {zstd_archive} -f', shell=True, stderr=subprocess.DEVNULL)
             subprocess.check_output(f'tar xvf {archive}', shell=True)
@@ -53,7 +53,7 @@ for i in range(revcount // CHUNK_SIZE):
             subprocess.check_output(f'/home/marxin/Programming/elfshaker/target/release/elfshaker store {h}',
                                     shell=True)
         else:
-            print('#', end='', flush=True)
+            print('.', end='', flush=True)
     print()
     duration = time.monotonic() - start
     print(f'Store took {duration / CHUNK_SIZE:.2f}s per revision')
