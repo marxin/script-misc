@@ -13,7 +13,6 @@ import shutil
 import subprocess
 import sys
 import time
-from datetime import datetime, timedelta
 from pathlib import Path
 from urllib.parse import quote
 
@@ -207,7 +206,7 @@ class GitRevision:
     def run(self, describe):
         with lock:
             self.decompress()
-            start = datetime.now()
+            start = time.monotonic()
 
             my_env = os.environ.copy()
             my_env['PATH'] = (os.path.join(self.get_install_path(), 'bin')
@@ -237,7 +236,7 @@ class GitRevision:
                                 'Internal Error at ']
                     success = any(map(lambda m: m in stdout, messages))
 
-                seconds = (datetime.now() - start).total_seconds()
+                seconds = time.monotonic() - start
                 if args.soft_timeout and success:
                     success = seconds <= args.soft_timeout
 
@@ -275,10 +274,9 @@ class GitRevision:
             with (open(os.path.join(extract_location, 'git-revision.txt'), 'w+')) as note:
                 note.write(self.commit.hexsha)
             self.compress()
-            took = datetime.now() - start
+            took = time.monotonic() - start
             build_times.append(took)
-            flush_print('Build has taken: %s, avg: %s' % (str(took), str(sum(build_times,
-                                                          timedelta(0)) / len(build_times))))
+            flush_print('Build has taken: %s, avg: %s' % (str(took), str(sum(build_times) / len(build_times))))
             log(self.commit.hexsha, 'OK')
 
     def build(self):
@@ -293,7 +291,7 @@ class GitRevision:
             return False
         else:
             flush_print('Building %s' % (str(self)))
-            start = datetime.now()
+            start = time.monotonic()
             tmp_folder = '/dev/shm/gcc-bisect-tmp'
 
             if os.path.exists(tmp_folder):
