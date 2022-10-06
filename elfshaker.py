@@ -63,7 +63,7 @@ def pack_revisions(n, revisions):
     print(f'Packing {n} took {time.monotonic() - start:.2f}')
 
 
-with concurrent.futures.ProcessPoolExecutor(max_workers=8) as executor:
+with concurrent.futures.ProcessPoolExecutor(max_workers=4) as executor:
     futures = []
     for i in range(revcount // CHUNK_SIZE):
         chunk = revisions[:CHUNK_SIZE]
