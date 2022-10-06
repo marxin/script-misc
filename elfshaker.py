@@ -15,6 +15,7 @@ CHUNK_SIZE = 100
 COMPRESSION_LEVEL = 17
 last_revision = '58a41b43b5f02c67544569c508424efa4115ad9f'
 repo = Repo('/home/marxin/Programming/gcc2')
+binaries_dir = '/home/marxin/DATA/gcc-binaries'
 elfshaker_repo = Path('/home/marxin/elfshaker-gcc-binaries')
 elfshaker_packs = elfshaker_repo / 'elfshaker_data' / 'packs'
 
@@ -34,7 +35,7 @@ def pack_revisions(n, revisions):
     for h in revisions:
         archive = f'{h}.tar'
         zstd_archive = f'{archive}.zst'
-        abs_zstd_archive = f'/home/marxin/DATA/gcc-binaries/{zstd_archive}'
+        abs_zstd_archive = f'{binaries_dir}/{zstd_archive}'
         if Path(abs_zstd_archive).exists():
             shutil.copyfile(abs_zstd_archive, zstd_archive)
             subprocess.check_output(f'zstd -T0 -d {zstd_archive} -f', shell=True, stderr=subprocess.DEVNULL)
@@ -43,7 +44,7 @@ def pack_revisions(n, revisions):
             os.remove(zstd_archive)
             subprocess.check_output(f'/home/marxin/Programming/elfshaker/target/release/elfshaker store {h}',
                                     shell=True)
-    subprocess.check_output(f'~/Programming/elfshaker/target/release/elfshaker pack pack-{i}'
+    subprocess.check_output(f'~/Programming/elfshaker/target/release/elfshaker pack pack-{i} '
                             '--compression-level {COMPRESSION_LEVEL}',
                             shell=True, stderr=subprocess.PIPE)
     shutil.copy(f'elfshaker_data/packs/pack-{n}.pack', elfshaker_packs)
