@@ -29,7 +29,7 @@ elfshaker_packs.mkdir(parents=True)
 
 def pack_revisions(n, revisions):
     start = time.monotonic()
-    tempdir = tempfile.mkdtemp()
+    tempdir = tempfile.mkdtemp(dir='/dev/shm/tmp-elfshaker')
     os.chdir(tempdir)
     print(f'Packing {n} in {tempdir}')
     for h in revisions:
@@ -53,7 +53,7 @@ def pack_revisions(n, revisions):
     print(f'Packing {n} took {time.monotonic() - start:.2f}')
 
 
-with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+with concurrent.futures.ProcessPoolExecutor(max_workers=8) as executor:
     futures = []
     for i in range(revcount // CHUNK_SIZE):
         chunk = revisions[:CHUNK_SIZE]
