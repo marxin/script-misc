@@ -19,6 +19,7 @@ binaries_dir = '/home/marxin/DATA/gcc-binaries'
 elfshaker_bin = '/home/marxin/Programming/elfshaker/target/release/elfshaker'
 elfshaker_repo = Path('/home/marxin/elfshaker-gcc-binaries')
 elfshaker_packs = elfshaker_repo / 'elfshaker_data' / 'packs'
+tmpdir = Path('/dev/shm/tmp-elfshaker')
 
 revisions = [x.hexsha for x in reversed(list(repo.iter_commits(last_revision + '..origin/master', first_parent=True)))]
 revcount = len(revisions)
@@ -27,10 +28,19 @@ print(f'Have: {revcount} revisions')
 shutil.rmtree(elfshaker_repo, ignore_errors=True)
 elfshaker_packs.mkdir(parents=True)
 
+shutil.rmtree(tmpdir, ignore_errors=True)
+tmpdir.mkdir(parents=True)
+
 
 def pack_revisions(n, revisions):
+    if n < 4:
+        delay = 30 * n
+        print(f'Sleeping for {delay} s', flush=True)
+        time.sleep(delay)
+        print(f'Starting {n} after sleeping')
+
     start = time.monotonic()
-    tempdir = tempfile.mkdtemp(dir='/dev/shm/tmp-elfshaker')
+    tempdir = tempfile.mkdtemp(dir=tmpdir)
     os.chdir(tempdir)
     print(f'Packing {n} in {tempdir}')
     for h in revisions:
