@@ -27,7 +27,7 @@ def get_debuginfo(binary, buildid, verbose):
 parser = argparse.ArgumentParser(description='debuginfod stress test')
 parser.add_argument('FILE', help='Input file with checked binaries')
 parser.add_argument('URL', help='Server url')
-parser.add_argument('--workers', type=int, default=8, help='Number of threads')
+parser.add_argument('--workers', type=int, default=4, help='Number of threads')
 parser.add_argument('--verbose', '-v', action='store_true', help='Verbose')
 args = parser.parse_args()
 
