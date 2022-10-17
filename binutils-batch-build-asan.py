@@ -201,7 +201,10 @@ def report_error(command, test_case, location, full_line, target):
         print('-' * 80)
         print(prefix + location)
         print('The following fails when I build binutils with:')
-        print('configure --build=x86_64-linux --disable-gdb --disable-gdbserver --enable-obsolete --target=%s CFLAGS="-g -O2 -fsanitize=address,undefined -Wno-error" CXXLAGS="-g -O2 -fsanitize=address,undefined -Wno-error" LDFLAGS="-ldl"' % target)
+        print('configure --build=x86_64-linux --disable-gdb --disable-gdbserver --disable-werror --enable-obsolete --target=%s ' \
+              'CFLAGS="-g -O2 -fsanitize=address,undefined -Wno-error"' \
+              'CXXLAGS="-g -O2 -fsanitize=address,undefined -Wno-error"' \
+              'LDFLAGS="-ldl"' % target)
         print('Target: %s' % target)
         print(test_case)
         print(command)
