@@ -5,6 +5,9 @@ import sys
 LIMIT = 80
 
 for line in sys.stdin.read().strip().splitlines():
+    if not line:
+        print()
+        continue
     print('  * ', end='')
     first = True
     while line:
