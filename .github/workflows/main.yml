@@ -23,5 +23,6 @@ jobs:
               tar gzip
 
       - uses: actions/checkout@v2
-
       - run: flake8
+      - run: pip install pyupgrade
+      - run: pyupgrade --py38-plus *py
