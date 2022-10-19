@@ -65,7 +65,7 @@ def build_target(full_target):
             cmd = ('%s --target=%s --disable-bootstrap --enable-languages=c,c++ --disable-multilib %s --enable-obsolete'
                    % (os.path.join(args.repository, 'configure'), target, opts))
             cmd = cmd.strip()
-            r = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+            r = subprocess.run(cmd, capture_output=True, shell=True)
             if r.returncode != 0:
                 print(f'Configure FAILED for {full_target}')
                 return 1
@@ -75,7 +75,7 @@ def build_target(full_target):
 
             # 2) build
             cmd = f'nice make -j{JOBS} all-host CXXFLAGS="-O0 -g" CFLAGS="-O0 -g"'
-            r = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True, encoding='utf8')
+            r = subprocess.run(cmd, capture_output=True, shell=True, encoding='utf8')
             if r.returncode != 0:
                 print(f'Target failed: {full_target}')
 

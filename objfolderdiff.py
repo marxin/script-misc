@@ -43,7 +43,7 @@ def print_diff(filename, source1, source2):
 
     diff_path = (filename + '.diff').replace('/', '_')
     with open(diff_path, 'w') as diff:
-        subprocess.run('diff -u %s %s' % (f1, f2), shell=True, stdout=diff)
+        subprocess.run(f'diff -u {f1} {f2}', shell=True, stdout=diff)
         print(f'  saving diff to {diff_path}')
 
 source_files1 = list(sorted(get_files(args.source1)))

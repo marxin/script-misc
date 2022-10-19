@@ -50,7 +50,7 @@ class Rpm:
         self.size = data['size']
         self.extracted_size = data['extracted_size']
         self.files = dict(data['files'])
-        self.canonfiles = dict((get_canon_filename(x[0]), x[1]) for x in data['files'])
+        self.canonfiles = {get_canon_filename(x[0]): x[1] for x in data['files']}
         assert len(self.files.keys()) == len(self.canonfiles.keys())
 
 class Package:

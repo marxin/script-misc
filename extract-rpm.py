@@ -14,4 +14,4 @@ if not os.path.exists(args.folder):
     os.mkdir(args.folder)
 
 cmd_args = '-i' if '.src.rpm' in Path(args.rpm).name else '-idmv'
-subprocess.check_output('rpm2cpio %s | cpio %s -D %s' % (args.rpm, cmd_args, args.folder), shell=True)
+subprocess.check_output(f'rpm2cpio {args.rpm} | cpio {cmd_args} -D {args.folder}', shell=True)

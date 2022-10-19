@@ -33,7 +33,7 @@ parsed = 0
 files = list(Path('/usr/bin').iterdir()) + list(Path('/usr/lib64').iterdir())
 for file in files:
     r = subprocess.run(f'readelf -SW {file}', encoding='utf8',
-                       stdout=subprocess.PIPE, stderr=subprocess.PIPE, shell=True)
+                       capture_output=True, shell=True)
     data = parse_readelf(file, r.stdout)
     if data:
         parsed += 1

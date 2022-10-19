@@ -17,7 +17,7 @@ parser.add_argument('tmp', help = 'TMP folder where to extract RPM packages')
 parser.add_argument('output_folder', help = 'Output folder where to save. json files')
 args = parser.parse_args()
 
-result = subprocess.check_output('osc -A %s r %s -r %s -a %s --csv' % (args.api, args.project, args.repository, 'x86_64'), shell = True)
+result = subprocess.check_output('osc -A {} r {} -r {} -a {} --csv'.format(args.api, args.project, args.repository, 'x86_64'), shell = True)
 packages = result.decode('utf-8', 'ignore').strip().split('\n')
 packages = [x.split(';')[0] for x in packages if 'succeeded' in x]
 packages = [x for x in packages if x != '_' and not 'gcc' in x]
@@ -49,7 +49,7 @@ def process_rpm(full):
     cleanroot()
     vm = {'name': full, 'size': os.path.getsize(full), 'files': []} 
 
-    subprocess.check_output('rpm2cpio %s | cpio -idmv -D %s' % (full, root), shell = True, stderr = subprocess.PIPE)
+    subprocess.check_output(f'rpm2cpio {full} | cpio -idmv -D {root}', shell = True, stderr = subprocess.PIPE)
 
     r = subprocess.check_output('du -bs %s' % root, shell = True, encoding = 'utf8')
     value = int(r.strip().split('\t')[0])
@@ -73,7 +73,7 @@ def process_rpm(full):
             print('skipping due to dash %s' % f)
             continue
         try:
-            r = subprocess.run('file %s' % f, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE, encoding = 'utf8', timeout = 30)
+            r = subprocess.run('file %s' % f, shell = True, capture_output=True, encoding = 'utf8', timeout = 30)
             if 'ELF' in r.stdout:
                 s = os.path.getsize(f)
                 vm['files'].append((f, s))
@@ -108,7 +108,7 @@ for i, p in enumerate(packages):
     clean()
     try:
         vm = {'name': p, 'sections': {}}
-        subprocess.check_output('osc -A %s getbinaries %s %s %s x86_64 --debug -d %s' % (args.api, args.project, p, args.repository, binfolder), shell = True, stderr = subprocess.PIPE)
+        subprocess.check_output(f'osc -A {args.api} getbinaries {args.project} {p} {args.repository} x86_64 --debug -d {binfolder}', shell = True, stderr = subprocess.PIPE)
         vm['sections']['normal'] = process_category('normal')
         vm['sections']['devel'] = process_category('devel')
         vm['sections']['debug'] = process_category('debug')

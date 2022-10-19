@@ -222,7 +222,7 @@ with concurrent.futures.ProcessPoolExecutor() as executor:
             errors = future.result()
             results[target] = future.result()
         except Exception as exc:
-            print('%r generated an exception: %s' % (target, exc))
+            print(f'{target!r} generated an exception: {exc}')
 print()
 
 for target in targets:

@@ -22,7 +22,7 @@ def format_dbgcnt(needed, start, end):
     if s:
         s += ':'
     s2 = '%d-%d' % (start, end) if start != -1 else ''
-    return ' -fdbg-cnt=%s:%s%s' % (args.dbg_cnt_name, s, s2)
+    return f' -fdbg-cnt={args.dbg_cnt_name}:{s}{s2}'
 
 
 def test(minimum, maximum, needed, count):
@@ -33,7 +33,7 @@ def test(minimum, maximum, needed, count):
     cmd = args.gcc_command + extra_arg
     subprocess.check_output(cmd, shell=True, stderr=subprocess.PIPE)
     r = subprocess.run(args.run_command, shell=True,
-                       stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                       capture_output=True,
                        encoding='utf8')
     if args.verbose:
         print(r.stdout)

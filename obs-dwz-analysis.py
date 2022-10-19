@@ -23,7 +23,7 @@ def print_header():
 def sizeof_fmt(num):
     for x in ['B','KB','MB','GB','TB']:
         if num < 1024.0:
-            return "%3.1f %s" % (num, x)
+            return f"{num:3.1f} {x}"
         num /= 1024.0
 
 d = sys.argv[1] if len(sys.argv) >= 2 else '.'
@@ -36,7 +36,7 @@ for f in files:
     size = [0, 0]
     for i, l in enumerate(lines):
         if ' dwz: ' in l and not 'is not a shared library' in l and not 'too much work for irq' in l:
-            print('WARNING:%s:%s' % (f, l))
+            print(f'WARNING:{f}:{l}')
         t = 'original debug info size'
         if t in l:
             tokens = l[len(t):].split(' ')

@@ -91,7 +91,7 @@ if 'Default' not in config:
 needed_variables = ['git_location', 'binaries_location', 'extract_location']
 for nv in needed_variables:
     if nv not in config['Default']:
-        print('Missing variable %s in config file: %s' % (nv, config_location))
+        print(f'Missing variable {nv} in config file: {config_location}')
         exit(127)
 
 git_location = config['Default']['git_location']
@@ -109,7 +109,7 @@ def single_or_default(fn, items):
 
 
 def revisions_in_range(source, target):
-    r = '%s..%s' % (source.hexsha, target.hexsha)
+    r = f'{source.hexsha}..{target.hexsha}'
     return list(repo.iter_commits(r)) + [source]
 
 
@@ -132,7 +132,7 @@ def strip_suffix(text, suffix):
 
 def log(revision_hash, message):
     with open(log_file, 'a+') as f:
-        f.write('%s:%s\n' % (revision_hash, message))
+        f.write(f'{revision_hash}:{message}\n')
 
 
 def build_failed_for_revision(revision_hash):
@@ -153,8 +153,7 @@ def run_cmd(command, strict=False):
     if isinstance(command, list):
         command = ' '.join(command)
     flush_print('Running: %s' % command)
-    r = subprocess.run(command, shell=True, stdout=subprocess.PIPE,
-                       stderr=subprocess.PIPE)
+    r = subprocess.run(command, shell=True, capture_output=True)
     if r.returncode == args.success_exit_code:
         return (True, None)
     else:
@@ -197,8 +196,7 @@ class GitRevision:
         hashtext = colored(self.short_hexsha(), description_color)
         if describe:
             hashtext = colored(self.get_full_hash(), 'green')
-        return '%s(%s)(%s)' % (hashtext, self.timestamp_str(),
-                               self.commit.author.email)
+        return f'{hashtext}({self.timestamp_str()})({self.commit.author.email})'
 
     def patch_name(self):
         return self.commit.hexsha + '.patch'
@@ -244,7 +242,7 @@ class GitRevision:
                     success = not success
 
                 text = colored('OK', 'green') if success else colored('FAILED', 'red') + ' (%d)' % returncode
-                flush_print('  %s: [took: %3.2f s] result: %s' % (self.description(describe), seconds, text))
+                flush_print(f'  {self.description(describe)}: [took: {seconds:3.2f} s] result: {text}')
                 if not args.silent:
                     flush_print(stdout, end='')
 
@@ -276,7 +274,7 @@ class GitRevision:
             self.compress()
             took = time.monotonic() - start
             build_times.append(took)
-            flush_print('Build has taken: %s, avg: %s' % (str(took), str(sum(build_times) / len(build_times))))
+            flush_print(f'Build has taken: {str(took)}, avg: {str(sum(build_times) / len(build_times))}')
             log(self.commit.hexsha, 'OK')
 
     def build(self):
@@ -302,7 +300,7 @@ class GitRevision:
                 # apply all patches
                 for p in patches:
                     r = subprocess.run('patch -p1 < ' + os.path.join(patches_folder, p),
-                                       shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, encoding='utf8')
+                                       shell=True, capture_output=True, encoding='utf8')
                     flush_print('applying patch %s with result: %d' % (p, r.returncode))
 
                 os.chdir(tmp_folder)
@@ -355,13 +353,13 @@ class GitRevision:
 
         shutil.rmtree(extract_location, ignore_errors=True)
         os.makedirs(extract_location)
-        cmd = 'zstdcat -T0 %s | tar x -C %s' % (archive, extract_location)
+        cmd = f'zstdcat -T0 {archive} | tar x -C {extract_location}'
         subprocess.check_output(cmd, shell=True)
         return True
 
     def print_status(self):
         status = colored('OK', 'green') if self.has_binary else colored('missing binary', 'yellow')
-        flush_print('%s: %s' % (self.description(), status))
+        flush_print(f'{self.description()}: {status}')
 
 
 class Release(GitRevision):
@@ -380,7 +378,7 @@ class Release(GitRevision):
         return self.commit.hexsha + ':' + self.name
 
     def description(self, describe=False):
-        return '%s (%s)(%s)' % (colored(self.name, description_color), self.short_hexsha(), self.timestamp_str())
+        return f'{colored(self.name, description_color)} ({self.short_hexsha()})({self.timestamp_str()})'
 
     def patch_name(self):
         return self.name + '.patch'
@@ -395,7 +393,7 @@ class Branch(GitRevision):
         return self.commit.hexsha + ':' + self.name
 
     def description(self, describe=False):
-        return '%s (%s)(%s)' % (colored(self.name, description_color), self.short_hexsha(), self.timestamp_str())
+        return f'{colored(self.name, description_color)} ({self.short_hexsha()})({self.timestamp_str()})'
 
     def print_info(self):
         base = repo.merge_base(head, self.commit)[0]

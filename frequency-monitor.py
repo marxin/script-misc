@@ -24,7 +24,7 @@ try:
                                     shell=True, encoding='utf8')
         freq = float(r.strip().split(' ')[-1])
         d = time.monotonic() - start
-        print('%3.2f CPU: %6.2f%%, frequency: %.2f MHz' % (d, cpu, freq))
+        print(f'{d:3.2f} CPU: {cpu:6.2f}%, frequency: {freq:.2f} MHz')
         time.sleep(INTERVAL)
 
         times.append(d)

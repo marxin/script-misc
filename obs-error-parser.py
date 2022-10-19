@@ -36,7 +36,7 @@ def download_build_log(package, log_file):
     global done
     if args.progress:
         print(package[0], end='', flush=True)
-    result = subprocess.check_output('osc -A %s remotebuildlog %s %s %s %s' % (args.url, args.project, package, args.repository, arch), shell = True, encoding='utf8')
+    result = subprocess.check_output(f'osc -A {args.url} remotebuildlog {args.project} {package} {args.repository} {arch}', shell = True, encoding='utf8')
     with open(log_file, 'w+') as w:
         w.write(result)
 
@@ -50,7 +50,7 @@ def process_arch(arch):
     create_dir(os.path.join(args.folder, args.repository))
     arch_dir = os.path.join(args.folder, args.repository, arch)
 
-    result = subprocess.check_output('osc -A %s r %s -r %s -a %s --csv' % (args.url, args.project, args.repository, arch), shell = True)
+    result = subprocess.check_output(f'osc -A {args.url} r {args.project} -r {args.repository} -a {arch} --csv', shell = True)
     packages = result.decode('utf-8', 'ignore').strip().split('\n')
     packages = [x.split(';')[0] for x in packages if 'failed' in x or (args.all and 'succeeded' in x)]
     packages = [x for x in packages if x != '_']

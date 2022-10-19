@@ -10,7 +10,7 @@ import sys
 import xmltodict
 
 base_url = 'https://gcc.gnu.org/bugzilla/rest.cgi/'
-pr_regex = re.compile('PR\ (.*)\/([0-9]+)')
+pr_regex = re.compile(r'PR\ (.*)\/([0-9]+)')
 
 def find_prs(message):
     for line in message.split('\n'):

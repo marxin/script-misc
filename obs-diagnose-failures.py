@@ -61,6 +61,6 @@ for c in categories:
     print('=== %s (%d) ===' % (k, len(v)))
     for p in sorted(v):
         if p[1] != None:
-            print('%s:%s' % (p[0], p[1]))
+            print(f'{p[0]}:{p[1]}')
         else:
             print(p[0])

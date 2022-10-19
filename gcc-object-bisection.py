@@ -48,9 +48,9 @@ def get_objects(folder):
     return sorted([x[len(folder):] for x in objects])
 
 def copy_file(source, target):
-    r = subprocess.call('diff %s %s' % (source, target), shell = True, stdout = FNULL)
+    r = subprocess.call(f'diff {source} {target}', shell = True, stdout = FNULL)
     if r != 0:
-        print('Copying %s -> %s' % (source, target))
+        print(f'Copying {source} -> {target}')
         shutil.copy(source, target)
 
 if args.action == 'save':

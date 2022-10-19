@@ -11,7 +11,7 @@ args = parser.parse_args()
 contrib = '~/Programming/gcc/contrib/'
 tmp = '/tmp/gcc.patch'
 
-subprocess.check_output('git diff %s > %s' % (args.revision, tmp), shell=True)
+subprocess.check_output(f'git diff {args.revision} > {tmp}', shell=True)
 
 if args.inplace:
     print('applying clang-format in place')
@@ -22,4 +22,4 @@ subprocess.run('git diff -U0 --no-color %s | clang-format-diff -p1 %s | colordif
 
 print()
 print('check_GNU_style.py:')
-subprocess.run('%s/check_GNU_style.py %s' % (contrib, tmp), shell=True, encoding='utf8')
+subprocess.run(f'{contrib}/check_GNU_style.py {tmp}', shell=True, encoding='utf8')

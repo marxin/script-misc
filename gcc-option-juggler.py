@@ -89,13 +89,13 @@ def get_compiler_by_extension(f):
     else:
         return None
 
-ignored_tests = set(['instantiate-typeof.cpp', 'multi-level-substitution.cpp', 'constructor-template.cpp', 'instantiate-typeof.cpp',
+ignored_tests = {'instantiate-typeof.cpp', 'multi-level-substitution.cpp', 'constructor-template.cpp', 'instantiate-typeof.cpp',
         'enum-unscoped-nonexistent.cpp', 'dr6xx.cpp', 'cxx1y-generic-lambdas-capturing.cpp', 'cxx1y-variable-templates_in_class.cpp',
         'temp_arg_nontype.cpp', 'constant-expression-cxx1y.cpp', 'cxx1z-using-declaration.cpp', 'pack-deduction.cpp', 'pr65693.c', 'const-init.cpp',
         'temp_arg_nontype_cxx1z.cpp', 'cxx1z-decomposition.cpp', 'vla-lambda-capturing.cpp', 'cxx0x-defaulted-functions.cpp', 'dllimport.cpp', 'type-traits.cpp',
         'for-range-examples.cpp', 'lambda-expressions.cpp', 'mangle-lambdas.cpp', 'cxx1y-generic-lambdas.cpp', 'macro_vaopt_expand.cpp', 'dllimport-members.cpp',
         'dllexport.cpp', 'lambda-mangle4.C', 'dllexport-members.cpp', 'arm-asm.c', 'cxx0x-cursory-default-delete.cpp',
-        'pr89037.c', 'pr90139.c'])
+        'pr89037.c', 'pr90139.c'}
 
 def find_tests(base, contains):
     result = []
@@ -130,7 +130,7 @@ def split_by_space(line):
     return [x for x in line.replace('\t', ' ').split(' ') if x != '']
 
 def output_for_command(command):
-    r = subprocess.run(command, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    r = subprocess.run(command, shell = True, capture_output=True)
     assert r.returncode == 0
     lines = [x.strip() for x in r.stdout.decode('utf-8').split('\n')]
     lines = lines[1:]
@@ -140,8 +140,8 @@ def check_option(level, option):
     if option in option_validity_cache:
         return option_validity_cache[option]
 
-    cmd = '%s -c -c %s %s %s' % (get_compiler(), empty, level, option)
-    r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+    cmd = f'{get_compiler()} -c -c {empty} {level} {option}'
+    r = subprocess.run(cmd, shell = True, capture_output=True)
     result = r.returncode == 0
     option_validity_cache[option] = result
     return result
@@ -326,8 +326,8 @@ class Param:
         if self.max == 0:
             self.max = 2147483647
 
-        limitted_params = set(['max-iterations-to-track', 'min-nondebug-insn-uid', 'max-completely-peel-times', 'max-completely-peeled-insns',
-            'jump-table-max-growth-ratio-for-size', 'jump-table-max-growth-ratio-for-speed'])
+        limitted_params = {'max-iterations-to-track', 'min-nondebug-insn-uid', 'max-completely-peel-times', 'max-completely-peeled-insns',
+            'jump-table-max-growth-ratio-for-size', 'jump-table-max-growth-ratio-for-speed'}
 
         for l in limitted_params:
             if l in self.name:
@@ -376,7 +376,7 @@ class OptimizationLevel:
 
         if name == 'target':
             # enums are listed at the end
-            lines = output_for_command('%s -c -Q --help=%s %s' % (get_compiler(), name, self.level))
+            lines = output_for_command(f'{get_compiler()} -c -Q --help={name} {self.level}')
             start = takewhile(lambda x: x != '', lines)
             lines = lines[len(list(start)):]
 
@@ -393,7 +393,7 @@ class OptimizationLevel:
 
         else:
             # run without -Q
-            lines = output_for_command('%s -c --help=%s %s' % (get_compiler(), name, self.level))
+            lines = output_for_command(f'{get_compiler()} -c --help={name} {self.level}')
 
             for l in lines:
                 parts = split_by_space(l)
@@ -410,7 +410,7 @@ class OptimizationLevel:
     def parse_options(self, name):
         enum_values = self.parse_enum_values(name)
 
-        for l in output_for_command('%s -c -Q --help=%s %s' % (get_compiler(), name, self.level)):
+        for l in output_for_command(f'{get_compiler()} -c -Q --help={name} {self.level}'):
             if l == '':
                break
             parts = split_by_space(l)
@@ -463,7 +463,7 @@ class OptimizationLevel:
                 pass
 
     def parse_params(self):
-        for l in output_for_command('%s -c -Q --help=params %s' % (get_compiler(), self.level)):
+        for l in output_for_command(f'{get_compiler()} -c -Q --help=params {self.level}'):
             if l == '':
                 continue
             elif 'available in' in l:
@@ -532,7 +532,7 @@ class OptimizationLevel:
         my_env['UBSAN_OPTIONS'] = 'color=never halt_on_error=1'
         my_env['ASAN_OPTIONS'] = 'color=never detect_leaks=0'
 
-        r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE, env = my_env)
+        r = subprocess.run(cmd, shell = True, capture_output=True, env = my_env)
         if r.returncode != 0:
             try:
                 stderr = r.stderr.decode('utf-8')
@@ -557,7 +557,7 @@ class OptimizationLevel:
                 print(cmd)
 
     def reduce(self, cmd):
-        r = subprocess.run(os.path.join(script_dir, "gcc-reduce-flags.py") + " '" + cmd + "'", shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        r = subprocess.run(os.path.join(script_dir, "gcc-reduce-flags.py") + " '" + cmd + "'", shell = True, capture_output=True)
         assert r.returncode == 0
         reduced_command = r.stdout.decode('utf-8').strip()
         print(colored('Reduced command: ' + reduced_command, 'green'))
@@ -576,7 +576,7 @@ class OptimizationLevel:
 
         suffix = '.i' if compiler.endswith('gcc') else '.ii'
 
-        r = subprocess.run(cmd + ' -E', shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        r = subprocess.run(cmd + ' -E', shell = True, capture_output=True)
         assert r.returncode == 0
         content = r.stdout.decode('utf-8')
 
@@ -609,13 +609,13 @@ exit 0"""
 
         start = time()
         try:
-            r = subprocess.run('creduce --n 10 %s %s' % (reduce_script.name, source_filename), shell = True, stdout = subprocess.PIPE, timeout = 500)
+            r = subprocess.run(f'creduce --n 10 {reduce_script.name} {source_filename}', shell = True, stdout = subprocess.PIPE, timeout = 500)
             assert r.returncode == 0
             lines = r.stdout.decode('utf-8').split('\n')
             lines = list(dropwhile(lambda x: not '*******' in x, lines))
             print('\n'.join(lines))
             print(colored('CREDUCE ', 'cyan'), end = '')
-            print('took %s s, to test:\n%s %s' % (str(time() - start), c, source.name))
+            print(f'took {str(time() - start)} s, to test:\n{c} {source.name}')
         except TimeoutExpired as e:
             print('CREDUCE timed out!')
 
@@ -644,7 +644,7 @@ def filter_source_files():
 
         compiler = get_compiler_by_extension(source)
         cmd = 'timeout %d %s %s -fmax-errors=1 -I/home/marxin/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s -o/dev/null -S' % (args.timeout, args.cflags, compiler, source)
-        r = subprocess.run(cmd, shell = True, stdout = subprocess.PIPE, stderr = subprocess.PIPE)
+        r = subprocess.run(cmd, shell = True, capture_output=True)
         if r.returncode == 0:
             filtered_source_files.add(source)
 
