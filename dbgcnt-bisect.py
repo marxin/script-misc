@@ -33,7 +33,7 @@ def test(minimum, maximum, needed, count):
     cmd = args.gcc_command + extra_arg
     subprocess.check_output(cmd, shell=True, stderr=subprocess.PIPE)
     r = subprocess.run(args.run_command, shell=True,
-                       stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                       capture_output=True,
                        encoding='utf8')
     if args.verbose:
         print(r.stdout)
