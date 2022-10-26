@@ -91,7 +91,7 @@ parser.add_argument('-r', '--ranges',
 parser.add_argument('-t', '--title', help='Graph title')
 parser.add_argument('-m', '--memory-hog-threshold', type=float,
                     help='Report about processes that consume the amount of '
-                    'memory (in GB)')
+                    'memory (in GiB)')
 parser.add_argument('-f', '--frequency', type=float,
                     default=INTERVAL,
                     help='Frequency of measuring (in seconds)')
@@ -100,7 +100,7 @@ parser.add_argument('-j', '--jobs', type=int,
                     help='Scale up CPU data to used CPUs '
                     'instead of available CPUs')
 parser.add_argument('--y-scale', type=int,
-                    help='Minimal y-scale (in GB)')
+                    help='Minimal y-scale (in GiB)')
 
 args = parser.parse_args()
 
@@ -242,9 +242,9 @@ def get_footnote():
     return (f'host: {hostname}; CPUs: {args.used_cpus}/{cpu_count};'
             f' CPU avg: {cpu_average:.0f}%;'
             f' CPU max: {cpu_max:.0f}%;'
-            f' base memory: {base_memory:.1f} GB;'
-            f' peak memory: {peak_memory:.1f} GB;'
-            f' total memory: {total_mem:.1f} GB')
+            f' base memory: {base_memory:.1f} GiB;'
+            f' peak memory: {peak_memory:.1f} GiB;'
+            f' total memory: {total_mem:.1f} GiB')
 
 
 def get_footnote2():
@@ -255,9 +255,9 @@ def get_footnote2():
     disk_end = to_gigabyte(psutil.disk_usage('.').used)
     disk_delta = disk_end - disk_start
     load_max = global_load_data_max
-    return (f'load max (1m): {load_max:.0f}%; swap peak/total: {peak_swap:.1f}/{total_swap:.1f} GB;'
-            f' disk start/end/total: {disk_start:.1f}/{disk_end:.1f}/{disk_total:.1f} GB;'
-            f' disk delta: {disk_delta:.1f} GB')
+    return (f'load max (1m): {load_max:.0f}%; swap peak/total: {peak_swap:.1f}/{total_swap:.1f} GiB;'
+            f' disk start/end/total: {disk_start:.1f}/{disk_end:.1f}/{disk_total:.1f} GiB;'
+            f' disk delta: {disk_delta:.1f} GiB')
 
 
 def generate_graph(time_range):
@@ -307,7 +307,7 @@ def generate_graph(time_range):
 
     mem_subplot.plot(timestamps, memory_data, c='blue', lw=LW, label='total')
     mem_subplot.set_title('Memory usage')
-    mem_subplot.set_ylabel('GB')
+    mem_subplot.set_ylabel('GiB')
     mem_subplot.set_xlabel('time')
 
     # scale it to a reasonable limit
@@ -363,11 +363,11 @@ def summary():
     print(f'SUMMARY: {get_footnote()}')
     print(f'SUMMARY: {get_footnote2()}')
     if global_process_hogs:
-        print(f'PROCESS MEMORY HOGS (>={args.memory_hog_threshold:.1f} GB):')
+        print(f'PROCESS MEMORY HOGS (>={args.memory_hog_threshold:.1f} GiB):')
         items = sorted(global_process_hogs.items(), key=lambda x: x[1][0],
                        reverse=True)
         for cmdline, (memory, ts) in items:
-            print(f'  {memory:.1f} GB: {ts:.1f} s: {cmdline}')
+            print(f'  {memory:.1f} GiB: {ts:.1f} s: {cmdline}')
 
 
 thread = threading.Thread(target=record, args=())
