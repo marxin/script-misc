@@ -12,7 +12,7 @@ git = Path(sys.argv[1]).resolve()
 repo = Repo(git)
 branches = [10, 11, 12]
 objdir = '/dev/shm/myobjdir'
-source = '/home/marxin/Programming/tramp3d/tramp3d-v4.cpp'
+source = '/home/marxin/Programming/tramp3d/tramp3d-v4.ii'
 obj = '/tmp/tramp.o'
 pwd = os.getcwd()
 
@@ -51,7 +51,7 @@ for branch in reversed(branches):
         last_bump = basepoint
     print(f'gcc-{branch} last time bumped in {last_bump}', flush=True)
     build_compiler(tip)
-    subprocess.check_output(f'./gcc/xg++ -Bgcc -O2 -c -std=c++98 -flto=16 {source} -o {obj}', shell=True)
+    subprocess.check_output(f'./gcc/xg++ -Bgcc -O2 -c -flto=16 {source} -o {obj}', shell=True)
     build_compiler(last_bump)
     try:
         subprocess.check_output(f'./gcc/xg++ -Bgcc -O2 -flto=16 {obj} -L ./x86_64-pc-linux-gnu/libstdc++-v3/src/.libs',
