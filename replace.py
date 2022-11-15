@@ -43,6 +43,10 @@ return line
 
 
 def modify_line(line, index, lines, filename):
+    nee = 'indices-and-tables'
+    if nee in line:
+        line = line.replace(nee, 'genindex')
+
     return line
 
 
