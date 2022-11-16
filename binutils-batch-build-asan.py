@@ -214,7 +214,7 @@ def report_error(command, test_case, location, full_line, target):
 results = {}
 
 print('.' * len(targets))
-with concurrent.futures.ProcessPoolExecutor() as executor:
+with concurrent.futures.ProcessPoolExecutor(max_workers=16) as executor:
     future_map = {executor.submit(build_and_test_target, target): target for target in targets}
     for future in concurrent.futures.as_completed(future_map):
         target = future_map[future]
