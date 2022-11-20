@@ -20,9 +20,13 @@ import filelock
 
 from git import Repo
 
+import psutil
+
 from semantic_version import Version
 
 from termcolor import colored
+
+CPU_COUNT = psutil.cpu_count()
 
 # configuration
 script_dirname = os.path.abspath(os.path.dirname(__file__))
@@ -278,7 +282,7 @@ class GitRevision:
             log(self.commit.hexsha, 'OK')
 
     def build(self):
-        build_command = 'nice make -j16 CFLAGS="-O2 -g0" CXXFLAGS="-O2 -g0"'
+        build_command = f'nice make -j{CPU_COUNT} CFLAGS="-O2 -g0" CXXFLAGS="-O2 -g0"'
         if os.path.exists(self.get_archive_path()):
             if args.verbose:
                 flush_print('Revision %s already exists' % (str(self)))
