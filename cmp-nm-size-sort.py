@@ -33,6 +33,7 @@ def parse(path):
 default = parse(sys.argv[1])
 lto = parse(sys.argv[2])
 
+print('      symbols size')
 print('def', len(default), sum(default.values()))
 print('LTO', len(lto), sum(lto.values()))
 
@@ -68,4 +69,4 @@ for d in diffs:
     else:
         loses += v
 
-print('wins:', wins, 'loses:', loses, 'diff:', wins + loses)
+print('wins:', wins, 'loses:', loses, 'DIFF:', wins + loses)
