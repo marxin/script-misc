@@ -37,14 +37,23 @@ print('def', len(default), sum(default.values()))
 print('LTO', len(lto), sum(lto.values()))
 
 same_names = 0
+different_size1 = 0
+different_size2 = 0
 diffs = []
 
 for symname, size in default.items():
     if symname in lto:
         same_names += 1
         diffs.append((symname, lto[symname] - size))
+    else:
+        different_size1 += size
+
+for symname, size in lto.items():
+    if symname not in default:
+        different_size2 += size
 
 print('Common symbols:', same_names)
+print('Different size:', different_size1, different_size2)
 
 diffs = sorted(diffs, key=lambda x: x[1], reverse=True)
 print('')
