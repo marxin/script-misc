@@ -31,9 +31,8 @@ CPU_COUNT = psutil.cpu_count()
 # configuration
 script_dirname = os.path.abspath(os.path.dirname(__file__))
 
-# WARNING: older commits include wide-int branch merged commits
-# close to base of trunk and 4.9, there is then some libgfortran relink issue
-last_revision = '58a41b43b5f02c67544569c508424efa4115ad9f'
+# Start with basepoints/gcc-6
+last_revision = '1a46d358050cf6964df0d8ceaffafd0cc88539b2'
 
 description_color = 'blue'
 title_color = 'cyan'
