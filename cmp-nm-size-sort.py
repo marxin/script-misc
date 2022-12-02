@@ -37,9 +37,12 @@ dfile = Path(sys.argv[2])
 source = parse(sfile)
 dest = parse(dfile)
 
+totals = sum(source.values())
+totald = sum(dest.values())
+
 print('      symbols size')
-print(sfile.stem + ':', len(source), sum(source.values()))
-print(dfile.stem + ':', len(dest), sum(dest.values()))
+print(sfile.stem + ':', len(source), totals)
+print(dfile.stem + ':', len(dest), totald, f'({100.0 * totald / totals:.1f} %)')
 print()
 
 same_names = 0
