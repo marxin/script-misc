@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 def prune_fname(name):
-    for N in ('.lto_priv', '.cold', '.part', '.isra'):
+    for N in ('.lto_priv', '.cold', '.part', '.isra', '.constprop', '.llvm.'):
         if N in name:
             name = name[:name.index(N)]
     return name
@@ -47,16 +47,22 @@ different_size1 = 0
 different_size2 = 0
 diffs = []
 
+verbose = len(sys.argv) >= 4 and sys.argv[3] == '-v'
+
 for symname, size in source.items():
     if symname in dest:
         same_names += 1
         diffs.append((symname, dest[symname] - size))
     else:
         different_size1 += size
+        if verbose:
+            print('>', symname)
 
 for symname, size in dest.items():
     if symname not in source:
         different_size2 += size
+        if verbose:
+            print('<', symname)
 
 print('Common symbols:', same_names)
 # print('Different size:', different_size1, different_size2)
