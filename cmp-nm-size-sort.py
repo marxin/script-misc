@@ -1,8 +1,9 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 # Parses and compares 2 files made by 'nm --size-sort'
 
 import sys
+from pathlib import Path
 
 
 def prune_fname(name):
@@ -15,7 +16,7 @@ def prune_fname(name):
 def parse(path):
     symbols = {}
 
-    lines = open(path).read().splitlines()
+    lines = path.open().read().splitlines()
     for line in lines:
         size, t, name = line.split()
         size = int(size, 16)
@@ -30,34 +31,37 @@ def parse(path):
     return symbols
 
 
-default = parse(sys.argv[1])
-lto = parse(sys.argv[2])
+sfile = Path(sys.argv[1])
+dfile = Path(sys.argv[2])
+
+source = parse(sfile)
+dest = parse(dfile)
 
 print('      symbols size')
-print('def', len(default), sum(default.values()))
-print('LTO', len(lto), sum(lto.values()))
+print(sfile.stem + ':', len(source), sum(source.values()))
+print(dfile.stem + ':', len(dest), sum(dest.values()))
+print()
 
 same_names = 0
 different_size1 = 0
 different_size2 = 0
 diffs = []
 
-for symname, size in default.items():
-    if symname in lto:
+for symname, size in source.items():
+    if symname in dest:
         same_names += 1
-        diffs.append((symname, lto[symname] - size))
+        diffs.append((symname, dest[symname] - size))
     else:
         different_size1 += size
 
-for symname, size in lto.items():
-    if symname not in default:
+for symname, size in dest.items():
+    if symname not in source:
         different_size2 += size
 
 print('Common symbols:', same_names)
-print('Different size:', different_size1, different_size2)
+# print('Different size:', different_size1, different_size2)
 
 diffs = sorted(diffs, key=lambda x: x[1], reverse=True)
-print('')
 
 wins = 0
 loses = 0
