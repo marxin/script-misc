@@ -45,6 +45,11 @@ FNULL = open(os.devnull, 'w')
 
 empty = tempfile.NamedTemporaryFile(suffix = '.c', delete = False).name
 
+my_env = os.environ.copy()
+my_env['UBSAN_OPTIONS'] = 'color=never halt_on_error=1'
+my_env['ASAN_OPTIONS'] = 'color=never detect_leaks=0'
+my_env['GCCRS_INCOMPLETE_AND_EXPERIMENTAL_COMPILER_DO_NOT_USE'] = '1'
+
 def get_compiler_prefix():
     if args.target == 'x86_64':
         return ''
@@ -528,10 +533,6 @@ class OptimizationLevel:
 
         # TODO: warning
         cmd = 'timeout %d %s %s -fmax-errors=1 -I/home/marxin/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s %s %s -o/dev/null -S' % (args.timeout, compiler, args.cflags, self.level, source_file, ' '.join(options))
-        my_env = os.environ.copy()
-        my_env['UBSAN_OPTIONS'] = 'color=never halt_on_error=1'
-        my_env['ASAN_OPTIONS'] = 'color=never detect_leaks=0'
-        my_env['GCCRS_INCOMPLETE_AND_EXPERIMENTAL_COMPILER_DO_NOT_USE'] = '1'
 
         r = subprocess.run(cmd, shell = True, capture_output=True, env = my_env)
         if r.returncode != 0:
@@ -645,7 +646,7 @@ def filter_source_files():
 
         compiler = get_compiler_by_extension(source)
         cmd = 'timeout %d %s %s -fmax-errors=1 -I/home/marxin/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s -o/dev/null -S' % (args.timeout, args.cflags, compiler, source)
-        r = subprocess.run(cmd, shell = True, capture_output=True)
+        r = subprocess.run(cmd, shell = True, capture_output=True, env=my_env)
         if r.returncode == 0:
             filtered_source_files.add(source)
 
