@@ -80,11 +80,11 @@ def get_compiler():
     return get_compiler_prefix() + 'gcc'
 
 def get_compiler_by_extension(f):
-    if f.endswith('.c'):
+    if f.endswith(('.c', '.rs')):
         return get_compiler()
-    elif f.endswith('.C') or f.endswith('.cpp') or f.endswith('.cc'):
+    elif f.endswith(('.C', '.cpp', '.cc')):
         return get_compiler_prefix() + 'g++'
-    elif f.endswith('.f') or f.endswith('.f90'):
+    elif f.endswith(('.f', '.f90')):
         return get_compiler_prefix() + 'gfortran'
     else:
         return None
@@ -531,6 +531,7 @@ class OptimizationLevel:
         my_env = os.environ.copy()
         my_env['UBSAN_OPTIONS'] = 'color=never halt_on_error=1'
         my_env['ASAN_OPTIONS'] = 'color=never detect_leaks=0'
+        my_env['GCCRS_INCOMPLETE_AND_EXPERIMENTAL_COMPILER_DO_NOT_USE'] = 1
 
         r = subprocess.run(cmd, shell = True, capture_output=True, env = my_env)
         if r.returncode != 0:
