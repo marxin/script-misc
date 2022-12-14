@@ -531,7 +531,7 @@ class OptimizationLevel:
         my_env = os.environ.copy()
         my_env['UBSAN_OPTIONS'] = 'color=never halt_on_error=1'
         my_env['ASAN_OPTIONS'] = 'color=never detect_leaks=0'
-        my_env['GCCRS_INCOMPLETE_AND_EXPERIMENTAL_COMPILER_DO_NOT_USE'] = 1
+        my_env['GCCRS_INCOMPLETE_AND_EXPERIMENTAL_COMPILER_DO_NOT_USE'] = '1'
 
         r = subprocess.run(cmd, shell = True, capture_output=True, env = my_env)
         if r.returncode != 0:
