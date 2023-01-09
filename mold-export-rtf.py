@@ -18,6 +18,8 @@ for root, _, files in os.walk(sys.argv[1]):
             continue
         elif 'win32' in fullname or 'source-all' in fullname:
             continue
+        elif 'objdir/' in fullname:
+            continue
 
         sources.append(full)
 
