@@ -46,7 +46,9 @@ print('File count:', len(sources))
 
 def cat_n(lines):
     for i, line in enumerate(lines):
-        yield f'{i + 1:4d} {line}'
+        sline = line.lstrip()
+        spaces = len(line) - len(sline)
+        yield f'{i + 1:4d} {" " * (spaces // 2)}{sline}'
 
 
 with open('source-all.cc', 'w') as w:
