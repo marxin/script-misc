@@ -93,7 +93,7 @@ retcode = 0
 
 print(f'Total targets: {len(targets)}')
 print('.' * len(targets))
-with concurrent.futures.ProcessPoolExecutor(max_workers=16) as executor:
+with concurrent.futures.ProcessPoolExecutor(max_workers=8) as executor:
     futures = []
     for t in targets:
         futures.append(executor.submit(build_target, t))
