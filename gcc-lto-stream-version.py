@@ -28,7 +28,8 @@ def build_compiler(revision):
     os.mkdir(objdir)
     os.chdir(objdir)
     subprocess.check_output(f'{git}/configure --enable-languages=c,c++,lto --prefix=/home/marxin/bin/gcc2 '
-                            '--disable-multilib --disable-libsanitizer --disable-bootstrap --with-ld=`which ld.bfd`', shell=True,
+                            '--disable-multilib --disable-libsanitizer --disable-bootstrap '
+                            '--with-ld=`which ld.bfd`', shell=True,
                             stderr=subprocess.DEVNULL)
     subprocess.check_output('make -j`nproc`', shell=True, stderr=subprocess.DEVNULL)
 
