@@ -17,16 +17,16 @@ git fetch || exit 1
 git rev-parse $toplevel || exit 1
 rev=`git rev-parse $toplevel`
 
-# NOTE: git repository must point to HEAD, otherwise HEAD^ will not work!!!
-# use gcc-BASE-VER+r<number of commits on the branch>
-# ??? does rev-list as follows works when taring up HEAD?  Maybe somehow
-# use commits since stage1 start instead
-# ??? maybe use git describe [--tags] $toplevel
-r=`git rev-list --count $rev ^HEAD`
-if [[ "$1" == *"master" ]]; then
-  r=`git rev-list --count $rev`
-fi
 v=`git show $rev:gcc/BASE-VER`
+
+# use the count from git gcc-descr with 13+
+if test "`echo $v | cut -d '.' -f 1`" -ge "13"; then
+  r=`git gcc-descr $toplevel | sed -e 's/.*-\([0-9]*\)-.*/\1/'`
+else
+  # use gcc-BASE-VER+r<number of commits on the branch>
+  r=`git rev-list --count $rev ^origin/master`
+fi
+
   if test "`echo $v | cut -d '.' -f 1`" -lt "5"; then
    if test "`git show $rev:gcc/DEV-PHASE`" == "prerelease"; then
     v=`echo $v | cut -d '.' -f 1-2 | tr -d '\n'; echo -n .; echo $v | cut -d '.' -f 3 | tr '0123456789' '0012345678'`
@@ -44,11 +44,15 @@ if ! test -z "$3"; then
 fi
 echo $pkg
 
-mkdir -p $pkg/gcc/
+if test -e $pkg; then
+  echo oops, local $pkg exists
+  exit 1
+fi
+mkdir -p $pkg/gcc
 echo "[revision $rev]" > $pkg/gcc/REVISION
 git archive --format=tar --prefix=$pkg/ -o $packagedir/$pkg.tar $rev
 tar rvf $packagedir/$pkg.tar $pkg/gcc/REVISION
-mv $pkg /tmp/
+rm -Rf $pkg
 xz -T0 $packagedir/$pkg.tar
 ls -l $packagedir/$pkg.tar.xz
 
