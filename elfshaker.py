@@ -58,10 +58,12 @@ def pack_revisions(n, revisions):
             os.remove(zstd_archive)
             subprocess.check_output(f'/home/marxin/Programming/elfshaker/target/release/elfshaker store {h}',
                                     shell=True)
-    subprocess.check_output(f'{elfshaker_bin} pack pack-{n:04} --compression-level {COMPRESSION_LEVEL}',
+
+    packname = f'pack-{n:04}'
+    subprocess.check_output(f'{elfshaker_bin} pack {packname} --compression-level {COMPRESSION_LEVEL}',
                             shell=True, stderr=subprocess.PIPE)
-    shutil.copy(f'elfshaker_data/packs/pack-{n}.pack', elfshaker_packs)
-    shutil.copy(f'elfshaker_data/packs/pack-{n}.pack.idx', elfshaker_packs)
+    shutil.copy(f'elfshaker_data/packs/{packname}.pack', elfshaker_packs)
+    shutil.copy(f'elfshaker_data/packs/{packname}.pack.idx', elfshaker_packs)
     shutil.rmtree(tempdir)
     print(f'Packing {n} took {time.monotonic() - start:.2f}')
 
