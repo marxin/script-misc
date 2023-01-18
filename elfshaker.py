@@ -22,8 +22,11 @@ elfshaker_packs = elfshaker_repo / 'elfshaker_data' / 'packs'
 tmpdir = Path('/dev/shm/tmp-elfshaker')
 
 revisions = [x.hexsha for x in reversed(list(repo.iter_commits(last_revision + '..origin/master', first_parent=True)))]
+print(f'Have: {len(revisions)} revisions')
+
+revisions = [hexsha for hexsha in revisions if (binaries_dir / f'{hexsha}.tar.zst').exists()]
 revcount = len(revisions)
-print(f'Have: {revcount} revisions')
+print(f'Have: {revcount} revisions with existing tarball')
 
 shutil.rmtree(elfshaker_repo, ignore_errors=True)
 elfshaker_packs.mkdir(parents=True)
@@ -55,7 +58,7 @@ def pack_revisions(n, revisions):
             os.remove(zstd_archive)
             subprocess.check_output(f'/home/marxin/Programming/elfshaker/target/release/elfshaker store {h}',
                                     shell=True)
-    subprocess.check_output(f'{elfshaker_bin} pack pack-{n} --compression-level {COMPRESSION_LEVEL}',
+    subprocess.check_output(f'{elfshaker_bin} pack pack-{n:04} --compression-level {COMPRESSION_LEVEL}',
                             shell=True, stderr=subprocess.PIPE)
     shutil.copy(f'elfshaker_data/packs/pack-{n}.pack', elfshaker_packs)
     shutil.copy(f'elfshaker_data/packs/pack-{n}.pack.idx', elfshaker_packs)
