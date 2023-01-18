@@ -13,7 +13,7 @@ from git import Repo
 
 CHUNK_SIZE = 100
 COMPRESSION_LEVEL = 17
-last_revision = '58a41b43b5f02c67544569c508424efa4115ad9f'
+last_revision = '1a46d358050cf6964df0d8ceaffafd0cc88539b2'
 repo = Repo('/home/marxin/Programming/gcc2')
 binaries_dir = '/home/marxin/DATA/gcc-binaries'
 elfshaker_bin = '/home/marxin/Programming/elfshaker/target/release/elfshaker'
