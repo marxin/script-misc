@@ -24,7 +24,7 @@ tmpdir = Path('/dev/shm/tmp-elfshaker')
 revisions = [x.hexsha for x in reversed(list(repo.iter_commits(last_revision + '..origin/master', first_parent=True)))]
 print(f'Have: {len(revisions)} revisions')
 
-revisions = [hexsha for hexsha in revisions if (Path(binaries_dir, f'{hexsha}.tar.zst').exists()]
+revisions = [hexsha for hexsha in revisions if Path(binaries_dir, f'{hexsha}.tar.zst').exists()]
 revcount = len(revisions)
 print(f'Have: {revcount} revisions with existing tarball')
 
