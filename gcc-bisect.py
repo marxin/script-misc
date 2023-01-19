@@ -354,9 +354,7 @@ class GitRevision:
 
         # Right now, elfshaker cannot save executable permission on files:
         # https://github.com/elfshaker/elfshaker/issues/93
-        bin_folder = Path(self.get_install_path(), 'bin')
-        for binary in bin_folder.iterdir():
-            binary.chmod(0o755)
+        subprocess.check_output(f'chmod -R +x {self.get_install_path()}/*', shell=True)
 
         os.chdir(current)
         return True
