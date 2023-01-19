@@ -541,12 +541,15 @@ class GitRepository:
         with lock:
             lines = subprocess.check_output(f'{elfshaker_bin} --data-dir {binaries_location} list',
                                             encoding='utf8', shell=True).splitlines()
-            tuples = [l.split(':') for l in lines]
-            loose = [l[1] for l in tuples if l[0].startswith('loose/')]
+            tuples = [line.split(':') for line in lines]
+            loose = {line[1] for line in tuples if line[0].startswith('loose/')}
 
             # Find next pack name
-            maxpack = max([int(l[0].split('-')[1]) for l in tuples if len(l[0]) == len('pack-0000')])
-            print(loose)
+            maxpack = max([int(line[0].split('-')[1]) for line in tuples if len(line[0]) == len('pack-0000')])
+            topack = [x.commit.hexsha for x in reversed(self.latest) if x.commit.hexsha in loose]
+
+            # TODO: start here
+            print('Loose objects:', len(topack))
             print(maxpack)
 
     def find_commit(self, name, candidates):
