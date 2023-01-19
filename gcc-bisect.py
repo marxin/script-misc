@@ -28,6 +28,8 @@ from semantic_version import Version
 from termcolor import colored
 
 CPU_COUNT = psutil.cpu_count()
+CHUNK_SIZE = 100
+COMPRESSION_LEVEL = 17
 
 # configuration
 script_dirname = os.path.abspath(os.path.dirname(__file__))
@@ -178,6 +180,7 @@ class GitRevision:
     def __init__(self, commit):
         self.commit = commit
         self.has_binary = False
+        self.in_pack = False
 
     def timestamp_str(self):
         return self.commit.committed_datetime.strftime('%d %b %Y %H:%M')
@@ -278,11 +281,7 @@ class GitRevision:
 
     def build(self):
         build_command = f'nice make -j{CPU_COUNT} CFLAGS="-O2 -g0" CXXFLAGS="-O2 -g0"'
-        if self.has_binary:
-            if args.verbose:
-                flush_print('Revision %s already exists' % (str(self)))
-            return False
-        elif build_failed_for_revision(self.commit.hexsha):
+        if build_failed_for_revision(self.commit.hexsha):
             if args.verbose:
                 flush_print('Revision %s already failed' % (str(self)))
             return False
@@ -506,20 +505,38 @@ class GitRepository:
         for r in self.latest:
             r.print_status()
 
-    def build(self):
-        for source in self.all:
-            for r in source:
-                r.build()
+    def pack(self, name, revisions):
+        subprocess.check_output(f'{elfshaker_bin} --data-dir {binaries_location} pack {name} '
+                                f'--compression-level {COMPRESSION_LEVEL} --snapshots-from -',
+                                encoding='utf8', shell=True, input='\n'.join(revisions))
+
+    def cleanup(self):
+        subprocess.check_output(f'{elfshaker_bin} --data-dir {binaries_location} gc -so',
+                                encoding='utf8', shell=True)
 
     def initialize_binaries(self):
         lines = subprocess.check_output(f'{elfshaker_bin} --data-dir {binaries_location} list',
                                         encoding='utf8', shell=True).splitlines()
         existing = {line.split(':')[1] for line in lines}
-
         for source in self.all:
             for r in source:
                 if r.commit.hexsha in existing:
                     r.has_binary = True
+
+    def build(self):
+        # First build branch tips and releases
+        # Pack each revision individually.
+        for r in self.releases + self.branches:
+            if not r.has_binary and r.build():
+                with lock:
+                    self.pack(f'pack-{r.commit.hexsha}', [r.commit.hexsha])
+                    self.cleanup()
+
+        # Build all latest revisions in reverse order and pack
+        # if we have enough snapshots.
+        for r in reversed(self.latest):
+            if not r.has_binary:
+                r.build()
 
     def find_commit(self, name, candidates):
         if 'base' in name:
