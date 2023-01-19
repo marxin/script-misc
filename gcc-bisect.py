@@ -91,7 +91,7 @@ if 'Default' not in config:
     print('Cannot find Default section in config file: %s' % config_location)
     exit(127)
 
-needed_variables = ['git_location', 'binaries_location', 'extract_location']
+needed_variables = ['git_location', 'binaries_location', 'extract_location', 'elfshaker_bin']
 for nv in needed_variables:
     if nv not in config['Default']:
         print(f'Missing variable {nv} in config file: {config_location}')
@@ -100,6 +100,7 @@ for nv in needed_variables:
 git_location = config['Default']['git_location']
 binaries_location = config['Default']['binaries_location']
 extract_location = config['Default']['extract_location']
+elfshaker_bin = config['Default']['elfshaker_bin']
 
 repo = Repo(git_location)
 head = repo.commit('origin/master')
@@ -261,11 +262,10 @@ class GitRevision:
     def get_install_path(self):
         return os.path.join(extract_location, 'usr', 'local')
 
-    def get_archive_path(self):
-        return self.get_folder_path() + '.tar.zst'
-
-    def get_folder_path(self):
-        return os.path.join(binaries_location, self.commit.hexsha)
+    def exists(self):
+        r = subprocess.run(f'{elfshaker_bin} --data-dir {binaries_location} list-files {self.commit}',
+                           encoding='utf8', shell=True, stdout=subprocess.DEVNULL)
+        return r.returncode == 0
 
     def install(self, start):
         with lock:
@@ -350,14 +350,23 @@ class GitRevision:
         os.chdir(current)
 
     def decompress(self):
-        archive = self.get_archive_path()
-        if not os.path.exists(archive):
+        if not self.exists():
             return False
 
         shutil.rmtree(extract_location, ignore_errors=True)
         os.makedirs(extract_location)
-        cmd = f'zstdcat -T0 {archive} | tar x -C {extract_location}'
-        subprocess.check_output(cmd, shell=True)
+        current = os.getcwd()
+        os.chdir(extract_location)
+        cmd = f'{elfshaker_bin} --data-dir {binaries_location} extract {self.commit} --verify --reset'
+        subprocess.check_output(cmd, stderr=subprocess.DEVNULL, shell=True)
+
+        # Right now, elfshaker cannot save executable permission on files:
+        # https://github.com/elfshaker/elfshaker/issues/93
+        bin_folder = Path(self.get_install_path(), 'bin')
+        for binary in bin_folder.iterdir():
+            binary.chmod(0o755)
+
+        os.chdir(current)
         return True
 
     def print_status(self):
@@ -510,11 +519,9 @@ class GitRepository:
                 r.build()
 
     def initialize_binaries(self):
-        files = os.listdir(binaries_location)
-        existing = set()
-        for f in files:
-            if f.endswith('.tar.zst'):
-                existing.add(f.split('.')[0])
+        lines = subprocess.check_output(f'{elfshaker_bin} --data-dir {binaries_location} list',
+                                        encoding='utf8', shell=True).splitlines()
+        existing = {line.split(':')[1] for line in lines}
 
         for source in self.all:
             for r in source:
