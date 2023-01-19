@@ -524,9 +524,9 @@ class GitRepository:
                     r.has_binary = True
 
     def build(self):
-        # First build branch tips and releases
+        # First build branch tips and releases (skip last which is master branch)
         # Pack each revision individually.
-        for r in self.releases + self.branches:
+        for r in self.releases[:-1] + self.branches[:-1]:
             if not r.has_binary and r.build():
                 with lock:
                     self.pack(f'pack-{r.commit.hexsha}', [r.commit.hexsha])
@@ -537,6 +537,17 @@ class GitRepository:
         for r in reversed(self.latest):
             if not r.has_binary:
                 r.build()
+
+        with lock:
+            lines = subprocess.check_output(f'{elfshaker_bin} --data-dir {binaries_location} list',
+                                            encoding='utf8', shell=True).splitlines()
+            tuples = [l.split(':') for l in lines]
+            loose = [l[1] for l in tuples if l[0].startswith('loose/')]
+
+            # Find next pack name
+            maxpack = max([int(l[0].split('-')[1]) for l in tuples if len(l[0]) == len('pack-0000')])
+            print(loose)
+            print(maxpack)
 
     def find_commit(self, name, candidates):
         if 'base' in name:
