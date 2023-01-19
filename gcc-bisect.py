@@ -274,9 +274,9 @@ class GitRevision:
             with (open(os.path.join(extract_location, 'git-revision.txt'), 'w+')) as note:
                 note.write(self.commit.hexsha)
             self.compress()
-            took = time.monotonic() - start
+            took = int(time.monotonic() - start)
             build_times.append(took)
-            flush_print(f'Build has taken: {str(took)}, avg: {str(sum(build_times) / len(build_times))}')
+            flush_print(f'Build has taken: {str(took)}, avg: {str(sum(build_times) // len(build_times))}')
             log(self.commit.hexsha, 'OK')
 
     def build(self):
