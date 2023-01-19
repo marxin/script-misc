@@ -2,7 +2,8 @@
 
 # one needs the following packages:
 # python3-filelock python3-GitPython
-# python3-semantic_version python3-termcolor zstd
+# python3-semantic_version python3-termcolor
+# elfshaker
 
 import argparse
 import configparser
@@ -262,11 +263,6 @@ class GitRevision:
     def get_install_path(self):
         return os.path.join(extract_location, 'usr', 'local')
 
-    def exists(self):
-        r = subprocess.run(f'{elfshaker_bin} --data-dir {binaries_location} list-files {self.commit}',
-                           encoding='utf8', shell=True, stdout=subprocess.DEVNULL)
-        return r.returncode == 0
-
     def install(self, start):
         with lock:
             if os.path.exists(extract_location):
@@ -282,7 +278,7 @@ class GitRevision:
 
     def build(self):
         build_command = f'nice make -j{CPU_COUNT} CFLAGS="-O2 -g0" CXXFLAGS="-O2 -g0"'
-        if os.path.exists(self.get_archive_path()):
+        if self.has_binary:
             if args.verbose:
                 flush_print('Revision %s already exists' % (str(self)))
             return False
@@ -339,18 +335,15 @@ class GitRevision:
             run_cmd('find %s -exec strip --strip-debug {} \\;' % extract_location)
 
     def compress(self):
-        archive = self.get_archive_path()
         self.strip()
-        assert archive.endswith('.tar.zst')
-        tarfile = archive.replace('.zst', '')
         current = os.getcwd()
         os.chdir(extract_location)
-        subprocess.check_output('tar cfv %s *' % tarfile, shell=True)
-        subprocess.check_output('zstd --rm -q -19 -T0 %s' % tarfile, shell=True)
+        cmd = f'{elfshaker_bin} --data-dir {binaries_location} store {self.commit}'
+        subprocess.check_output(cmd, shell=True)
         os.chdir(current)
 
     def decompress(self):
-        if not self.exists():
+        if not self.has_binary:
             return False
 
         shutil.rmtree(extract_location, ignore_errors=True)
