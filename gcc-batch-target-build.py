@@ -8,7 +8,8 @@ import subprocess
 import sys
 from itertools import dropwhile, takewhile
 
-IGNORED_TARGETS = ()
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=108491
+IGNORED_TARGETS = ('powerpc-freebsd13')
 
 
 def parse_default_targets(gcc_root):
