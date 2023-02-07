@@ -7,10 +7,12 @@
 
 import argparse
 import configparser
+import json
 import math
 import os
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import time
@@ -30,6 +32,7 @@ from termcolor import colored
 CPU_COUNT = psutil.cpu_count()
 CHUNK_SIZE = 100
 COMPRESSION_LEVEL = 17
+METAFILE = 'meta.json'
 
 # configuration
 script_dirname = os.path.abspath(os.path.dirname(__file__))
@@ -352,9 +355,17 @@ class GitRevision:
         cmd = f'{elfshaker_bin} --data-dir {binaries_location} extract {self.commit} --verify --reset'
         subprocess.check_output(cmd, stderr=subprocess.DEVNULL, shell=True)
 
-        # Right now, elfshaker cannot save executable permission on files:
-        # https://github.com/elfshaker/elfshaker/issues/93
-        subprocess.check_output(f'chmod -R +x {self.get_install_path()}/*', shell=True)
+        with open(METAFILE) as fp:
+            meta = json.load(fp)
+
+            # First create symlinks that are currently unsupported by elfshaker
+            for symlink, target in meta['symlinks'].items():
+                Path(symlink).symlink_to(target)
+
+            # Set executable flag
+            for execfile in meta['executables']:
+                p = Path(execfile)
+                p.chmod(p.stat().st_mode | stat.S_IXUSR)
 
         os.chdir(current)
         return True
