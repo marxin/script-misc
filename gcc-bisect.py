@@ -336,10 +336,27 @@ class GitRevision:
         if os.path.exists(extract_location):
             run_cmd('find %s -exec strip --strip-debug {} \\;' % extract_location)
 
+    def collect_metainfo(self):
+        symlinks = {}
+        executables = []
+
+        for root, _, files in os.walk('.'):
+            for file in files:
+                path = Path(root, file)
+                if path.is_symlink():
+                    symlinks[str(path)] = str(path.readlink())
+                if path.stat().st_mode & stat.S_IXUSR:
+                    executables.append(str(path))
+
+        meta = {'symlinks': symlinks, 'executables': sorted(executables)}
+        with open(METAFILE, 'w') as f:
+            json.dump(meta, f, indent=2)
+
     def compress(self):
         self.strip()
         current = os.getcwd()
         os.chdir(extract_location)
+        self.collect_metainfo()
         cmd = f'{elfshaker_bin} --data-dir {binaries_location} store {self.commit}'
         subprocess.check_output(cmd, shell=True)
         os.chdir(current)
