@@ -579,6 +579,8 @@ class GitRepository:
             if len(topack) >= CHUNK_SIZE:
                 self.pack(packname, topack[:CHUNK_SIZE])
                 print(f'New pack {packname} created')
+            else:
+                print(f'Loose objects waiting for packing: {len(topack)}')
 
     def find_commit(self, name, candidates):
         if 'base' in name:
