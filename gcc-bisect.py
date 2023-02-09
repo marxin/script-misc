@@ -541,13 +541,16 @@ class GitRepository:
                                 encoding='utf8', shell=True)
 
     def initialize_binaries(self):
-        lines = subprocess.check_output(f'{elfshaker_bin} --data-dir {binaries_location} list',
-                                        encoding='utf8', shell=True).splitlines()
-        existing = {line.split(':')[1] for line in lines}
+        existing = {t[1] for t in self.elfshaker_list()}
         for source in self.all:
             for r in source:
                 if r.commit.hexsha in existing:
                     r.has_binary = True
+
+    def elfshaker_list(self):
+        lines = subprocess.check_output(f'{elfshaker_bin} --data-dir {binaries_location} list',
+                                        encoding='utf8', shell=True).splitlines()
+        return [line.split(':') for line in lines]
 
     def build(self):
         # First build branch tips and releases (skip last which is master branch)
@@ -565,9 +568,7 @@ class GitRepository:
                 r.build()
 
         with lock:
-            lines = subprocess.check_output(f'{elfshaker_bin} --data-dir {binaries_location} list',
-                                            encoding='utf8', shell=True).splitlines()
-            tuples = [line.split(':') for line in lines]
+            tuples = self.elfshaker_list()
             loose = {line[1] for line in tuples if line[0].startswith('loose/')}
 
             # Find next pack name
