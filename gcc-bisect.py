@@ -673,17 +673,19 @@ class GitRepository:
 
     def gc(self):
         candidates = {r.commit.hexsha for r in self.latest + self.branches + self.releases}
-        folders = {folder.split('.')[0] for folder in os.listdir(binaries_location)}
-        todelete = folders - candidates
-        print(f'Builds found: {len(candidates)}, can be removed: {len(todelete)}')
-        if not todelete:
-            return
-        answer = input('Do you want to remove it (yes/no)?')
-        if answer == 'yes':
-            for file in todelete:
-                path = Path(binaries_location, file + '.tar.zst')
-                print(f'Removing {path}')
-                path.unlink()
+        with lock:
+            example = 'pack-0c1af5b6fde830146e5003b018ebabd2095533f4'
+            single_packs = {t[0][5:] for t in self.elfshaker_list() if len(t[0]) == len(example)}
+            todelete = single_packs - candidates
+            print(f'Builds found: {len(candidates)}, can be removed: {len(todelete)}')
+            if not todelete:
+                return
+            answer = input('Do you want to remove it (yes/no)?')
+            if answer == 'yes':
+                for rev in todelete:
+                    Path(binaries_location, 'packs', f'pack-{rev}.pack').unlink()
+                    Path(binaries_location, 'packs', f'pack-{rev}.pack.idx').unlink()
+                    print(f'Removing {rev}')
 
     def check_disk_usage(self):
         total, used, _ = shutil.disk_usage(binaries_location)
