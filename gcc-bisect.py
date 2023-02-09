@@ -571,13 +571,14 @@ class GitRepository:
             tuples = self.elfshaker_list()
             loose = {line[1] for line in tuples if line[0].startswith('loose/')}
 
-            # Find next pack name
+            # Find next pack name and create it if have enough revisions
             maxpack = max([int(line[0].split('-')[1]) for line in tuples if len(line[0]) == len('pack-0000')])
             topack = [x.commit.hexsha for x in reversed(self.latest) if x.commit.hexsha in loose]
+            packname = f'pack-{maxpack + 1:04}'
 
-            # TODO: start here
-            print('Loose objects:', len(topack))
-            print(maxpack)
+            if len(topack) >= CHUNK_SIZE:
+                self.pack(packname, topack[:CHUNK_SIZE])
+                print(f'New pack {packname} created')
 
     def find_commit(self, name, candidates):
         if 'base' in name:
