@@ -97,14 +97,14 @@ if 'Default' not in config:
     print('Cannot find Default section in config file: %s' % config_location)
     exit(127)
 
-needed_variables = ['git_location', 'binaries_location', 'extract_location', 'elfshaker_bin']
+needed_variables = ['git_location', 'elfshaker_data', 'extract_location', 'elfshaker_bin']
 for nv in needed_variables:
     if nv not in config['Default']:
         print(f'Missing variable {nv} in config file: {config_location}')
         exit(127)
 
 git_location = config['Default']['git_location']
-binaries_location = config['Default']['binaries_location']
+elfshaker_data = config['Default']['elfshaker_data']
 extract_location = config['Default']['extract_location']
 elfshaker_bin = config['Default']['elfshaker_bin']
 
@@ -357,7 +357,7 @@ class GitRevision:
         current = os.getcwd()
         os.chdir(extract_location)
         self.collect_metainfo()
-        cmd = f'{elfshaker_bin} --data-dir {binaries_location} store {self.commit}'
+        cmd = f'{elfshaker_bin} --data-dir {elfshaker_data} store {self.commit}'
         subprocess.check_output(cmd, shell=True)
         os.chdir(current)
 
@@ -369,7 +369,7 @@ class GitRevision:
         os.makedirs(extract_location)
         current = os.getcwd()
         os.chdir(extract_location)
-        cmd = f'{elfshaker_bin} --data-dir {binaries_location} extract {self.commit} --verify --reset'
+        cmd = f'{elfshaker_bin} --data-dir {elfshaker_data} extract {self.commit} --verify --reset'
         subprocess.check_output(cmd, stderr=subprocess.DEVNULL, shell=True)
 
         with open(METAFILE) as fp:
@@ -532,12 +532,12 @@ class GitRepository:
             r.print_status()
 
     def pack(self, name, revisions):
-        subprocess.check_output(f'{elfshaker_bin} --data-dir {binaries_location} pack {name} '
+        subprocess.check_output(f'{elfshaker_bin} --data-dir {elfshaker_data} pack {name} '
                                 f'--compression-level {COMPRESSION_LEVEL} --snapshots-from -',
                                 encoding='utf8', shell=True, input='\n'.join(revisions))
 
     def cleanup(self):
-        subprocess.check_output(f'{elfshaker_bin} --data-dir {binaries_location} gc -so',
+        subprocess.check_output(f'{elfshaker_bin} --data-dir {elfshaker_data} gc -so',
                                 encoding='utf8', shell=True)
 
     def initialize_binaries(self):
@@ -548,7 +548,7 @@ class GitRepository:
                     r.has_binary = True
 
     def elfshaker_list(self):
-        lines = subprocess.check_output(f'{elfshaker_bin} --data-dir {binaries_location} list',
+        lines = subprocess.check_output(f'{elfshaker_bin} --data-dir {elfshaker_data} list',
                                         encoding='utf8', shell=True).splitlines()
         return [line.split(':') for line in lines]
 
@@ -687,12 +687,12 @@ class GitRepository:
             answer = input('Do you want to remove it (yes/no)?')
             if answer == 'yes':
                 for rev in todelete:
-                    Path(binaries_location, 'packs', f'pack-{rev}.pack').unlink()
-                    Path(binaries_location, 'packs', f'pack-{rev}.pack.idx').unlink()
+                    Path(elfshaker_data, 'packs', f'pack-{rev}.pack').unlink()
+                    Path(elfshaker_data, 'packs', f'pack-{rev}.pack.idx').unlink()
                     print(f'Removing {rev}')
 
     def check_disk_usage(self):
-        total, used, _ = shutil.disk_usage(binaries_location)
+        total, used, _ = shutil.disk_usage(elfshaker_data)
         usage = 100 * used / total
         if usage > 95:
             print(colored(f'WARNING: binary folder usage is {usage:.2f}% !!!\n', 'red'))
