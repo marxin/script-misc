@@ -64,7 +64,8 @@ special_processes = {'linker': 'gold',
                      'rust': 'brown',
                      'go': 'hotpink',
                      'dwz': 'limegreen',
-                     'rpm/rpm2cpio/dpkg': 'plum'}
+                     'rpm/rpm2cpio/dpkg': 'plum',
+                     'xsltproc': 'bisque'}
 for i, k in enumerate(special_processes.keys()):
     process_name_map[k] = i
 
