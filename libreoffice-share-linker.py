@@ -80,6 +80,6 @@ for libdir in LIBDIRS:
     # libreoffice versions
     # Run find directly as it's faster than os.walk run and a os.path.islink!
     symlinks = subprocess.check_output(f'find {str(lodir)} -type l -xtype l',
-                                       shell=True, universal_newlines=True).splitlines()
+                                       shell=True, text=True).splitlines()
     for symlink in symlinks:
         Path(symlink).unlink()
