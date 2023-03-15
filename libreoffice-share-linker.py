@@ -55,7 +55,7 @@ for libdir in LIBDIRS:
                 if link.is_dir() and not any(link.iterdir()):
                     r = subprocess.run(f'rpm -qf {file}', shell=True, stdout=subprocess.PIPE)
                     if not r.stdout:
-                        file.unlink()
+                        link.rmdir()
     else:
         for file in files:
             # if we get ourselves folder then just create it
