@@ -255,7 +255,8 @@ def get_footnote2():
     disk_end = to_gigabyte(psutil.disk_usage('.').used)
     disk_delta = disk_end - disk_start
     load_max = global_load_data_max
-    return (f'load max (1m): {load_max:.0f}%; swap peak/total: {peak_swap:.1f}/{total_swap:.1f} GiB;'
+    return (f'taken: {int(global_timestamps[-1])} s;'
+            f' load max (1m): {load_max:.0f}%; swap peak/total: {peak_swap:.1f}/{total_swap:.1f} GiB;'
             f' disk start/end/total: {disk_start:.1f}/{disk_end:.1f}/{disk_total:.1f} GiB;'
             f' disk delta: {disk_delta:.1f} GiB')
 
