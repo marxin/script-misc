@@ -28,8 +28,7 @@ files = sorted([Path(x) for x in open(args.filelist).read().splitlines() if x.st
 
 def get_relative_folder(file, libdir):
     try:
-        relative = file.relative_to(DATADIR)
-        return libdir / relative
+        return libdir / file.relative_to(DATADIR)
     except ValueError:
         return None
 
@@ -53,7 +52,8 @@ for libdir in LIBDIRS:
                 # we have to be sure it is not owned by anything else
                 # doing in 2nd run to ensure avoiding collisions
                 if link.is_dir() and not any(link.iterdir()):
-                    r = subprocess.run(f'rpm -qf {file}', shell=True, stdout=subprocess.PIPE)
+                    r = subprocess.run(f'rpm -qf {file}', shell=True,
+                                       stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
                     if not r.stdout:
                         link.rmdir()
     else:
@@ -79,7 +79,5 @@ for libdir in LIBDIRS:
     # remove dangling links as they might happen when migratin from older
     # libreoffice versions
     # Run find directly as it's faster than os.walk run and a os.path.islink!
-    symlinks = subprocess.check_output(f'find {str(lodir)} -type l -xtype l',
-                                       shell=True, text=True).splitlines()
-    for symlink in symlinks:
-        Path(symlink).unlink()
+    subprocess.run(f'find {str(lodir)} -type l -xtype l -delete',
+                   shell=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
