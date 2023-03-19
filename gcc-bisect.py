@@ -245,7 +245,7 @@ class GitRevision:
                     messages = ['internal compiler error', 'Fatal Error', 'Internal compiler error',
                                 'Please submit a full bug report', 'lto-wrapper: fatal error',
                                 'Internal Error at ']
-                    success = any(map(lambda m: m in stdout, messages))
+                    success = any(m for m in messages if m in stdout)
 
                 seconds = time.monotonic() - start
                 if args.soft_timeout and success:
@@ -432,7 +432,7 @@ class Branch(GitRevision):
         branch_commits = revisions_in_range(base, self.commit)
         head_commits = revisions_in_range(base, head)
 
-        built = set(map(lambda x: x.commit.hexsha, filter(lambda x: x.has_binary, g.latest)))
+        built = {x.commit.hexsha for x in filter(lambda x: x.has_binary, g.latest)}
         existing_head_commits = list(filter(lambda x: x.hexsha in built, head_commits))
         flush_print('%3s-branch: branch commits: %8d, head distance: %8d (have: %d)' % (self.name, len(branch_commits),
                     len(head_commits), len(existing_head_commits)))
