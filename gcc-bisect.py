@@ -491,7 +491,7 @@ class GitRepository:
 
     def parse_branches(self):
         remote = repo.remotes['origin']
-        # support bases for 5+ releases
+        # support bases for 6+ releases
         branches = list(filter(lambda x: self.RELEASE_BRANCH_PREFIX in x.name and '.' not in x.name, remote.refs))
         branches = sorted(branches, key=lambda x: int(strip_prefix(x.name, self.RELEASE_BRANCH_PREFIX)))
         for b in branches:
@@ -500,7 +500,9 @@ class GitRepository:
             if name and int(name) >= oldest_active_branch:
                 self.branches.append(Branch(name, branch_commit))
             base = repo.merge_base(head, branch_commit)[0]
-            self.branch_bases.append(Release(name + '-base', base))
+            # Align this with last_revision
+            if int(name) >= 6:
+                self.branch_bases.append(Release(name + '-base', base))
         self.branches.append(Branch(self.get_master_branch(), head))
 
     def parse_latest_revisions(self):
