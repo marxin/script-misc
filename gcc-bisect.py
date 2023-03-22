@@ -585,6 +585,9 @@ class GitRepository:
             else:
                 print(f'Loose objects waiting for packing: {len(topack)}')
 
+            # Back-up gcc-build.log file to elfshaker folder
+            shutil.copyfile(log_file, Path(elfshaker_data, '../build-log-backup.txt'))
+
     def find_commit(self, name, candidates):
         if 'base' in name:
             b = single_or_default(lambda x: x.name == name, self.branch_bases)
