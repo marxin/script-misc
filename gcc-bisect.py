@@ -144,7 +144,7 @@ def strip_suffix(text, suffix):
 
 def log(revision_hash, message):
     with open(log_file, 'a+') as f:
-        f.write(f'{revision_hash}:{message}\n')
+        f.write(f'{revision_hash}:{message:300}\n')
 
 
 def build_failed_for_revision(revision_hash):
