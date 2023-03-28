@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 
 # one needs the following packages:
-# python3-filelock python3-GitPython
-# python3-semantic_version python3-termcolor
+# zypper in python3-filelock python3-GitPython python3-semantic_version python3-termcolor
 
 # elfshaker - installed from source:
 # https://github.com/elfshaker/elfshaker/blob/main/docs/users/installing.md#building-from-source
