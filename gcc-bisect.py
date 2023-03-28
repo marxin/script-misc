@@ -216,7 +216,7 @@ class GitRevision:
 
     def run(self, describe):
         with lock:
-            self.decompress()
+            extraction_time = self.decompress()
             start = time.monotonic()
 
             my_env = os.environ.copy()
@@ -255,7 +255,8 @@ class GitRevision:
                     success = not success
 
                 text = colored('OK', 'green') if success else colored('FAILED', 'red') + ' (%d)' % returncode
-                flush_print(f'  {self.description(describe)}: [took: {seconds:3.2f} s] result: {text}')
+                details = f'[extraction: {extraction_time:.1f} s]' if args.verbose else ''
+                flush_print(f'  {self.description(describe)}: {details}[took: {seconds:3.2f} s] result: {text}')
                 if not args.silent:
                     flush_print(stdout, end='')
 
@@ -365,8 +366,9 @@ class GitRevision:
 
     def decompress(self):
         if not self.has_binary:
-            return False
+            return None
 
+        start = time.monotonic()
         shutil.rmtree(extract_location, ignore_errors=True)
         os.makedirs(extract_location)
         current = os.getcwd()
@@ -387,7 +389,7 @@ class GitRevision:
                 p.chmod(p.stat().st_mode | stat.S_IXUSR)
 
         os.chdir(current)
-        return True
+        return time.monotonic() - start
 
     def print_status(self):
         status = colored('OK', 'green') if self.has_binary else colored('missing binary', 'yellow')
