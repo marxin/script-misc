@@ -197,7 +197,7 @@ class GitRevision:
         return self.commit.hexsha[0:16]
 
     def get_full_hash(self):
-        cmd = f'{git_location}/contrib/git-descr.sh --full %s' % self.commit.hexsha
+        cmd = f'{git_location}/contrib/git-descr.sh %s' % self.commit.hexsha
         r = subprocess.check_output(cmd, cwd=git_location, shell=True,
                                     encoding='utf8')
         parts = r.strip().split('-')
