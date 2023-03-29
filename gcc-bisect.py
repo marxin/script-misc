@@ -61,32 +61,33 @@ parser = argparse.ArgumentParser(description=DESC)
 parser.add_argument('command', nargs='?', metavar='command',
                     help='GCC command')
 parser.add_argument('--silent', action='store_true',
-                    help='Do not print stderr and stdout output')
+                    help='Do not print stderr and stdout output.')
 parser.add_argument('-x', '--negate', action='store_true',
-                    help='FAIL if result code is equal to zero')
+                    help='FAIL if result code is equal to zero and OK if non-zero.')
 parser.add_argument('-l', '--only-latest', action='store_true',
-                    help='Test only latest revisions')
-parser.add_argument('-s', '--bisect-start', help='Bisection start revision')
-parser.add_argument('-e', '--bisect-end', help='Bisection end revision')
+                    help='Test only master revisions (skip releases, '
+                    'release branch tips and branch bases).')
+parser.add_argument('-s', '--bisect-start', help='Bisection start revision (for master revisions).')
+parser.add_argument('-e', '--bisect-end', help='Bisection end revision (for master revisions).')
 parser.add_argument('-i', '--ice', action='store_true',
-                    help='Grep stderr for ICE')
+                    help='Grep stderr for ICE and exit with OK if present.')
 parser.add_argument('-a', '--ask', action='store_true',
-                    help='Ask about return code')
+                    help='Ask about return code in interactive session.')
 parser.add_argument('-o', '--old', action='store_true',
-                    help='Test also old releases')
+                    help='Test also old releases.')
 parser.add_argument('-v', '--verbose', action='store_true',
-                    help='Verbose output')
-parser.add_argument('--build', action='store_true', help='Build revisions')
+                    help='Verbose output.')
+parser.add_argument('--build', action='store_true', help='Build revisions.')
 parser.add_argument('-f', '--fetch', action='store_true',
-                    help='Fetch remote repository (useful with --build)')
-parser.add_argument('--gc', action='store_true', help='GC unused revisions')
+                    help='Fetch remote repository (useful with --build).')
+parser.add_argument('--gc', action='store_true', help='Garbage collect unused revisions (active branch tips).')
 parser.add_argument('--print', action='store_true',
-                    help='Print built revisions')
+                    help='Print built revisions.')
 parser.add_argument('--success-exit-code', type=int, default=0,
-                    help='Success exit code')
-parser.add_argument('-u', '--unpack', help='Only unpack the revision and exit')
-parser.add_argument('-t', '--timeout', type=float, help='Time out command')
-parser.add_argument('--soft-timeout', type=float, help='Time out command (after it finishes)')
+                    help='Select exit-code that is considered as OK (zero by default).')
+parser.add_argument('-u', '--unpack', help='Only unpack the revision and exit.')
+parser.add_argument('-t', '--timeout', type=float, help='Time out command after N seconds.')
+parser.add_argument('--soft-timeout', type=float, help='Finish a command and then apply timeout (in seconds).')
 
 args = parser.parse_args()
 
