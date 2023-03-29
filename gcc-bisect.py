@@ -64,8 +64,6 @@ parser.add_argument('--silent', action='store_true',
                     help='Do not print stderr and stdout output')
 parser.add_argument('-x', '--negate', action='store_true',
                     help='FAIL if result code is equal to zero')
-parser.add_argument('-p', '--pull', action='store_true',
-                    help='Pull repository')
 parser.add_argument('-l', '--only-latest', action='store_true',
                     help='Test only latest revisions')
 parser.add_argument('-s', '--bisect-start', help='Bisection start revision')
@@ -79,6 +77,8 @@ parser.add_argument('-o', '--old', action='store_true',
 parser.add_argument('-v', '--verbose', action='store_true',
                     help='Verbose output')
 parser.add_argument('--build', action='store_true', help='Build revisions')
+parser.add_argument('-f', '--fetch', action='store_true',
+                    help='Fetch remote repository (useful with --build)')
 parser.add_argument('--gc', action='store_true', help='GC unused revisions')
 parser.add_argument('--print', action='store_true',
                     help='Print built revisions')
@@ -449,7 +449,7 @@ class GitRepository:
         self.branch_bases = []
         self.latest = []
 
-        if args.pull:
+        if args.fetch:
             attempts = 10
             for _ in range(attempts):
                 r = self.pull()
