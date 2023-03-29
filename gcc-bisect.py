@@ -253,7 +253,8 @@ class GitRevision:
                 if args.negate:
                     success = not success
 
-                text = colored('OK', 'green') if success else colored('FAILED', 'red') + ' (%d)' % returncode
+                text = f'{colored("OK", "green")}' if success else f'{colored("FAILED", "red")}'
+                text += f' ({returncode})'
                 details = f'[extraction: {extraction_time:.1f} s]' if args.verbose else ''
                 flush_print(f'  {self.description(describe)}: {details}[took: {seconds:3.2f} s] result: {text}')
                 if not args.silent:
