@@ -121,7 +121,7 @@ cpu_scale = cpu_count / args.used_cpus
 def get_process_name(proc):
     name = proc.name()
     cmdline = proc.cmdline()
-    if name in ('ld', 'ld.gold', 'ld.lld', 'mold'):
+    if name in ('ld', 'ld.gold', 'ld.lld', 'ld.mold'):
         return 'linker'
     elif name == 'lto1-wpa':
         return 'WPA'
