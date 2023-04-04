@@ -15,6 +15,7 @@ except ImportError:
     sys.exit(1)
 
 try:
+    import matplotlib
     import matplotlib.pyplot as plt
     from matplotlib.lines import Line2D
 except ImportError:
@@ -326,7 +327,7 @@ def generate_graph(time_range):
     mem_subplot.set_yticks(range(0, limit + 1, math.ceil(limit / 8)))
     mem_subplot.grid(True)
 
-    colors = list(plt.cm.get_cmap('tab20c').colors * 100)
+    colors = list(matplotlib.colormaps['tab20c'].colors * 100)
     for name, color in special_processes.items():
         if name in process_name_map:
             colors[process_name_map[name]] = color
