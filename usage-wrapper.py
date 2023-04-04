@@ -78,10 +78,10 @@ parser.add_argument('command', metavar='command',
 parser.add_argument('-c', '--command', dest='command1',
                     help='command as a single argument')
 parser.add_argument('-v', '--verbose', action='store_true', help='Verbose')
-parser.add_argument('--summary-only', dest='summary_only',
+parser.add_argument('-S', '--summary-only', dest='summary_only',
                     action='store_true',
                     help='No plot, just a summary at the end')
-parser.add_argument('--base-memory', action='store_true',
+parser.add_argument('-b', '--base-memory', action='store_true',
                     help='Adjust memory to include the system load')
 parser.add_argument('-s', '--separate-ltrans', action='store_true',
                     help='Separate LTRANS processes in graph')
