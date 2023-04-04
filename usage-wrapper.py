@@ -170,8 +170,8 @@ def record():
         used_load = 100 * psutil.getloadavg()[0] / cpu_count
         used_memory = to_gigabyte(psutil.virtual_memory().used)
         used_swap = to_gigabyte(psutil.swap_memory().used)
+        global_timestamps.append(timestamp)
         if not args.summary_only:
-            global_timestamps.append(timestamp)
             global_memory_data.append(used_memory)
             global_cpu_data.append(used_cpu)
             global_load_data.append(used_load)
