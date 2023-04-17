@@ -14,7 +14,7 @@ parser.add_argument('api', help = 'API')
 parser.add_argument('project', help = 'OBS project name')
 parser.add_argument('repository', help = 'OBS repository')
 parser.add_argument('tmp', help = 'TMP folder where to extract RPM packages')
-parser.add_argument('output_folder', help = 'Output folder where to save. json files')
+parser.add_argument('output_folder', help = 'Output folder where to save JSON files')
 args = parser.parse_args()
 
 result = subprocess.check_output('osc -A {} r {} -r {} -a {} --csv'.format(args.api, args.project, args.repository, 'x86_64'), shell = True)
