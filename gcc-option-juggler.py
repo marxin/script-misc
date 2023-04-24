@@ -33,7 +33,6 @@ parser.add_argument('--cflags', default = '', help = 'Additional compile flags')
 parser.add_argument('--timeout', type = int, default = 10, help = 'Default timeout for GCC command')
 parser.add_argument('-v', '--verbose', action = 'store_true', help = 'Verbose messages')
 parser.add_argument('-l', '--logging', action = 'store_true', help = 'Log error output')
-parser.add_argument('-r', '--reduce', action = 'store_true', help = 'Creduce a failing test-case')
 parser.add_argument('-f', '--filter', action = 'store_true', help = 'First filter valid source files')
 parser.add_argument('-m', '--maxparam', help = 'Maximum param value')
 parser.add_argument('-t', '--target', default = 'x86_64', help = 'Default target', choices = ['x86_64', 'ppc64', 'ppc64le', 's390x', 'aarch64', 'arm', 'riscv64'])
@@ -564,62 +563,6 @@ class OptimizationLevel:
         reduced_command = r.stdout.decode('utf-8').strip()
         print(colored('Reduced command: ' + reduced_command, 'green'))
 
-        if args.reduce:
-            self.reduce_testcase(reduced_command)
-
-    def reduce_testcase(self, cmd):
-        parts = cmd.split(' ')
-        f = parts[1]
-        compiler = get_compiler_by_extension(f)
-        assert compiler != None
-
-        if not compiler.endswith('gcc') and not compiler.endswith('g++'):
-            return
-
-        suffix = '.i' if compiler.endswith('gcc') else '.ii'
-
-        r = subprocess.run(cmd + ' -E', shell = True, capture_output=True)
-        assert r.returncode == 0
-        content = r.stdout.decode('utf-8')
-
-        extension = path.splitext(f)[1]
-        source = tempfile.NamedTemporaryFile(mode = 'w+', suffix = suffix, delete = False)
-        source.write(content)
-        source.close()
-        source_filename = path.basename(source.name)
-
-        # generate reduce-ice shell script
-        reduce_script = tempfile.NamedTemporaryFile(mode = 'w+', suffix = '.sh', delete = False)
-
-        tmp = """
-#!/bin/sh
-
-TC1=${1:-%s}
-COMMAND="%s $TC1 -c"
-
-$COMMAND 2>&1 | grep 'internal compiler'
-
-if ! test $? = 0; then
-  exit 1
-fi
-
-exit 0"""
-        c = ' '.join([parts[0]] + parts[2:])
-        reduce_script.write(tmp % (source_filename, c))
-        reduce_script.close()
-        os.chmod(reduce_script.name, 0o766)
-
-        start = time()
-        try:
-            r = subprocess.run(f'creduce --n 10 {reduce_script.name} {source_filename}', shell = True, stdout = subprocess.PIPE, timeout = 500)
-            assert r.returncode == 0
-            lines = r.stdout.decode('utf-8').split('\n')
-            lines = list(dropwhile(lambda x: not '*******' in x, lines))
-            print('\n'.join(lines))
-            print(colored('CREDUCE ', 'cyan'), end = '')
-            print(f'took {str(time() - start)} s, to test:\n{c} {source.name}')
-        except TimeoutExpired as e:
-            print('CREDUCE timed out!')
 
 os.chdir('/tmp/')
 levels = [OptimizationLevel(x) for x in ['', '-O0', '-O1', '-O2', '-O3', '-Ofast', '-Os', '-Oz', '-Og']]
