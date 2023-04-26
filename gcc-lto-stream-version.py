@@ -48,8 +48,7 @@ for branch in reversed(branches):
                 if not last_bump or commit.committed_datetime > last_bump.committed_datetime:
                     last_bump = commit
     basepoint = repo.commit(basepoint_next)
-    if basepoint.committed_datetime > last_bump.committed_datetime:
-        last_bump = basepoint
+    assert basepoint.committed_datetime <= last_bump.committed_datetime
     print(f'gcc-{branch} last time bumped in {last_bump}', flush=True)
     build_compiler(tip)
     subprocess.check_output(f'./gcc/xg++ -Bgcc -O2 -c -std=c++98 -flto=16 {source} -o {obj}', shell=True)
