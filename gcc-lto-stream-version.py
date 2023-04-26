@@ -12,7 +12,7 @@ git = Path(sys.argv[1]).resolve()
 repo = Repo(git)
 branches = [11, 12, 13]
 objdir = '/dev/shm/buildbot-lto-stream'
-source = '/home/marxin/Programming/tramp3d/tramp3d-v4.cpp'
+source = '/home/marxin/Programming/tramp3d/tramp3d-v4.ii'
 obj = '/dev/shm/tramp3d-v4.o'
 pwd = os.getcwd()
 
