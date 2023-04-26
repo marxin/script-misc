@@ -4,7 +4,12 @@ import os
 import subprocess
 from pathlib import Path
 
-ENV = 'AUTOCONF=autoconf-2.69 ACLOCAL=~/bin/automake-1.15.1/bin/aclocal  AUTOMAKE=~/bin/automake-1.15.1/bin/automake'
+AUTOCONF_BIN = '/home/worker/bin/autoconf'
+AUTOMAKE_BIN = '/home/worker/bin/automake'
+ACLOCAL_BIN = '/home/worker/bin/aclocal'
+AUTOHEADER_BIN = '/home/worker/bin/autoheader'
+
+ENV = f'AUTOCONF={AUTOCONF_BIN} ACLOCAL={ACLOCAL_BIN} AUTOMAKE={AUTOMAKE_BIN}'
 
 config_folders = []
 
@@ -18,10 +23,10 @@ for folder in sorted(config_folders):
     os.chdir(folder)
     configure_lines = open('configure.ac').read().splitlines()
     if any(_ for line in configure_lines if line.startswith('AC_CONFIG_HEADERS')):
-        subprocess.check_output(f'{ENV} autoheader-2.69 -f', shell=True, encoding='utf8')
+        subprocess.check_output(f'{ENV} {AUTOHEADER_BIN} -f', shell=True, encoding='utf8')
     # apparently automake is somehow unstable -> skip it for gotools
     if (any(_ for line in configure_lines if line.startswith('AM_INIT_AUTOMAKE'))
             and not str(folder).endswith('gotools')):
-        subprocess.check_output(f'{ENV} /home/marxin/bin/automake-1.15.1/bin/automake -f',
+        subprocess.check_output(f'{ENV} {AUTOMAKE_BIN} -f',
                                 shell=True, encoding='utf8')
-    subprocess.check_output(f'{ENV} autoconf-2.69 -f', shell=True, encoding='utf8')
+    subprocess.check_output(f'{ENV} {AUTOCONF_BIN} -f', shell=True, encoding='utf8')
