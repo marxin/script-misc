@@ -22,10 +22,10 @@ for folder in sorted(config_folders):
     print(folder, flush=True)
     os.chdir(folder)
     configure_lines = open('configure.ac').read().splitlines()
-    if any(_ for line in configure_lines if line.startswith('AC_CONFIG_HEADERS')):
+    if any(True for line in configure_lines if line.startswith('AC_CONFIG_HEADERS')):
         subprocess.check_output(f'{ENV} {AUTOHEADER_BIN} -f', shell=True, encoding='utf8')
     # apparently automake is somehow unstable -> skip it for gotools
-    if (any(_ for line in configure_lines if line.startswith('AM_INIT_AUTOMAKE'))
+    if (any(True for line in configure_lines if line.startswith('AM_INIT_AUTOMAKE'))
             and not str(folder).endswith('gotools')):
         subprocess.check_output(f'{ENV} {AUTOMAKE_BIN} -f',
                                 shell=True, encoding='utf8')
