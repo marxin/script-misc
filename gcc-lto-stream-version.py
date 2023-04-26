@@ -50,9 +50,9 @@ for branch in reversed(branches):
     basepoint = repo.commit(basepoint_next)
     assert basepoint.committed_datetime <= last_bump.committed_datetime
     print(f'gcc-{branch} last time bumped in {last_bump}', flush=True)
-    build_compiler(tip)
-    subprocess.check_output(f'./gcc/xg++ -Bgcc -O2 -c -std=c++98 -flto=16 {source} -o {obj}', shell=True)
     build_compiler(last_bump)
+    subprocess.check_output(f'./gcc/xg++ -Bgcc -O2 -c -std=c++98 -flto=16 {source} -o {obj}', shell=True)
+    build_compiler(tip)
     try:
         subprocess.check_output(f'./gcc/xg++ -Bgcc -O2 -flto=16 {obj} -L ./x86_64-pc-linux-gnu/libstdc++-v3/src/.libs',
                                 shell=True)
