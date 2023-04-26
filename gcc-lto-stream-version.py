@@ -11,9 +11,9 @@ from git import Repo
 git = Path(sys.argv[1]).resolve()
 repo = Repo(git)
 branches = [11, 12]
-objdir = '/dev/shm/myobjdir'
-source = '/home/marxin/Programming/tramp3d/tramp3d-v4.ii'
-obj = '/tmp/tramp.o'
+objdir = '/dev/shm/buildbot-lto-stream'
+source = '/home/marxin/Programming/tramp3d/tramp3d-v4.cpp'
+obj = '/dev/shm/tramp3d-v4.o'
 pwd = os.getcwd()
 
 
@@ -27,9 +27,9 @@ def build_compiler(revision):
     clean_temp()
     os.mkdir(objdir)
     os.chdir(objdir)
-    subprocess.check_output(f'{git}/configure --enable-languages=c,c++,lto --prefix=/home/marxin/bin/gcc2 '
-                            '--disable-multilib --disable-libsanitizer --disable-bootstrap '
-                            '--with-ld=`which ld.bfd`', shell=True,
+    subprocess.check_output(f'{git}/configure --enable-languages=c,c++,lto '
+                            '--disable-multilib --disable-libsanitizer --disable-bootstrap',
+                            shell=True,
                             stderr=subprocess.DEVNULL)
     subprocess.check_output('make -j`nproc`', shell=True, stderr=subprocess.DEVNULL)
 
