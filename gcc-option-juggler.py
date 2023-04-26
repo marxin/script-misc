@@ -534,7 +534,7 @@ class OptimizationLevel:
         options = [o.select_nondefault() for o in options]
 
         # TODO: warning
-        cmd = 'timeout %d %s %s -fmax-errors=1 -I/home/marxin/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s %s %s -o/dev/null -S' % (args.timeout, compiler, args.cflags, self.level, source_file, ' '.join(options))
+        cmd = f'timeout %d %s %s -fmax-errors=1 -I{LLVM_DIR}/libcxx/test/support/ -Wno-overflow %s %s %s -o/dev/null -S' % (args.timeout, compiler, args.cflags, self.level, source_file, ' '.join(options))
 
         r = subprocess.run(cmd, shell = True, capture_output=True, env = my_env)
         if r.returncode != 0:
@@ -591,7 +591,7 @@ def filter_source_files():
             source = source_files.pop()
 
         compiler = get_compiler_by_extension(source)
-        cmd = 'timeout %d %s %s -fmax-errors=1 -I/home/marxin/Programming/llvm-project/libcxx/test/support/ -Wno-overflow %s -o/dev/null -S' % (args.timeout, args.cflags, compiler, source)
+        cmd = 'timeout %d %s %s -fmax-errors=1 -I{LLVM_DIR}/libcxx/test/support/ -Wno-overflow %s -o/dev/null -S' % (args.timeout, args.cflags, compiler, source)
         r = subprocess.run(cmd, shell = True, capture_output=True, env=my_env)
         if r.returncode == 0:
             filtered_source_files.add(source)
