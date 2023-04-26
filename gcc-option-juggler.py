@@ -21,6 +21,9 @@ from time import time
 from os import path
 from multiprocessing import Pool
 
+GCC_DIR = '/home/marxin/Programming/gcc'
+LLVM_DIR = '/home/marxin/Programming/llvm-project'
+
 known_bugs = {'clear_padding_type, at gimple-fold.c': 'PRxxx'}
 
 script_dir = os.path.dirname(os.path.realpath(__file__))
@@ -111,9 +114,9 @@ def find_tests(base, contains):
 
     return result
 
-source_files = find_tests('/home/marxin/Programming/gcc/gcc/', '/testsuite/')
-source_files += find_tests('/home/marxin/Programming/llvm-project/', '/test/')
-source_files += find_tests('/home/marxin/Programming/llvm-project/', '/test-suite/')
+source_files = find_tests(GCC_DIR, '/testsuite/')
+source_files += find_tests(LLVM_DIR, '/test/')
+source_files += find_tests(LLVM_DIR, '/test-suite/')
 source_files = list(set(sorted(source_files)))
 source_files = list(filter(lambda x: get_compiler_by_extension(x) != None and not any([i in x for i in ignored_tests]), source_files))
 
