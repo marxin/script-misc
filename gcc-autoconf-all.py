@@ -4,11 +4,10 @@ import os
 import subprocess
 from pathlib import Path
 
-HOME = Path.home()
-AUTOCONF_BIN = HOME / 'bin/autoconf'
-AUTOMAKE_BIN = HOME / 'bin/automake'
-ACLOCAL_BIN = HOME / 'bin/aclocal'
-AUTOHEADER_BIN = HOME / 'bin/autoheader'
+AUTOCONF_BIN = 'autoconf-2.69'
+AUTOMAKE_BIN = 'automake-1.15.1'
+ACLOCAL_BIN = 'aclocal-1.15.1'
+AUTOHEADER_BIN = 'autoheader-2.69'
 
 ENV = f'AUTOCONF={AUTOCONF_BIN} ACLOCAL={ACLOCAL_BIN} AUTOMAKE={AUTOMAKE_BIN}'
 
