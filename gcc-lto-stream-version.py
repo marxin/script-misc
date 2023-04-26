@@ -36,7 +36,7 @@ def build_compiler(revision):
 
 for branch in reversed(branches):
     tip = f'origin/releases/gcc-{branch}'
-    basepoint = f'basepoints/gcc-{branch}'
+    basepoint = f'basepoints/gcc-{branch + 1}'
     interval = f'{basepoint}..{tip}'
     changes = repo.blame(interval, 'gcc/lto-streamer.h')
     last_bump = None
