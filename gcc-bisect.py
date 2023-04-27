@@ -387,7 +387,8 @@ class GitRevision:
             # Set executable flag
             for execfile in meta['executables']:
                 p = Path(execfile)
-                p.chmod(p.stat().st_mode | stat.S_IXUSR)
+                if p.exists():
+                    p.chmod(p.stat().st_mode | stat.S_IXUSR)
 
         os.chdir(current)
         return time.monotonic() - start
