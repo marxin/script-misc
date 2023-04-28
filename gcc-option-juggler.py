@@ -442,6 +442,9 @@ class OptimizationLevel:
             if key == '-miamcu' or key == '-march=' or key == '-mtune=':
                 continue
 
+            if original.startswith('-param='):
+                # skip params in the function
+                pass
             if value == '[enabled]':
                 self.options.append(BooleanFlag(key, True))
             elif value == '[disabled]':
