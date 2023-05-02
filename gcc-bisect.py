@@ -50,7 +50,7 @@ oldest_active_branch = 10
 # Other locations should not by set up by a script consumer
 lock_path = os.path.join(script_dirname, '.gcc_build_binary.lock')
 lock = filelock.FileLock(lock_path)
-log_file = '/home/marxin/Programming/script-misc/gcc-build.log'
+log_file = os.path.join(script_dirname, 'gcc-build.log')
 
 patches_folder = os.path.join(script_dirname, 'gcc-bisect-patches')
 patches = ['0001-Use-ucontext_t-not-struct-ucontext-in-linux-unwind.h.patch',
