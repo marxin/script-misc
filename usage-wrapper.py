@@ -26,6 +26,10 @@ def to_gigabyte(value):
     return value / 1024**3
 
 
+def to_megabyte(value):
+    return value / 1024**2
+
+
 INTERVAL = 0.33
 LW = 0.5
 
@@ -40,6 +44,8 @@ global_swap_data_min = to_gigabyte(psutil.swap_memory().total)
 global_swap_data_max = 0
 global_disk_data_total = to_gigabyte(psutil.disk_usage('.').total)
 global_disk_data_start = to_gigabyte(psutil.disk_usage('.').used)
+global_disk_last_read = None
+global_disk_last_write = None
 
 global_timestamps = []
 global_cpu_data = []
@@ -47,6 +53,8 @@ global_load_data = []
 global_memory_data = []
 global_process_usage = []
 global_process_hogs = {}
+global_disk_read_data = []
+global_disk_write_data = []
 
 process_name_map = {}
 lock = threading.Lock()
@@ -162,6 +170,7 @@ def record():
     global global_memory_data_sum, global_memory_data_min
     global global_memory_data_max
     global global_swap_data_min, global_swap_data_max
+    global global_disk_last_read, global_disk_last_write, global_disk_read_data, global_disk_write_data
 
     active_pids = {}
     while not done:
@@ -175,6 +184,16 @@ def record():
             global_memory_data.append(used_memory)
             global_cpu_data.append(used_cpu)
             global_load_data.append(used_load)
+            disk_info = psutil.disk_io_counters()
+            if global_disk_last_read is None:
+                global_disk_last_read = disk_info.read_bytes
+                global_disk_last_write = disk_info.write_bytes
+
+            duration = 1 / INTERVAL
+            global_disk_read_data.append(to_megabyte(duration * (disk_info.read_bytes - global_disk_last_read)))
+            global_disk_last_read = disk_info.read_bytes
+            global_disk_write_data.append(to_megabyte(duration * (disk_info.write_bytes - global_disk_last_write)))
+            global_disk_last_write = disk_info.write_bytes
 
         global_n += 1
         global_cpu_data_sum += used_cpu
@@ -269,6 +288,8 @@ def generate_graph(time_range):
     load_data = []
     memory_data = []
     process_usage = []
+    disk_read_usage = []
+    disk_write_usage = []
 
     # filter date by timestamp
     for i, ts in enumerate(global_timestamps):
@@ -278,6 +299,8 @@ def generate_graph(time_range):
             load_data.append(global_load_data[i])
             memory_data.append(global_memory_data[i])
             process_usage.append(global_process_usage[i])
+            disk_read_usage.append(global_disk_read_data[i])
+            disk_write_usage.append(global_disk_write_data[i])
 
     if not timestamps:
         if args.verbose:
@@ -286,12 +309,12 @@ def generate_graph(time_range):
 
     peak_memory = max(memory_data)
 
-    fig, (cpu_subplot, mem_subplot) = plt.subplots(2, sharex=True)
+    fig, (cpu_subplot, mem_subplot, disk_subplot) = plt.subplots(3, sharex=True)
     title = args.title if args.title else ''
     if time_range:
         title += ' (%d-%d s)' % (time_range[0], time_range[1])
     fig.suptitle(title, fontsize=17)
-    fig.set_figheight(5)
+    fig.set_figheight(8)
     fig.set_figwidth(10)
     # scale cpu axis
     local_peak_cpu = max(cpu_data + load_data)
@@ -311,7 +334,12 @@ def generate_graph(time_range):
     mem_subplot.plot(timestamps, memory_data, c='blue', lw=LW, label='total')
     mem_subplot.set_title('Memory usage')
     mem_subplot.set_ylabel('GiB')
-    mem_subplot.set_xlabel('time')
+
+    disk_subplot.plot(timestamps, disk_read_usage, c='green', lw=LW, label='read')
+    disk_subplot.plot(timestamps, disk_write_usage, c='red', lw=LW, label='write')
+    disk_subplot.set_title('Disk read/write')
+    disk_subplot.set_ylabel('MiB/s')
+    disk_subplot.set_xlabel('time')
 
     # scale it to a reasonable limit
     limit = 1
@@ -326,6 +354,8 @@ def generate_graph(time_range):
     mem_subplot.set_ylim([0, 1.1 * limit])
     mem_subplot.set_yticks(range(0, limit + 1, math.ceil(limit / 8)))
     mem_subplot.grid(True)
+
+    disk_subplot.grid(True)
 
     colors = list(matplotlib.colormaps['tab20c'].colors * 100)
     for name, color in special_processes.items():
@@ -343,18 +373,20 @@ def generate_graph(time_range):
         # generate custom legend
         colors = special_processes.values()
         custom_lines = [Line2D([0], [0], color=x, lw=5) for x in colors]
+        custom_lines.insert(0, Line2D([0], [0], color='red', lw=LW))
+        custom_lines.insert(0, Line2D([0], [0], color='green', lw=LW))
         custom_lines.insert(0, Line2D([0], [0], color='cyan', lw=LW))
         custom_lines.insert(0, Line2D([0], [0], color='b', lw=LW))
         custom_lines.insert(0, Line2D([0], [0], color='r', alpha=0.5,
                                       linestyle='dotted', lw=LW))
-        names = ['single core', 'total', 'load'] + list(special_processes.keys())
+        names = ['single core', 'total', 'load', 'disk read', 'disk write'] + list(special_processes.keys())
         fig.legend(custom_lines, names, loc='right', prop={'size': 6})
 
     filename = args.output
     if time_range:
         tr = '-%d-%d' % (time_range[0], time_range[1])
         filename = os.path.splitext(args.output)[0] + tr + '.svg'
-    plt.subplots_adjust(bottom=0.15)
+    plt.subplots_adjust(bottom=0.12)
     plt.figtext(0.1, 0.04, get_footnote(), fontsize='small')
     plt.figtext(0.1, 0.01, get_footnote2(), fontsize='small')
     plt.savefig(filename)
