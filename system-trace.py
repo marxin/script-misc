@@ -18,7 +18,7 @@ trace_data = []
 
 # initial values
 vm_initial = psutil.virtual_memory()
-last_disk_counters = [0, 0]
+last_disk_counters = None
 last_net_counters = [0, 0]
 
 start = time.time()
@@ -26,6 +26,19 @@ start = time.time()
 
 def convert_time(t):
     return t * 10**6
+
+
+DISK_UNITS = {
+    'read_count': 'reads/s',
+    'write_count': 'writes/s',
+    'read_bytes': 'B/s',
+    'write_bytes': 'B/s',
+    'read_time': 'ms',
+    'write_time': 'ms',
+    'busy_time': 'ms',
+    'read_merged_count': 'count/s',
+    'write_merged_count': 'count/s'
+}
 
 
 try:
@@ -44,18 +57,17 @@ try:
 
         # DISK USAGE
         disk_counters = psutil.disk_io_counters()
-        read_value = disk_counters.read_bytes
-        write_value = disk_counters.write_bytes
+        if last_disk_counters:
+            for field in disk_counters._fields:
+                entry = {'name': 'Disk', 'category': 'Disk',
+                         'ph': 'C', 'ts': ts, 'args': {}}
+                last = getattr(last_disk_counters, field)
+                current = getattr(disk_counters, field)
+                entry['args'][f'{field} ({DISK_UNITS[field]})'] = (current - last) / INTERVAL
+                trace_data.append(entry)
 
-        first = last_disk_counters[0] == 0
-        read_per_sec = (read_value - last_disk_counters[0]) / INTERVAL
-        write_per_sec = (write_value - last_disk_counters[1]) / INTERVAL
-        last_disk_counters = [read_value, write_value]
-        if not first:
-            trace_data.append({'name': 'Disk (bytes/s)', 'category': 'Disk',
-                               'ph': 'C', 'ts': ts,
-                               'args': {'read': read_per_sec,
-                                        'write': write_per_sec}})
+        last_disk_counters = disk_counters
+
         # NETWORK USAGE
         net_counters = psutil.net_io_counters()
         received_value = net_counters.bytes_recv
