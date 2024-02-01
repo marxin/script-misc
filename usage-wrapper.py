@@ -386,18 +386,19 @@ def generate_graph(time_range):
                               colors=colors)
 
         # generate custom legend
-        names = ['CPU: single core', 'CPU: total', 'CPU: load', 'disk: read', 'disk: write']
+        names = ['CPU: single core', 'CPU: total', 'CPU: load']
+        if gputil:
+            names += ['GPU: total']
+        names += ['disk: read', 'disk: write']
 
         custom_lines = []
         custom_lines.append(Line2D([0], [0], color='r', alpha=0.5, linestyle='dotted', lw=LW))
         custom_lines.append(Line2D([0], [0], color='b', lw=LW))
         custom_lines.append(Line2D([0], [0], color='cyan', lw=LW))
+        if gputil:
+            custom_lines.append(Line2D([0], [0], color='fuchsia', lw=LW))
         custom_lines.append(Line2D([0], [0], color='green', lw=LW))
         custom_lines.append(Line2D([0], [0], color='red', lw=LW))
-
-        if gputil:
-            names += ['GPU: total']
-            custom_lines.append(Line2D([0], [0], color='fuchsia', lw=LW))
 
         colors = special_processes.values()
         custom_lines += [Line2D([0], [0], color=x, lw=5) for x in colors]
