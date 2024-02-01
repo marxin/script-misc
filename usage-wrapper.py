@@ -21,6 +21,11 @@ try:
 except ImportError:
     plt = None
 
+try:
+    import GPUtil as gputil
+except ImportError:
+    gputil = None
+
 
 def to_gigabyte(value):
     return value / 1024**3
@@ -55,6 +60,7 @@ global_process_usage = []
 global_process_hogs = {}
 global_disk_read_data = []
 global_disk_write_data = []
+global_gpu_data = []
 
 process_name_map = {}
 lock = threading.Lock()
@@ -171,6 +177,7 @@ def record():
     global global_memory_data_max
     global global_swap_data_min, global_swap_data_max
     global global_disk_last_read, global_disk_last_write, global_disk_read_data, global_disk_write_data
+    global global_gpu_data
 
     active_pids = {}
     while not done:
@@ -194,6 +201,8 @@ def record():
             global_disk_last_read = disk_info.read_bytes
             global_disk_write_data.append(to_megabyte(duration * (disk_info.write_bytes - global_disk_last_write)))
             global_disk_last_write = disk_info.write_bytes
+            if gputil:
+                global_gpu_data.append(100 * gputil.getGPUs()[0].load)
 
         global_n += 1
         global_cpu_data_sum += used_cpu
@@ -290,6 +299,7 @@ def generate_graph(time_range):
     process_usage = []
     disk_read_usage = []
     disk_write_usage = []
+    gpu_data = []
 
     # filter date by timestamp
     for i, ts in enumerate(global_timestamps):
@@ -301,6 +311,8 @@ def generate_graph(time_range):
             process_usage.append(global_process_usage[i])
             disk_read_usage.append(global_disk_read_data[i])
             disk_write_usage.append(global_disk_write_data[i])
+            if gputil:
+                gpu_data.append(global_gpu_data[i])
 
     if not timestamps:
         if args.verbose:
@@ -317,7 +329,7 @@ def generate_graph(time_range):
     fig.set_figheight(8)
     fig.set_figwidth(10)
     # scale cpu axis
-    local_peak_cpu = max(cpu_data + load_data)
+    local_peak_cpu = max(cpu_data + load_data + gpu_data)
     cpu_ylimit = (local_peak_cpu // 10) * 11 + 5
     if cpu_ylimit > 300:
         cpu_ylimit = 300
@@ -340,6 +352,9 @@ def generate_graph(time_range):
     disk_subplot.set_title('Disk read/write')
     disk_subplot.set_ylabel('MiB/s')
     disk_subplot.set_xlabel('time')
+
+    if gputil:
+        cpu_subplot.plot(timestamps, gpu_data, c='fuchsia', lw=LW, label='GPU')
 
     # scale it to a reasonable limit
     limit = 1
@@ -371,15 +386,22 @@ def generate_graph(time_range):
                               colors=colors)
 
         # generate custom legend
+        names = ['CPU: single core', 'CPU: total', 'CPU: load', 'disk: read', 'disk: write']
+
+        custom_lines = []
+        custom_lines.append(Line2D([0], [0], color='r', alpha=0.5, linestyle='dotted', lw=LW))
+        custom_lines.append(Line2D([0], [0], color='b', lw=LW))
+        custom_lines.append(Line2D([0], [0], color='cyan', lw=LW))
+        custom_lines.append(Line2D([0], [0], color='green', lw=LW))
+        custom_lines.append(Line2D([0], [0], color='red', lw=LW))
+
+        if gputil:
+            names += ['GPU: total']
+            custom_lines.append(Line2D([0], [0], color='fuchsia', lw=LW))
+
         colors = special_processes.values()
-        custom_lines = [Line2D([0], [0], color=x, lw=5) for x in colors]
-        custom_lines.insert(0, Line2D([0], [0], color='red', lw=LW))
-        custom_lines.insert(0, Line2D([0], [0], color='green', lw=LW))
-        custom_lines.insert(0, Line2D([0], [0], color='cyan', lw=LW))
-        custom_lines.insert(0, Line2D([0], [0], color='b', lw=LW))
-        custom_lines.insert(0, Line2D([0], [0], color='r', alpha=0.5,
-                                      linestyle='dotted', lw=LW))
-        names = ['single core', 'total', 'load', 'disk read', 'disk write'] + list(special_processes.keys())
+        custom_lines += [Line2D([0], [0], color=x, lw=5) for x in colors]
+        names += list(special_processes.keys())
         fig.legend(custom_lines, names, loc='right', prop={'size': 6})
 
     filename = args.output
