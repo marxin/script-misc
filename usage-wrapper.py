@@ -312,7 +312,7 @@ def generate_graph(time_range):
             timestamps.append(ts)
             cpu_data.append(cpu_stats.value(i))
             load_data.append(load_stats.value(i))
-            memory_data.append(cpu_stats.value(i))
+            memory_data.append(mem_stats.value(i))
             process_usage.append(global_process_usage[i])
             disk_read_usage.append(global_disk_read_data[i])
             disk_write_usage.append(global_disk_write_data[i])
