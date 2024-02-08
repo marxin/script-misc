@@ -21,11 +21,6 @@ try:
 except ImportError:
     plt = None
 
-try:
-    import GPUtil as gputil
-except ImportError:
-    gputil = None
-
 
 def to_gigabyte(value):
     return value / 1024**3
@@ -38,36 +33,50 @@ def to_megabyte(value):
 INTERVAL = 0.33
 LW = 0.5
 
+
+class DataStatistic:
+    def __init__(self, collect_fn):
+        self.collect_fn = collect_fn
+        self.values = []
+
+    def collect(self):
+        self.values.append(self.collect_fn())
+
+    def value(self, i):
+        return self.values[i]
+
+    def maximum(self):
+        return max(self.values)
+
+    def minimum(self):
+        return min(self.values)
+
+    def average(self):
+        return sum(self.values) / len(self.values)
+
+    def empty(self):
+        return not self.values
+
+
 global_n = 0
-global_cpu_data_sum = 0
-global_memory_data_sum = 0
-global_cpu_data_max = 0
-global_load_data_max = 0
 global_memory_data_min = to_gigabyte(psutil.virtual_memory().total)
-global_memory_data_max = 0
 global_swap_data_min = to_gigabyte(psutil.swap_memory().total)
-global_swap_data_max = 0
 global_disk_data_total = to_gigabyte(psutil.disk_usage('.').total)
 global_disk_data_start = to_gigabyte(psutil.disk_usage('.').used)
 global_disk_last_read = None
 global_disk_last_write = None
 
 global_timestamps = []
-global_cpu_data = []
-global_load_data = []
-global_memory_data = []
 global_process_usage = []
 global_process_hogs = {}
 global_disk_read_data = []
 global_disk_write_data = []
-global_gpu_data = []
 
 process_name_map = {}
 lock = threading.Lock()
 
 done = False
 start_ts = time.monotonic()
-cpu_count = psutil.cpu_count()
 
 special_processes = {'linker': 'gold',
                      'WPA': 'deepskyblue',
@@ -84,6 +93,7 @@ special_processes = {'linker': 'gold',
 for i, k in enumerate(special_processes.keys()):
     process_name_map[k] = i
 
+cpu_count = psutil.cpu_count()
 
 descr = 'Run command and measure memory and CPU utilization'
 parser = argparse.ArgumentParser(description=descr)
@@ -131,6 +141,19 @@ if not args.summary_only and plt is None:
     sys.exit(1)
 
 cpu_scale = cpu_count / args.used_cpus
+cpu_stats = DataStatistic(lambda: psutil.cpu_percent(interval=args.frequency) * cpu_scale)
+mem_stats = DataStatistic(lambda: to_gigabyte(psutil.virtual_memory().used))
+load_stats = DataStatistic(lambda: 100 * psutil.getloadavg()[0] / cpu_count)
+swap_stats = DataStatistic(lambda: to_gigabyte(psutil.swap_memory().used))
+
+collectors = [cpu_stats, mem_stats, load_stats, swap_stats]
+
+try:
+    import GPUtil
+    gpu_stats = DataStatistic(lambda: 100 * GPUtil.getGPUs()[0].load)
+    collectors.append(gpu_stats)
+except ImportError:
+    gpu_stats = None
 
 
 def get_process_name(proc):
@@ -172,25 +195,16 @@ def record_process_memory_hog(proc, memory, timestamp):
 
 
 def record():
-    global global_n, global_cpu_data_sum, global_cpu_data_max, global_load_data_max
-    global global_memory_data_sum, global_memory_data_min
-    global global_memory_data_max
-    global global_swap_data_min, global_swap_data_max
+    global global_n
     global global_disk_last_read, global_disk_last_write, global_disk_read_data, global_disk_write_data
-    global global_gpu_data
 
     active_pids = {}
     while not done:
         timestamp = time.monotonic() - start_ts
-        used_cpu = psutil.cpu_percent(interval=args.frequency) * cpu_scale
-        used_load = 100 * psutil.getloadavg()[0] / cpu_count
-        used_memory = to_gigabyte(psutil.virtual_memory().used)
-        used_swap = to_gigabyte(psutil.swap_memory().used)
         global_timestamps.append(timestamp)
         if not args.summary_only:
-            global_memory_data.append(used_memory)
-            global_cpu_data.append(used_cpu)
-            global_load_data.append(used_load)
+            for stat in collectors:
+                stat.collect()
             disk_info = psutil.disk_io_counters()
             if global_disk_last_read is None:
                 global_disk_last_read = disk_info.read_bytes
@@ -201,18 +215,8 @@ def record():
             global_disk_last_read = disk_info.read_bytes
             global_disk_write_data.append(to_megabyte(duration * (disk_info.write_bytes - global_disk_last_write)))
             global_disk_last_write = disk_info.write_bytes
-            if gputil:
-                global_gpu_data.append(100 * gputil.getGPUs()[0].load)
 
         global_n += 1
-        global_cpu_data_sum += used_cpu
-        global_memory_data_sum += used_memory
-        global_cpu_data_max = max(global_cpu_data_max, used_cpu)
-        global_load_data_max = max(global_load_data_max, used_load)
-        global_memory_data_min = min(global_memory_data_min, used_memory)
-        global_memory_data_max = max(global_memory_data_max, used_memory)
-        global_swap_data_min = min(global_swap_data_min, used_swap)
-        global_swap_data_max = max(global_swap_data_max, used_swap)
 
         entry = {}
         seen_pids = set()
@@ -264,27 +268,28 @@ def stack_values(process_usage, key):
 
 def get_footnote():
     hostname = os.uname()[1].split('.')[0]
-    cpu_average = global_cpu_data_sum / global_n
-    cpu_max = global_cpu_data_max
+    cpu_average = cpu_stats.average()
+    cpu_max = cpu_stats.maximum()
     base_memory = global_memory_data_min
-    peak_memory = global_memory_data_max
+    peak_memory = mem_stats.maximum()
     total_mem = to_gigabyte(psutil.virtual_memory().total)
+    gpu_line = ''
+    if gpu_stats:
+        gpu_line = f' GPU avg/max: {gpu_stats.average():.1f}/{gpu_stats.maximum():.1f};'
     return (f'host: {hostname}; CPUs: {args.used_cpus}/{cpu_count};'
-            f' CPU avg: {cpu_average:.0f}%;'
-            f' CPU max: {cpu_max:.0f}%;'
-            f' base memory: {base_memory:.1f} GiB;'
-            f' peak memory: {peak_memory:.1f} GiB;'
-            f' total memory: {total_mem:.1f} GiB')
+            f' CPU avg/max: {cpu_average:.0f}/{cpu_max:.0f}%;'
+            f'{gpu_line}'
+            f' memory base/peak/total: {base_memory:.1f}/{peak_memory:.1f}/{total_mem:.1f} GiB;')
 
 
 def get_footnote2():
-    peak_swap = global_swap_data_max
+    peak_swap = swap_stats.maximum()
     total_swap = to_gigabyte(psutil.swap_memory().total)
     disk_total = global_disk_data_total
     disk_start = global_disk_data_start
     disk_end = to_gigabyte(psutil.disk_usage('.').used)
     disk_delta = disk_end - disk_start
-    load_max = global_load_data_max
+    load_max = load_stats.maximum()
     return (f'taken: {int(global_timestamps[-1])} s;'
             f' load max (1m): {load_max:.0f}%; swap peak/total: {peak_swap:.1f}/{total_swap:.1f} GiB;'
             f' disk start/end/total: {disk_start:.1f}/{disk_end:.1f}/{disk_total:.1f} GiB;'
@@ -305,14 +310,14 @@ def generate_graph(time_range):
     for i, ts in enumerate(global_timestamps):
         if not time_range or time_range[0] <= ts and ts <= time_range[1]:
             timestamps.append(ts)
-            cpu_data.append(global_cpu_data[i])
-            load_data.append(global_load_data[i])
-            memory_data.append(global_memory_data[i])
+            cpu_data.append(cpu_stats.value(i))
+            load_data.append(load_stats.value(i))
+            memory_data.append(cpu_stats.value(i))
             process_usage.append(global_process_usage[i])
             disk_read_usage.append(global_disk_read_data[i])
             disk_write_usage.append(global_disk_write_data[i])
-            if gputil:
-                gpu_data.append(global_gpu_data[i])
+            if gpu_stats:
+                gpu_data.append(gpu_stats.value(i))
 
     if not timestamps:
         if args.verbose:
@@ -353,7 +358,7 @@ def generate_graph(time_range):
     disk_subplot.set_ylabel('MiB/s')
     disk_subplot.set_xlabel('time')
 
-    if gputil:
+    if gpu_stats:
         cpu_subplot.plot(timestamps, gpu_data, c='fuchsia', lw=LW, label='GPU')
 
     # scale it to a reasonable limit
@@ -387,7 +392,7 @@ def generate_graph(time_range):
 
         # generate custom legend
         names = ['CPU: single core', 'CPU: total', 'CPU: load']
-        if gputil:
+        if gpu_stats:
             names += ['GPU: total']
         names += ['disk: read', 'disk: write']
 
@@ -395,7 +400,7 @@ def generate_graph(time_range):
         custom_lines.append(Line2D([0], [0], color='r', alpha=0.5, linestyle='dotted', lw=LW))
         custom_lines.append(Line2D([0], [0], color='b', lw=LW))
         custom_lines.append(Line2D([0], [0], color='cyan', lw=LW))
-        if gputil:
+        if gpu_stats:
             custom_lines.append(Line2D([0], [0], color='fuchsia', lw=LW))
         custom_lines.append(Line2D([0], [0], color='green', lw=LW))
         custom_lines.append(Line2D([0], [0], color='red', lw=LW))
@@ -454,10 +459,10 @@ finally:
     done = True
     thread.join()
     summary()
-    if global_memory_data:
-        min_memory = min(global_memory_data)
+    if not mem_stats.empty():
+        min_memory = mem_stats.minimum()
         if not args.base_memory:
-            global_memory_data = [x - min_memory for x in global_memory_data]
+            mem_stats.values = [x - min_memory for x in mem_stats.values]
 
         if plt:
             generate_graph(None)
