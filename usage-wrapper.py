@@ -313,11 +313,12 @@ def generate_graph(time_range):
             cpu_data.append(cpu_stats.value(i))
             load_data.append(load_stats.value(i))
             memory_data.append(mem_stats.value(i))
-            process_usage.append(global_process_usage[i])
             disk_read_usage.append(global_disk_read_data[i])
             disk_write_usage.append(global_disk_write_data[i])
             if gpu_stats:
                 gpu_data.append(gpu_stats.value(i))
+            if i < len(global_process_usage):
+                process_usage.append(global_process_usage[i])
 
     if not timestamps:
         if args.verbose:
