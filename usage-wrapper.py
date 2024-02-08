@@ -277,7 +277,7 @@ def get_footnote():
     if gpu_stats:
         gpu_line = f' GPU avg/max: {gpu_stats.average():.1f}/{gpu_stats.maximum():.1f};'
     return (f'host: {hostname}; CPUs: {args.used_cpus}/{cpu_count};'
-            f' CPU avg/max: {cpu_average:.0f}/{cpu_max:.0f}%;'
+            f' CPU avg/max: {cpu_average:.1f}/{cpu_max:.1f}%;'
             f'{gpu_line}'
             f' memory base/peak/total: {base_memory:.1f}/{peak_memory:.1f}/{total_mem:.1f} GiB;')
 
