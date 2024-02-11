@@ -258,7 +258,6 @@ def get_footnote():
     hostname = os.uname()[1].split('.')[0]
     cpu_average = cpu_stats.average()
     cpu_max = cpu_stats.maximum()
-    base_memory = to_gigabyte(psutil.virtual_memory().total)
     peak_memory = mem_stats.maximum()
     total_mem = to_gigabyte(psutil.virtual_memory().total)
     gpu_line = ''
@@ -267,7 +266,7 @@ def get_footnote():
     return (f'host: {hostname}; CPUs: {args.used_cpus}/{cpu_count};'
             f' CPU avg/max: {cpu_average:.1f}/{cpu_max:.1f}%;'
             f'{gpu_line}'
-            f' RAM base/peak/total: {base_memory:.1f}/{peak_memory:.1f}/{total_mem:.1f} GiB;')
+            f' RAM peak/total: {peak_memory:.1f}/{total_mem:.1f} GiB;')
 
 
 def get_footnote2():
