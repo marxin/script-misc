@@ -283,7 +283,7 @@ def get_footnote2():
     return (f'taken: {int(timestamps[-1])} s;'
             f' load max (1m): {load_max:.0f}%; swap peak/total: {peak_swap:.1f}/{total_swap:.1f} GiB;'
             f' disk start/end/total: {disk_start:.1f}/{disk_end:.1f}/{disk_total:.1f} GiB;'
-            f' total GiB read/write: {total_read:.1f}/{total_written:.1f}')
+            f' total read/write GiB: {total_read:.1f}/{total_written:.1f}')
 
 
 def generate_graph():
