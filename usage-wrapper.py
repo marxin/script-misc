@@ -60,13 +60,17 @@ class DataStatistic:
 
 class DiskDataStatistic(DataStatistic):
     def __init__(self, collect_fn):
-        self.last_value = collect_fn()
+        self.latest_value = collect_fn()
+        self.start_value = collect_fn()
         super().__init__(collect_fn)
 
     def collect(self):
         value = self.collect_fn()
-        self.values.append(value - self.last_value)
-        self.last_value = value
+        self.values.append(value - self.latest_value)
+        self.latest_value = value
+
+    def difference_in_gb(self):
+        return (self.latest_value - self.start_value) / 1024
 
 
 timestamps = []
@@ -273,10 +277,13 @@ def get_footnote2():
     disk_total = disk_data_total
     disk_start = disk_data_start
     disk_end = to_gigabyte(psutil.disk_usage('.').used)
+    total_read = disk_read_stats.difference_in_gb()
+    total_written = disk_write_stats.difference_in_gb()
     load_max = load_stats.maximum()
     return (f'taken: {int(timestamps[-1])} s;'
             f' load max (1m): {load_max:.0f}%; swap peak/total: {peak_swap:.1f}/{total_swap:.1f} GiB;'
-            f' disk start/end/total: {disk_start:.1f}/{disk_end:.1f}/{disk_total:.1f} GiB;')
+            f' disk start/end/total: {disk_start:.1f}/{disk_end:.1f}/{disk_total:.1f} GiB;'
+            f' total GiB read/write: {total_read:.1f}/{total_written:.1f}')
 
 
 def generate_graph():
