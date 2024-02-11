@@ -42,9 +42,6 @@ class DataStatistic:
     def collect(self):
         self.values.append(self.collect_fn())
 
-    def value(self, i):
-        return self.values[i]
-
     def maximum(self):
         return max(self.values)
 
@@ -294,27 +291,18 @@ def get_footnote2():
 
 
 def generate_graph():
-    cpu_data = []
-    load_data = []
-    memory_data = []
     process_usage = []
     disk_read_usage = []
     disk_write_usage = []
-    gpu_data = []
 
     # filter date by timestamp
     for i, _ in enumerate(timestamps):
-        cpu_data.append(cpu_stats.value(i))
-        load_data.append(load_stats.value(i))
-        memory_data.append(mem_stats.value(i))
         disk_read_usage.append(global_disk_read_data[i])
         disk_write_usage.append(global_disk_write_data[i])
-        if gpu_stats:
-            gpu_data.append(gpu_stats.value(i))
         if i < len(global_process_usage):
             process_usage.append(global_process_usage[i])
 
-    peak_memory = max(memory_data)
+    peak_memory = mem_stats.maximum()
 
     fig, (cpu_subplot, mem_subplot, disk_subplot) = plt.subplots(3, sharex=True)
     title = args.title if args.title else ''
@@ -322,21 +310,21 @@ def generate_graph():
     fig.set_figheight(8)
     fig.set_figwidth(10)
     # scale cpu axis
-    local_peak_cpu = max(cpu_data + load_data + gpu_data)
+    local_peak_cpu = max(cpu_stats.values + load_stats.values + (gpu_stats.values if gpu_stats else []))
     cpu_ylimit = (local_peak_cpu // 10) * 11 + 5
     if cpu_ylimit > 300:
         cpu_ylimit = 300
     cpu_subplot.set_title('CPU usage')
     cpu_subplot.set_ylabel('%')
-    cpu_subplot.plot(timestamps, cpu_data, c='blue', lw=LW, label='total')
-    cpu_subplot.plot(timestamps, load_data, c='cyan', lw=LW, label='load')
+    cpu_subplot.plot(timestamps, cpu_stats.values, c='blue', lw=LW, label='total')
+    cpu_subplot.plot(timestamps, load_stats.values, c='cyan', lw=LW, label='load')
     cpu_subplot.set_ylim([0, cpu_ylimit])
     cpu_subplot.axhline(color='r', alpha=0.5, y=100.0 / args.used_cpus, lw=LW,
                         linestyle='dotted', label='single core')
     cpu_subplot.set_xlim(left=0)
     cpu_subplot.grid(True)
 
-    mem_subplot.plot(timestamps, memory_data, c='blue', lw=LW, label='total')
+    mem_subplot.plot(timestamps, mem_stats.values, c='blue', lw=LW, label='total')
     mem_subplot.set_title('Memory usage')
     mem_subplot.set_ylabel('GiB')
 
@@ -347,7 +335,7 @@ def generate_graph():
     disk_subplot.set_xlabel('time')
 
     if gpu_stats:
-        cpu_subplot.plot(timestamps, gpu_data, c='fuchsia', lw=LW, label='GPU')
+        cpu_subplot.plot(timestamps, gpu_stats.values, c='fuchsia', lw=LW, label='GPU')
 
     # scale it to a reasonable limit
     limit = 1
