@@ -55,7 +55,6 @@ class DataStatistic:
         return not self.values
 
 
-global_memory_data_min = to_gigabyte(psutil.virtual_memory().total)
 global_swap_data_min = to_gigabyte(psutil.swap_memory().total)
 global_disk_data_total = to_gigabyte(psutil.disk_usage('.').total)
 global_disk_data_start = to_gigabyte(psutil.disk_usage('.').used)
@@ -136,6 +135,7 @@ if not args.summary_only and plt is None:
 cpu_scale = cpu_count / args.used_cpus
 cpu_stats = DataStatistic(lambda: psutil.cpu_percent(interval=args.frequency) * cpu_scale)
 mem_stats = DataStatistic(lambda: to_gigabyte(psutil.virtual_memory().used))
+mem_stats.total = to_gigabyte(psutil.virtual_memory().total)
 load_stats = DataStatistic(lambda: 100 * psutil.getloadavg()[0] / cpu_count)
 swap_stats = DataStatistic(lambda: to_gigabyte(psutil.swap_memory().used))
 
@@ -260,7 +260,7 @@ def get_footnote():
     hostname = os.uname()[1].split('.')[0]
     cpu_average = cpu_stats.average()
     cpu_max = cpu_stats.maximum()
-    base_memory = global_memory_data_min
+    base_memory = mem_stats.total
     peak_memory = mem_stats.maximum()
     total_mem = to_gigabyte(psutil.virtual_memory().total)
     gpu_line = ''
