@@ -203,9 +203,8 @@ def record():
     while not done:
         timestamp = time.monotonic() - start_ts
         timestamps.append(timestamp)
-        if not args.summary_only:
-            for stat in collectors:
-                stat.collect()
+        for stat in collectors:
+            stat.collect()
 
         entry = {}
         seen_pids = set()
@@ -381,6 +380,7 @@ def generate_graph():
 
 
 def summary():
+    print()
     print(f'SUMMARY: {get_footnote()}')
     print(f'SUMMARY: {get_footnote2()}')
     if process_hogs:
@@ -414,7 +414,7 @@ finally:
         if not args.base_memory:
             mem_stats.values = [x - min_memory for x in mem_stats.values]
 
-        if plt:
+        if not args.summary_only:
             generate_graph()
     if cp:
         rv = cp.returncode
