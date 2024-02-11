@@ -21,9 +21,11 @@ jobs:
               python3-flake8-import-order
               python3-flake8-quotes
               python3-pip
+              python3-ruff
               tar gzip
 
       - uses: actions/checkout@v3
       - run: flake8
+      - run: ruff *py
       - run: pip install --break-system-packages pyupgrade
-      - run: pyupgrade --py38-plus *py
+      - run: pyupgrade --py310-plus *py
