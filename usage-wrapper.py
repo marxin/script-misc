@@ -264,7 +264,7 @@ def get_footnote():
     return (f'host: {hostname}; CPUs: {args.used_cpus}/{cpu_count};'
             f' CPU avg/max: {cpu_average:.1f}/{cpu_max:.1f}%;'
             f'{gpu_line}'
-            f' memory base/peak/total: {base_memory:.1f}/{peak_memory:.1f}/{total_mem:.1f} GiB;')
+            f' RAM base/peak/total: {base_memory:.1f}/{peak_memory:.1f}/{total_mem:.1f} GiB;')
 
 
 def get_footnote2():
@@ -273,12 +273,10 @@ def get_footnote2():
     disk_total = disk_data_total
     disk_start = disk_data_start
     disk_end = to_gigabyte(psutil.disk_usage('.').used)
-    disk_delta = disk_end - disk_start
     load_max = load_stats.maximum()
     return (f'taken: {int(timestamps[-1])} s;'
             f' load max (1m): {load_max:.0f}%; swap peak/total: {peak_swap:.1f}/{total_swap:.1f} GiB;'
-            f' disk start/end/total: {disk_start:.1f}/{disk_end:.1f}/{disk_total:.1f} GiB;'
-            f' disk delta: {disk_delta:.1f} GiB')
+            f' disk start/end/total: {disk_start:.1f}/{disk_end:.1f}/{disk_total:.1f} GiB;')
 
 
 def generate_graph():
