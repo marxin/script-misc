@@ -33,6 +33,9 @@ def to_megabyte(value):
 INTERVAL = 0.33
 LW = 0.5
 
+disk_data_total = to_gigabyte(psutil.disk_usage('.').total)
+disk_data_start = to_gigabyte(psutil.disk_usage('.').used)
+
 
 class DataStatistic:
     def __init__(self, collect_fn):
@@ -55,16 +58,20 @@ class DataStatistic:
         return not self.values
 
 
-global_disk_data_total = to_gigabyte(psutil.disk_usage('.').total)
-global_disk_data_start = to_gigabyte(psutil.disk_usage('.').used)
-global_disk_last_read = None
-global_disk_last_write = None
+class DiskDataStatistic(DataStatistic):
+    def __init__(self, collect_fn):
+        self.last_value = collect_fn()
+        super().__init__(collect_fn)
+
+    def collect(self):
+        value = self.collect_fn()
+        self.values.append(value - self.last_value)
+        self.last_value = value
+
 
 timestamps = []
 process_usage = []
 process_hogs = {}
-global_disk_read_data = []
-global_disk_write_data = []
 
 process_name_map = {}
 lock = threading.Lock()
@@ -136,8 +143,10 @@ cpu_stats = DataStatistic(lambda: psutil.cpu_percent(interval=args.frequency) * 
 mem_stats = DataStatistic(lambda: to_gigabyte(psutil.virtual_memory().used))
 load_stats = DataStatistic(lambda: 100 * psutil.getloadavg()[0] / cpu_count)
 swap_stats = DataStatistic(lambda: to_gigabyte(psutil.swap_memory().used))
+disk_read_stats = DiskDataStatistic(lambda: to_megabyte((1 / INTERVAL) * (psutil.disk_io_counters().read_bytes)))
+disk_write_stats = DiskDataStatistic(lambda: to_megabyte((1 / INTERVAL) * (psutil.disk_io_counters().write_bytes)))
 
-collectors = [cpu_stats, mem_stats, load_stats, swap_stats]
+collectors = [cpu_stats, mem_stats, load_stats, swap_stats, disk_read_stats, disk_write_stats]
 
 try:
     import GPUtil
@@ -186,8 +195,6 @@ def record_process_memory_hog(proc, memory, timestamp):
 
 
 def record():
-    global global_disk_last_read, global_disk_last_write, global_disk_read_data, global_disk_write_data
-
     active_pids = {}
     while not done:
         timestamp = time.monotonic() - start_ts
@@ -195,16 +202,6 @@ def record():
         if not args.summary_only:
             for stat in collectors:
                 stat.collect()
-            disk_info = psutil.disk_io_counters()
-            if global_disk_last_read is None:
-                global_disk_last_read = disk_info.read_bytes
-                global_disk_last_write = disk_info.write_bytes
-
-            duration = 1 / INTERVAL
-            global_disk_read_data.append(to_megabyte(duration * (disk_info.read_bytes - global_disk_last_read)))
-            global_disk_last_read = disk_info.read_bytes
-            global_disk_write_data.append(to_megabyte(duration * (disk_info.write_bytes - global_disk_last_write)))
-            global_disk_last_write = disk_info.write_bytes
 
         entry = {}
         seen_pids = set()
@@ -273,8 +270,8 @@ def get_footnote():
 def get_footnote2():
     peak_swap = swap_stats.maximum()
     total_swap = to_gigabyte(psutil.swap_memory().total)
-    disk_total = global_disk_data_total
-    disk_start = global_disk_data_start
+    disk_total = disk_data_total
+    disk_start = disk_data_start
     disk_end = to_gigabyte(psutil.disk_usage('.').used)
     disk_delta = disk_end - disk_start
     load_max = load_stats.maximum()
@@ -285,14 +282,6 @@ def get_footnote2():
 
 
 def generate_graph():
-    disk_read_usage = []
-    disk_write_usage = []
-
-    # filter date by timestamp
-    for i, _ in enumerate(timestamps):
-        disk_read_usage.append(global_disk_read_data[i])
-        disk_write_usage.append(global_disk_write_data[i])
-
     peak_memory = mem_stats.maximum()
 
     fig, (cpu_subplot, mem_subplot, disk_subplot) = plt.subplots(3, sharex=True)
@@ -319,8 +308,8 @@ def generate_graph():
     mem_subplot.set_title('Memory usage')
     mem_subplot.set_ylabel('GiB')
 
-    disk_subplot.plot(timestamps, disk_read_usage, c='green', lw=LW, label='read')
-    disk_subplot.plot(timestamps, disk_write_usage, c='red', lw=LW, label='write')
+    disk_subplot.plot(timestamps, disk_read_stats.values, c='green', lw=LW, label='read')
+    disk_subplot.plot(timestamps, disk_write_stats.values, c='red', lw=LW, label='write')
     disk_subplot.set_title('Disk read/write')
     disk_subplot.set_ylabel('MiB/s')
     disk_subplot.set_xlabel('time')
