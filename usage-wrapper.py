@@ -55,7 +55,6 @@ class DataStatistic:
         return not self.values
 
 
-global_n = 0
 global_memory_data_min = to_gigabyte(psutil.virtual_memory().total)
 global_swap_data_min = to_gigabyte(psutil.swap_memory().total)
 global_disk_data_total = to_gigabyte(psutil.disk_usage('.').total)
@@ -189,7 +188,6 @@ def record_process_memory_hog(proc, memory, timestamp):
 
 
 def record():
-    global global_n
     global global_disk_last_read, global_disk_last_write, global_disk_read_data, global_disk_write_data
 
     active_pids = {}
@@ -209,8 +207,6 @@ def record():
             global_disk_last_read = disk_info.read_bytes
             global_disk_write_data.append(to_megabyte(duration * (disk_info.write_bytes - global_disk_last_write)))
             global_disk_last_write = disk_info.write_bytes
-
-        global_n += 1
 
         entry = {}
         seen_pids = set()
