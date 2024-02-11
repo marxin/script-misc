@@ -61,8 +61,8 @@ global_disk_last_read = None
 global_disk_last_write = None
 
 timestamps = []
-global_process_usage = []
-global_process_hogs = {}
+process_usage = []
+process_hogs = {}
 global_disk_read_data = []
 global_disk_write_data = []
 
@@ -179,10 +179,10 @@ def record_process_memory_hog(proc, memory, timestamp):
         if memory >= args.memory_hog_threshold:
             cmd = ' '.join(proc.cmdline())
             tpl = (memory, timestamp)
-            if cmd not in global_process_hogs:
-                global_process_hogs[cmd] = tpl
-            elif memory > global_process_hogs[cmd][0]:
-                global_process_hogs[cmd] = tpl
+            if cmd not in process_hogs:
+                process_hogs[cmd] = tpl
+            elif memory > process_hogs[cmd][0]:
+                process_hogs[cmd] = tpl
 
 
 def record():
@@ -238,7 +238,7 @@ def record():
         if args.verbose:
             print(entry, flush=True)
         if not args.summary_only:
-            global_process_usage.append(entry)
+            process_usage.append(entry)
 
 
 def stack_values(process_usage, key):
@@ -285,7 +285,6 @@ def get_footnote2():
 
 
 def generate_graph():
-    process_usage = []
     disk_read_usage = []
     disk_write_usage = []
 
@@ -293,8 +292,6 @@ def generate_graph():
     for i, _ in enumerate(timestamps):
         disk_read_usage.append(global_disk_read_data[i])
         disk_write_usage.append(global_disk_write_data[i])
-        if i < len(global_process_usage):
-            process_usage.append(global_process_usage[i])
 
     peak_memory = mem_stats.maximum()
 
@@ -392,9 +389,9 @@ def generate_graph():
 def summary():
     print(f'SUMMARY: {get_footnote()}')
     print(f'SUMMARY: {get_footnote2()}')
-    if global_process_hogs:
+    if process_hogs:
         print(f'PROCESS MEMORY HOGS (>={args.memory_hog_threshold:.1f} GiB):')
-        items = sorted(global_process_hogs.items(), key=lambda x: x[1][0],
+        items = sorted(process_hogs.items(), key=lambda x: x[1][0],
                        reverse=True)
         for cmdline, (memory, ts) in items:
             print(f'  {memory:.1f} GiB: {ts:.1f} s: {cmdline}')
