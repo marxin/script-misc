@@ -146,11 +146,10 @@ cpu_scale = cpu_count / args.used_cpus
 cpu_stats = DataStatistic(lambda: psutil.cpu_percent(interval=args.frequency) * cpu_scale)
 mem_stats = DataStatistic(lambda: to_gigabyte(psutil.virtual_memory().used))
 load_stats = DataStatistic(lambda: 100 * psutil.getloadavg()[0] / cpu_count)
-swap_stats = DataStatistic(lambda: to_gigabyte(psutil.swap_memory().used))
 disk_read_stats = DiskDataStatistic(lambda: to_megabyte((1 / INTERVAL) * (psutil.disk_io_counters().read_bytes)))
 disk_write_stats = DiskDataStatistic(lambda: to_megabyte((1 / INTERVAL) * (psutil.disk_io_counters().write_bytes)))
 
-collectors = [cpu_stats, mem_stats, load_stats, swap_stats, disk_read_stats, disk_write_stats]
+collectors = [cpu_stats, mem_stats, load_stats, disk_read_stats, disk_write_stats]
 
 try:
     import GPUtil
@@ -271,8 +270,6 @@ def get_footnote():
 
 
 def get_footnote2():
-    peak_swap = swap_stats.maximum()
-    total_swap = to_gigabyte(psutil.swap_memory().total)
     disk_total = disk_data_total
     disk_start = disk_data_start
     disk_end = to_gigabyte(psutil.disk_usage('.').used)
@@ -280,7 +277,7 @@ def get_footnote2():
     total_written = disk_write_stats.difference_in_gb()
     load_max = load_stats.maximum()
     return (f'taken: {int(timestamps[-1])} s;'
-            f' load max (1m): {load_max:.0f}%; swap peak/total: {peak_swap:.1f}/{total_swap:.1f} GiB;'
+            f' load max (1m): {load_max:.0f}%;'
             f' disk start/end/total: {disk_start:.1f}/{disk_end:.1f}/{disk_total:.1f} GiB;'
             f' total read/write GiB: {total_read:.1f}/{total_written:.1f}')
 
