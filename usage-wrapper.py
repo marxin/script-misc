@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import datetime
 import math
 import os
 import subprocess
@@ -276,7 +277,10 @@ def get_footnote2():
     total_read = disk_read_stats.difference_in_gb()
     total_written = disk_write_stats.difference_in_gb()
     load_max = load_stats.maximum()
-    return (f'taken: {int(timestamps[-1])} s;'
+    ts = str(datetime.datetime.now())
+    # strip second fraction part
+    ts = ts[:ts.rindex('.')]
+    return (f'taken: {int(timestamps[-1])} s; created: {ts};'
             f' load max (1m): {load_max:.0f}%;'
             f' disk start/end/total: {disk_start:.1f}/{disk_end:.1f}/{disk_total:.1f} GiB;'
             f' total read/write GiB: {total_read:.1f}/{total_written:.1f}')
