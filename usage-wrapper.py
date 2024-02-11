@@ -66,7 +66,7 @@ global_disk_data_start = to_gigabyte(psutil.disk_usage('.').used)
 global_disk_last_read = None
 global_disk_last_write = None
 
-global_timestamps = []
+timestamps = []
 global_process_usage = []
 global_process_hogs = {}
 global_disk_read_data = []
@@ -111,9 +111,6 @@ parser.add_argument('-s', '--separate-ltrans', action='store_true',
                     help='Separate LTRANS processes in graph')
 parser.add_argument('-o', '--output', default='usage.svg',
                     help='Path to output image (default: usage.svg)')
-parser.add_argument('-r', '--ranges',
-                    help='Plot only the selected time ranges '
-                    '(e.g. 20-30, 0-1000)')
 parser.add_argument('-t', '--title', help='Graph title')
 parser.add_argument('-m', '--memory-hog-threshold', type=float,
                     help='Report about processes that consume the amount of '
@@ -201,7 +198,7 @@ def record():
     active_pids = {}
     while not done:
         timestamp = time.monotonic() - start_ts
-        global_timestamps.append(timestamp)
+        timestamps.append(timestamp)
         if not args.summary_only:
             for stat in collectors:
                 stat.collect()
@@ -290,14 +287,13 @@ def get_footnote2():
     disk_end = to_gigabyte(psutil.disk_usage('.').used)
     disk_delta = disk_end - disk_start
     load_max = load_stats.maximum()
-    return (f'taken: {int(global_timestamps[-1])} s;'
+    return (f'taken: {int(timestamps[-1])} s;'
             f' load max (1m): {load_max:.0f}%; swap peak/total: {peak_swap:.1f}/{total_swap:.1f} GiB;'
             f' disk start/end/total: {disk_start:.1f}/{disk_end:.1f}/{disk_total:.1f} GiB;'
             f' disk delta: {disk_delta:.1f} GiB')
 
 
-def generate_graph(time_range):
-    timestamps = []
+def generate_graph():
     cpu_data = []
     load_data = []
     memory_data = []
@@ -307,30 +303,21 @@ def generate_graph(time_range):
     gpu_data = []
 
     # filter date by timestamp
-    for i, ts in enumerate(global_timestamps):
-        if not time_range or time_range[0] <= ts and ts <= time_range[1]:
-            timestamps.append(ts)
-            cpu_data.append(cpu_stats.value(i))
-            load_data.append(load_stats.value(i))
-            memory_data.append(mem_stats.value(i))
-            disk_read_usage.append(global_disk_read_data[i])
-            disk_write_usage.append(global_disk_write_data[i])
-            if gpu_stats:
-                gpu_data.append(gpu_stats.value(i))
-            if i < len(global_process_usage):
-                process_usage.append(global_process_usage[i])
-
-    if not timestamps:
-        if args.verbose:
-            print('No data for range: %s' % str(time_range))
-        return
+    for i, _ in enumerate(timestamps):
+        cpu_data.append(cpu_stats.value(i))
+        load_data.append(load_stats.value(i))
+        memory_data.append(mem_stats.value(i))
+        disk_read_usage.append(global_disk_read_data[i])
+        disk_write_usage.append(global_disk_write_data[i])
+        if gpu_stats:
+            gpu_data.append(gpu_stats.value(i))
+        if i < len(global_process_usage):
+            process_usage.append(global_process_usage[i])
 
     peak_memory = max(memory_data)
 
     fig, (cpu_subplot, mem_subplot, disk_subplot) = plt.subplots(3, sharex=True)
     title = args.title if args.title else ''
-    if time_range:
-        title += ' (%d-%d s)' % (time_range[0], time_range[1])
     fig.suptitle(title, fontsize=17)
     fig.set_figheight(8)
     fig.set_figwidth(10)
@@ -346,7 +333,7 @@ def generate_graph(time_range):
     cpu_subplot.set_ylim([0, cpu_ylimit])
     cpu_subplot.axhline(color='r', alpha=0.5, y=100.0 / args.used_cpus, lw=LW,
                         linestyle='dotted', label='single core')
-    cpu_subplot.set_xlim(left=time_range[0] if time_range else 0)
+    cpu_subplot.set_xlim(left=0)
     cpu_subplot.grid(True)
 
     mem_subplot.plot(timestamps, memory_data, c='blue', lw=LW, label='total')
@@ -412,9 +399,6 @@ def generate_graph(time_range):
         fig.legend(custom_lines, names, loc='right', prop={'size': 6})
 
     filename = args.output
-    if time_range:
-        tr = '-%d-%d' % (time_range[0], time_range[1])
-        filename = os.path.splitext(args.output)[0] + tr + '.svg'
     plt.subplots_adjust(bottom=0.12)
     plt.figtext(0.1, 0.04, get_footnote(), fontsize='small')
     plt.figtext(0.1, 0.01, get_footnote2(), fontsize='small')
@@ -437,15 +421,7 @@ def summary():
 thread = threading.Thread(target=record, args=())
 thread.start()
 
-ranges = []
-if args.ranges:
-    for r in args.ranges.split(','):
-        parts = r.split('-')
-        assert len(parts) == 2
-        ranges.append([int(x) for x in parts])
-
 if args.verbose:
-    print('Ranges are %s' % str(ranges))
     print('Running command', flush=True)
 
 cp = None
@@ -466,9 +442,7 @@ finally:
             mem_stats.values = [x - min_memory for x in mem_stats.values]
 
         if plt:
-            generate_graph(None)
-            for r in ranges:
-                generate_graph(r)
+            generate_graph()
     if cp:
         rv = cp.returncode
 
