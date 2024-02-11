@@ -1,0 +1,18 @@
+exclude = [
+  "legacy",
+  "gcc-flavor",
+  "binutils-batch-build-asan.py",
+  "binary-heatmap.py",
+  "binutils-batch-build.py",
+  "find-missing-bz-commits.py",
+  "gcc-option-juggler.py",
+  "gcc-object-bisection.py",
+  "gcov-dump-dynamic.py",
+  "objfolderdiff.py",
+  "obs-analyze-warnings.py",
+  "obs-compare-binaries-size.py",
+  "obs-compute-binaries-size.py",
+  "obs-diagnose-failures.py",
+  "obs-dwz-analysis.py",
+  "obs-error-parser.py",
+]
