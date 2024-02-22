@@ -155,9 +155,14 @@ collectors = [cpu_stats, mem_stats, load_stats, disk_read_stats, disk_write_stat
 try:
     import GPUtil
     gpu_stats = DataStatistic(lambda: 100 * GPUtil.getGPUs()[0].load)
+    # the memory consumption is reported in MiBs
+    gpu_mem_stats = DataStatistic(lambda: GPUtil.getGPUs()[0].memoryUsed / 1024)
     collectors.append(gpu_stats)
+    collectors.append(gpu_mem_stats)
 except ImportError:
     gpu_stats = None
+    gpu_mem_stats = None
+    print('WARNING: missing GPUtil package (pip install GPUtil)')
 
 
 def get_process_name(proc):
@@ -311,6 +316,8 @@ def generate_graph():
     mem_subplot.plot(timestamps, mem_stats.values, c='blue', lw=LW, label='total')
     mem_subplot.set_title('Memory usage')
     mem_subplot.set_ylabel('GiB')
+    if gpu_stats:
+        mem_subplot.plot(timestamps, gpu_mem_stats.values, c='fuchsia', lw=LW, label='GPU')
 
     disk_subplot.plot(timestamps, disk_read_stats.values, c='green', lw=LW, label='read')
     disk_subplot.plot(timestamps, disk_write_stats.values, c='red', lw=LW, label='write')
