@@ -147,10 +147,20 @@ cpu_scale = cpu_count / args.used_cpus
 cpu_stats = DataStatistic(lambda: psutil.cpu_percent(interval=args.frequency) * cpu_scale)
 mem_stats = DataStatistic(lambda: to_gigabyte(psutil.virtual_memory().used))
 load_stats = DataStatistic(lambda: 100 * psutil.getloadavg()[0] / cpu_count)
-disk_read_stats = DiskDataStatistic(lambda: to_megabyte((1 / INTERVAL) * (psutil.disk_io_counters().read_bytes)))
-disk_write_stats = DiskDataStatistic(lambda: to_megabyte((1 / INTERVAL) * (psutil.disk_io_counters().write_bytes)))
 
-collectors = [cpu_stats, mem_stats, load_stats, disk_read_stats, disk_write_stats]
+collectors = [cpu_stats, mem_stats, load_stats]
+
+# Some LXC containers do not support disk IO counters:
+try:
+    disk_read_stats = DiskDataStatistic(lambda: to_megabyte((1 / INTERVAL) * (psutil.disk_io_counters().read_bytes)))
+    disk_write_stats = DiskDataStatistic(lambda: to_megabyte((1 / INTERVAL) * (psutil.disk_io_counters().write_bytes)))
+    collectors.append(disk_read_stats)
+    collectors.append(disk_write_stats)
+except AttributeError:
+    disk_read_stats = None
+    disk_write_stats = None
+    print('WARNING: disk IO counters not supported by the system')
+    pass
 
 try:
     import GPUtil
@@ -278,8 +288,8 @@ def get_footnote2():
     disk_total = disk_data_total
     disk_start = disk_data_start
     disk_end = to_gigabyte(psutil.disk_usage('.').used)
-    total_read = disk_read_stats.difference_in_gb()
-    total_written = disk_write_stats.difference_in_gb()
+    total_read = disk_read_stats.difference_in_gb() if disk_read_stats else 0
+    total_written = disk_write_stats.difference_in_gb() if disk_write_stats else 0
     load_max = load_stats.maximum()
     ts = str(datetime.datetime.now())
     # strip second fraction part
@@ -319,8 +329,9 @@ def generate_graph():
     if gpu_stats:
         mem_subplot.plot(timestamps, gpu_mem_stats.values, c='fuchsia', lw=LW, label='GPU')
 
-    disk_subplot.plot(timestamps, disk_read_stats.values, c='green', lw=LW, label='read')
-    disk_subplot.plot(timestamps, disk_write_stats.values, c='red', lw=LW, label='write')
+    if disk_read_stats:
+        disk_subplot.plot(timestamps, disk_read_stats.values, c='green', lw=LW, label='read')
+        disk_subplot.plot(timestamps, disk_write_stats.values, c='red', lw=LW, label='write')
     disk_subplot.set_title('Disk read/write')
     disk_subplot.set_ylabel('MiB/s')
     disk_subplot.set_xlabel('time')
@@ -415,14 +426,13 @@ except KeyboardInterrupt:
 finally:
     done = True
     thread.join()
-    summary()
     if not mem_stats.empty():
         min_memory = mem_stats.minimum()
         if not args.base_memory:
             mem_stats.values = [x - min_memory for x in mem_stats.values]
-
         if not args.summary_only:
             generate_graph()
+    summary()
     if cp:
         rv = cp.returncode
 
