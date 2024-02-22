@@ -164,9 +164,24 @@ except AttributeError:
 
 try:
     import GPUtil
-    gpu_stats = DataStatistic(lambda: 100 * GPUtil.getGPUs()[0].load)
+
+    def collect_gpu():
+        try:
+            return 100 * GPUtil.getGPUs()[0].load
+        except IndexError:
+            # sometimes GPUtil.getGPUs() returns [] if we are terminating
+            return 0
+
+    def collect_gpu_memory():
+        try:
+            return GPUtil.getGPUs()[0].memoryUsed / 1024
+        except IndexError:
+            # sometimes GPUtil.getGPUs() returns [] if we are terminating
+            return 0
+
+    gpu_stats = DataStatistic(collect_gpu)
     # the memory consumption is reported in MiBs
-    gpu_mem_stats = DataStatistic(lambda: GPUtil.getGPUs()[0].memoryUsed / 1024)
+    gpu_mem_stats = DataStatistic(collect_gpu_memory)
     collectors.append(gpu_stats)
     collectors.append(gpu_mem_stats)
 except ImportError:
