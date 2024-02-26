@@ -293,11 +293,13 @@ def get_footnote():
     total_mem = to_gigabyte(psutil.virtual_memory().total)
     gpu_line = ''
     if gpu_stats:
+        total_gpu_mem = GPUtil.getGPUs()[0].memoryTotal / 1024
         gpu_line = f' GPU avg/max: {gpu_stats.average():.1f}/{gpu_stats.maximum():.1f};'
+        gpu_line += f' GPU RAM: peak/total: {gpu_mem_stats.maximum():.1f}/{total_gpu_mem:.1f} GiB;'
     return (f'host: {hostname}; CPUs: {args.used_cpus}/{cpu_count};'
             f' CPU avg/max: {cpu_average:.1f}/{cpu_max:.1f}%;'
-            f'{gpu_line}'
-            f' RAM peak/total: {peak_memory:.1f}/{total_mem:.1f} GiB;')
+            f' RAM peak/total: {peak_memory:.1f}/{total_mem:.1f} GiB;'
+            f'{gpu_line}')
 
 
 def get_footnote2():
