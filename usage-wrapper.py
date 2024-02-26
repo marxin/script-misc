@@ -8,6 +8,7 @@ import subprocess
 import sys
 import threading
 import time
+from itertools import chain
 
 try:
     import psutil
@@ -398,9 +399,10 @@ def generate_graph():
         custom_lines.append(Line2D([0], [0], color='green', lw=LW))
         custom_lines.append(Line2D([0], [0], color='red', lw=LW))
 
-        colors = special_processes.values()
-        custom_lines += [Line2D([0], [0], color=x, lw=5) for x in colors]
-        names += list(special_processes.keys())
+        if sum(chain(*cpu_stacks)) > 0:
+            colors = special_processes.values()
+            custom_lines += [Line2D([0], [0], color=x, lw=5) for x in colors]
+            names += list(special_processes.keys())
         fig.legend(custom_lines, names, loc='right', prop={'size': 6})
 
     filename = args.output
