@@ -20,7 +20,6 @@ jobs:
               tar gzip
 
       - uses: actions/checkout@v3
-      - run: flake8
       - run: ruff check .
       - run: pip install --break-system-packages pyupgrade
       - run: pyupgrade --py310-plus *py
