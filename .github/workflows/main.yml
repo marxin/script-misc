@@ -15,11 +15,6 @@ jobs:
 
     steps:
       - run: zypper -n install
-              python3-flake8
-              python3-flake8-builtins
-              python3-flake8-bugbear
-              python3-flake8-import-order
-              python3-flake8-quotes
               python3-pip
               python3-ruff
               tar gzip
