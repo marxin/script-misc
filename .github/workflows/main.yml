@@ -19,7 +19,7 @@ jobs:
               python3-ruff
               tar gzip
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - run: ruff check .
       - run: pip install --break-system-packages pyupgrade
       - run: pyupgrade --py310-plus *py
