@@ -85,18 +85,20 @@ lock = threading.Lock()
 done = False
 start_ts = time.monotonic()
 
-special_processes = {'linker': 'gold',
-                     'WPA': 'deepskyblue',
-                     'WPA-stream': 'lightblue',
-                     'ltrans': 'forestgreen',
-                     'as': 'coral',
-                     'GCC': 'gray',
-                     'clang': 'darkgray',
-                     'rust': 'brown',
-                     'go': 'hotpink',
-                     'dwz': 'limegreen',
-                     'rpm/rpm2cpio/dpkg': 'plum',
-                     'xsltproc': 'bisque'}
+special_processes = {
+    'linker': 'gold',
+    'WPA': 'deepskyblue',
+    'WPA-stream': 'lightblue',
+    'ltrans': 'forestgreen',
+    'as': 'coral',
+    'GCC': 'gray',
+    'clang': 'darkgray',
+    'rust': 'brown',
+    'go': 'hotpink',
+    'dwz': 'limegreen',
+    'rpm/rpm2cpio/dpkg': 'plum',
+    'xsltproc': 'bisque',
+}
 for i, k in enumerate(special_processes.keys()):
     process_name_map[k] = i
 
@@ -104,44 +106,57 @@ cpu_count = psutil.cpu_count()
 
 descr = 'Run command and measure memory and CPU utilization'
 parser = argparse.ArgumentParser(description=descr)
-parser.add_argument('command', metavar='command',
-                    help='Command', nargs=argparse.REMAINDER)
-parser.add_argument('-c', '--command', dest='command1',
-                    help='command as a single argument')
+parser.add_argument('command', metavar='command', help='Command', nargs=argparse.REMAINDER)
+parser.add_argument('-c', '--command', dest='command1', help='command as a single argument')
 parser.add_argument('-v', '--verbose', action='store_true', help='Verbose')
-parser.add_argument('-S', '--summary-only', dest='summary_only',
-                    action='store_true',
-                    help='No plot, just a summary at the end')
-parser.add_argument('-b', '--base-memory', action='store_true',
-                    help='Adjust memory to include the system load')
-parser.add_argument('-s', '--separate-ltrans', action='store_true',
-                    help='Separate LTRANS processes in graph')
-parser.add_argument('-o', '--output', default='usage.svg',
-                    help='Path to output image (default: usage.svg)')
+parser.add_argument(
+    '-S',
+    '--summary-only',
+    dest='summary_only',
+    action='store_true',
+    help='No plot, just a summary at the end',
+)
+parser.add_argument(
+    '-b', '--base-memory', action='store_true', help='Adjust memory to include the system load'
+)
+parser.add_argument(
+    '-s', '--separate-ltrans', action='store_true', help='Separate LTRANS processes in graph'
+)
+parser.add_argument(
+    '-o', '--output', default='usage.svg', help='Path to output image (default: usage.svg)'
+)
 parser.add_argument('-t', '--title', help='Graph title')
-parser.add_argument('-m', '--memory-hog-threshold', type=float,
-                    help='Report about processes that consume the amount of '
-                    'memory (in GiB)')
-parser.add_argument('-f', '--frequency', type=float,
-                    default=INTERVAL,
-                    help='Frequency of measuring (in seconds)')
-parser.add_argument('-j', '--jobs', type=int,
-                    default=cpu_count, dest='used_cpus',
-                    help='Scale up CPU data to used CPUs '
-                    'instead of available CPUs')
-parser.add_argument('--y-scale', type=int,
-                    help='Minimal y-scale (in GiB)')
+parser.add_argument(
+    '-m',
+    '--memory-hog-threshold',
+    type=float,
+    help='Report about processes that consume the amount of ' 'memory (in GiB)',
+)
+parser.add_argument(
+    '-f', '--frequency', type=float, default=INTERVAL, help='Frequency of measuring (in seconds)'
+)
+parser.add_argument(
+    '-j',
+    '--jobs',
+    type=int,
+    default=cpu_count,
+    dest='used_cpus',
+    help='Scale up CPU data to used CPUs ' 'instead of available CPUs',
+)
+parser.add_argument('--y-scale', type=int, help='Minimal y-scale (in GiB)')
 
 args = parser.parse_args()
 
 if args.command1 and args.command:
-    print(f'{sys.argv[0]}: either use -c "<shell command>", '
-          'or append the command', file=sys.stderr)
+    print(
+        f'{sys.argv[0]}: either use -c "<shell command>", ' 'or append the command', file=sys.stderr
+    )
     sys.exit(1)
 
 if not args.summary_only and plt is None:
-    print(f'{sys.argv[0]}: use --summary-only, '
-          'or install the matplotlib module', file=sys.stderr)
+    print(
+        f'{sys.argv[0]}: use --summary-only, ' 'or install the matplotlib module', file=sys.stderr
+    )
     sys.exit(1)
 
 cpu_scale = cpu_count / args.used_cpus
@@ -153,8 +168,12 @@ collectors = [cpu_stats, mem_stats, load_stats]
 
 # Some LXC containers do not support disk IO counters:
 try:
-    disk_read_stats = DiskDataStatistic(lambda: to_megabyte((1 / INTERVAL) * (psutil.disk_io_counters().read_bytes)))
-    disk_write_stats = DiskDataStatistic(lambda: to_megabyte((1 / INTERVAL) * (psutil.disk_io_counters().write_bytes)))
+    disk_read_stats = DiskDataStatistic(
+        lambda: to_megabyte((1 / INTERVAL) * (psutil.disk_io_counters().read_bytes))
+    )
+    disk_write_stats = DiskDataStatistic(
+        lambda: to_megabyte((1 / INTERVAL) * (psutil.disk_io_counters().write_bytes))
+    )
     collectors.append(disk_read_stats)
     collectors.append(disk_write_stats)
 except AttributeError:
@@ -296,10 +315,12 @@ def get_footnote():
         total_gpu_mem = GPUtil.getGPUs()[0].memoryTotal / 1024
         gpu_line = f' GPU avg/max: {gpu_stats.average():.1f}/{gpu_stats.maximum():.1f};'
         gpu_line += f' GPU RAM: peak/total: {gpu_mem_stats.maximum():.1f}/{total_gpu_mem:.1f} GiB;'
-    return (f'host: {hostname}; CPUs: {args.used_cpus}/{cpu_count};'
-            f' CPU avg/max: {cpu_average:.1f}/{cpu_max:.1f}%;'
-            f' RAM peak/total: {peak_memory:.1f}/{total_mem:.1f} GiB;'
-            f'{gpu_line}')
+    return (
+        f'host: {hostname}; CPUs: {args.used_cpus}/{cpu_count};'
+        f' CPU avg/max: {cpu_average:.1f}/{cpu_max:.1f}%;'
+        f' RAM peak/total: {peak_memory:.1f}/{total_mem:.1f} GiB;'
+        f'{gpu_line}'
+    )
 
 
 def get_footnote2():
@@ -311,11 +332,13 @@ def get_footnote2():
     load_max = load_stats.maximum()
     ts = str(datetime.datetime.now())
     # strip second fraction part
-    ts = ts[:ts.rindex('.')]
-    return (f'taken: {int(timestamps[-1])} s; created: {ts};'
-            f' load max (1m): {load_max:.0f}%;'
-            f' disk start/end/total: {disk_start:.1f}/{disk_end:.1f}/{disk_total:.1f} GiB;'
-            f' total read/write: {total_read:.1f}/{total_written:.1f} GiB;')
+    ts = ts[: ts.rindex('.')]
+    return (
+        f'taken: {int(timestamps[-1])} s; created: {ts};'
+        f' load max (1m): {load_max:.0f}%;'
+        f' disk start/end/total: {disk_start:.1f}/{disk_end:.1f}/{disk_total:.1f} GiB;'
+        f' total read/write: {total_read:.1f}/{total_written:.1f} GiB;'
+    )
 
 
 def generate_graph():
@@ -327,7 +350,9 @@ def generate_graph():
     fig.set_figheight(8)
     fig.set_figwidth(10)
     # scale cpu axis
-    local_peak_cpu = max(cpu_stats.values + load_stats.values + (gpu_stats.values if gpu_stats else []))
+    local_peak_cpu = max(
+        cpu_stats.values + load_stats.values + (gpu_stats.values if gpu_stats else [])
+    )
     cpu_ylimit = (local_peak_cpu // 10) * 11 + 5
     if cpu_ylimit > 300:
         cpu_ylimit = 300
@@ -336,8 +361,14 @@ def generate_graph():
     cpu_subplot.plot(timestamps, cpu_stats.values, c='blue', lw=LW, label='total')
     cpu_subplot.plot(timestamps, load_stats.values, c='cyan', lw=LW, label='load')
     cpu_subplot.set_ylim([0, cpu_ylimit])
-    cpu_subplot.axhline(color='r', alpha=0.5, y=100.0 / args.used_cpus, lw=LW,
-                        linestyle='dotted', label='single core')
+    cpu_subplot.axhline(
+        color='r',
+        alpha=0.5,
+        y=100.0 / args.used_cpus,
+        lw=LW,
+        linestyle='dotted',
+        label='single core',
+    )
     cpu_subplot.set_xlim(left=0)
     cpu_subplot.grid(True)
 
@@ -381,10 +412,8 @@ def generate_graph():
     mem_stacks = stack_values(process_usage, 'memory')
     cpu_stacks = stack_values(process_usage, 'cpu')
     if mem_stacks:
-        mem_subplot.stackplot(timestamps, mem_stacks,
-                              colors=colors)
-        cpu_subplot.stackplot(timestamps, cpu_stacks,
-                              colors=colors)
+        mem_subplot.stackplot(timestamps, mem_stacks, colors=colors)
+        cpu_subplot.stackplot(timestamps, cpu_stacks, colors=colors)
 
         # generate custom legend
         names = ['CPU: single core', 'CPU: total', 'CPU: load']
@@ -422,8 +451,7 @@ def summary():
     print(f'SUMMARY: {get_footnote2()}')
     if process_hogs:
         print(f'PROCESS MEMORY HOGS (>={args.memory_hog_threshold:.1f} GiB):')
-        items = sorted(process_hogs.items(), key=lambda x: x[1][0],
-                       reverse=True)
+        items = sorted(process_hogs.items(), key=lambda x: x[1][0], reverse=True)
         for cmdline, (memory, ts) in items:
             print(f'  {memory:.1f} GiB: {ts:.1f} s: {cmdline}')
 
