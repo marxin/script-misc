@@ -144,6 +144,7 @@ parser.add_argument(
     help='Scale up CPU data to used CPUs ' 'instead of available CPUs',
 )
 parser.add_argument('--y-scale', type=int, help='Minimal y-scale (in GiB)')
+parser.add_argument('--skip-gpu', action='store_false', help='Skip collecting statistics for GPU')
 
 args = parser.parse_args()
 
@@ -182,32 +183,34 @@ except AttributeError:
     print('WARNING: disk IO counters not supported by the system')
     pass
 
-try:
-    import GPUtil
+gpu_stats = None
+gpu_mem_stats = None
 
-    def collect_gpu():
-        try:
-            return 100 * GPUtil.getGPUs()[0].load
-        except IndexError:
-            # sometimes GPUtil.getGPUs() returns [] if we are terminating
-            return 0
+if args.skip_gpu:
+    try:
+        import GPUtil
 
-    def collect_gpu_memory():
-        try:
-            return GPUtil.getGPUs()[0].memoryUsed / 1024
-        except IndexError:
-            # sometimes GPUtil.getGPUs() returns [] if we are terminating
-            return 0
+        def collect_gpu():
+            try:
+                return 100 * GPUtil.getGPUs()[0].load
+            except IndexError:
+                # sometimes GPUtil.getGPUs() returns [] if we are terminating
+                return 0
 
-    gpu_stats = DataStatistic(collect_gpu)
-    # the memory consumption is reported in MiBs
-    gpu_mem_stats = DataStatistic(collect_gpu_memory)
-    collectors.append(gpu_stats)
-    collectors.append(gpu_mem_stats)
-except ImportError:
-    gpu_stats = None
-    gpu_mem_stats = None
-    print('WARNING: missing GPUtil package (pip install GPUtil)')
+        def collect_gpu_memory():
+            try:
+                return GPUtil.getGPUs()[0].memoryUsed / 1024
+            except IndexError:
+                # sometimes GPUtil.getGPUs() returns [] if we are terminating
+                return 0
+
+        gpu_stats = DataStatistic(collect_gpu)
+        # the memory consumption is reported in MiBs
+        gpu_mem_stats = DataStatistic(collect_gpu_memory)
+        collectors.append(gpu_stats)
+        collectors.append(gpu_mem_stats)
+    except ImportError:
+        print('WARNING: missing GPUtil package (pip install GPUtil)')
 
 
 def get_process_name(proc):
